@@ -5,6 +5,9 @@
 *.pem
 secrets/
 
+# Internal authoring artifact — not part of the product repo
+DOCS_GENERATION_PROMPT.md
+
 # Java / Gradle (services/backend)
 .gradle/
 build/

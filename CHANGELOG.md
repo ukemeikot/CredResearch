@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Rewrote the root `README.md` to describe the CredResearch product, architecture, and quick start.
+
+### Removed
+- Untracked the internal authoring artifact `DOCS_GENERATION_PROMPT.md` (now git-ignored).
+
 ### Added
 - **Phase 0 foundation.** Monorepo scaffold using Clean Architecture inside a modular monolith
   (backend) plus a separate Python AI/data worker.
