@@ -30,7 +30,7 @@ jobs:
         # Use the official Trivy image directly (avoids action version-pin breakage).
         run: |
           docker run --rm -v "${{ github.workspace }}:/src" \
-            aquasecurity/trivy:latest fs \
+            ghcr.io/aquasecurity/trivy:latest fs \
             --scanners vuln,secret,misconfig \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
