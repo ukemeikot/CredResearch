@@ -30,7 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Rewrote the root `README.md` to describe the CredResearch product, architecture, and quick start.
 - `docker-compose.yml`: added MailHog; wired backend email + app-base-url env.
-- CI `security` workflow: run Trivy via the official image (fixes an invalid action version).
+- CI `security` workflow: run Trivy via `ghcr.io/aquasecurity/trivy` (fixes an invalid action version).
+- Backend & ai-worker Dockerfiles run as a non-root `appuser` (Trivy DS-0002).
 - CodeRabbit (`.coderabbit.yaml`): auto-review PRs into `dev` only; disabled for `staging`/`main`.
 
 ### Removed
