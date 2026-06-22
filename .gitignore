@@ -1,0 +1,42 @@
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+secrets/
+
+# Java / Gradle (services/backend)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+
+# Python (services/ai-worker)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Next.js (apps/web, packages/*)
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# Docker / data volumes
+pgdata/
+miniodata/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

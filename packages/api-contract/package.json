@@ -1,0 +1,26 @@
+{
+  "name": "@credresearch/api-client",
+  "version": "0.1.0",
+  "description": "CredResearch REST API contract (OpenAPI 3.1) + generated TypeScript types. Single source of truth shared by backend and web.",
+  "type": "module",
+  "main": "./generated/index.ts",
+  "types": "./generated/index.ts",
+  "exports": {
+    ".": "./generated/index.ts",
+    "./openapi.yaml": "./openapi.yaml"
+  },
+  "files": [
+    "openapi.yaml",
+    "generated"
+  ],
+  "scripts": {
+    "lint": "redocly lint openapi.yaml",
+    "generate": "openapi-typescript openapi.yaml -o generated/schema.ts",
+    "build": "pnpm run lint && pnpm run generate",
+    "check": "pnpm run generate && git diff --exit-code generated"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.25.0",
+    "openapi-typescript": "^7.4.0"
+  }
+}

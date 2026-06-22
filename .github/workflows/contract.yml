@@ -1,0 +1,30 @@
+name: contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/api-contract/**"
+      - ".github/workflows/contract.yml"
+  pull_request:
+    paths:
+      - "packages/api-contract/**"
+      - ".github/workflows/contract.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint OpenAPI spec
+        run: pnpm --filter @credresearch/api-client lint
+      - name: Fail if generated client is stale
+        run: pnpm --filter @credresearch/api-client check

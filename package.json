@@ -1,0 +1,12 @@
+{
+  "name": "credresearch",
+  "private": true,
+  "description": "CredResearch monorepo (web + shared packages). Backend & ai-worker live under services/.",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "contract:lint": "pnpm --filter @credresearch/api-client lint",
+    "contract:build": "pnpm --filter @credresearch/api-client build",
+    "web:dev": "pnpm --filter @credresearch/web dev",
+    "web:build": "pnpm --filter @credresearch/web build"
+  }
+}

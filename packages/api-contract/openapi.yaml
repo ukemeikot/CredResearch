@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: CredResearch API
+  version: 0.1.0
+  description: >
+    Source-of-truth contract for the CredResearch REST API. The backend implements this
+    spec; the web app consumes the generated client. Contract-first: an endpoint
+    lives here before either side ships it. Errors use RFC 7807 problem+json.
+servers:
+  - url: http://localhost:18080/api/v1
+    description: Local (docker compose)
+  - url: https://app.credresearch.africa/api/v1
+    description: Production
+paths:
+  /ping:
+    get:
+      operationId: ping
+      summary: Liveness smoke check
+      tags: [system]
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PingResponse"
+components:
+  schemas:
+    PingResponse:
+      type: object
+      required: [status, service]
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: backend
+    Problem:
+      description: RFC 7807 problem+json error body.
+      type: object
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code: { type: string }

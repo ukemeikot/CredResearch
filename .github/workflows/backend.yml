@@ -1,0 +1,26 @@
+name: backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/backend/**"
+      - "packages/api-contract/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    paths:
+      - "services/backend/**"
+      - "packages/api-contract/**"
+      - ".github/workflows/backend.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: gradle:8.10-jdk21
+    defaults:
+      run:
+        working-directory: services/backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit + slice tests, build bootJar
+        run: gradle test bootJar --no-daemon
