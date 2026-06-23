@@ -18,16 +18,51 @@ repositories {
 }
 
 dependencies {
+    // Web / API
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Persistence
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.40'          // RS256 access tokens
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'     // Argon2id encoder backend
+
+    // Cache / rate limiting
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // Email (verification / reset) — MailHog locally
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // UUID v7 (time-ordered) primary keys
+    implementation 'com.fasterxml.uuid:java-uuid-generator:5.1.0'
+
+    // Tests
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
 }
 
+// Default `test` task runs fast unit tests only (no Docker required → CI-friendly).
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+
+// `integrationTest` runs Testcontainers-backed tests locally (requires Docker).
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests (Testcontainers; requires Docker).'
+    group = 'verification'
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    shouldRunAfter tasks.named('test')
 }

@@ -28,6 +28,10 @@ services:
       timeout: 3s
       retries: 15
 
+  mailhog:
+    image: mailhog/mailhog
+    ports: ["1025:1025", "8025:8025"]   # SMTP / web UI
+
   ai-worker:
     build: ../services/ai-worker
     environment:
@@ -53,6 +57,11 @@ services:
       REDIS_URL: redis://redis:6379/0
       INTERNAL_SERVICE_SECRET: change-me-dev-secret
       AI_WORKER_URL: http://ai-worker:8001
+      EMAIL_HOST: mailhog
+      EMAIL_PORT: "1025"
+      EMAIL_FROM: no-reply@credresearch.local
+      APP_BASE_URL: http://localhost:3000
+      # JWT_PRIVATE_KEY / JWT_PUBLIC_KEY unset in dev → ephemeral keypair (see GETTING_STARTED §4).
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }

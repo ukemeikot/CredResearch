@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit auto-reviews PRs targeting `dev` only. PRs into `staging` and `main`
+# (promotion PRs) are not auto-reviewed — code is reviewed once, when it lands on dev.
+language: en-US
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - dev
+chat:
+  auto_reply: true
