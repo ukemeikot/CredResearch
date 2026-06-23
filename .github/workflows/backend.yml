@@ -21,6 +21,6 @@ jobs:
       run:
         working-directory: services/backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Unit + slice tests, build bootJar
         run: gradle test bootJar --no-daemon
