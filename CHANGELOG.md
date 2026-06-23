@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     rotation, throttling, and tenant isolation.
   - Hardening: JWT issuer validation on parse; actuator health details restricted to
     authenticated callers (anonymous sees status only).
+- **Swagger UI / live API docs** (springdoc-openapi) at `/swagger-ui/index.html`, with a Bearer-JWT
+  Authorize button; OpenAPI JSON at `/v3/api-docs`.
 - **CI security**: secret scanning (gitleaks), dependency/config vulnerability scanning (Trivy),
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 

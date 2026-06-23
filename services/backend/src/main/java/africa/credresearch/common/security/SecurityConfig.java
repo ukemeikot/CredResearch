@@ -35,6 +35,9 @@ public class SecurityConfig {
                                 "/api/v1/ping",
                                 "/api/v1/auth/**",
                                 "/api/v1/invitations/accept",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
                                 "/error")
                         .permitAll()
                         .anyRequest().authenticated())
