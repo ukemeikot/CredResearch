@@ -2,6 +2,10 @@ package africa.credresearch.modules.org.interfaces.rest;
 
 import africa.credresearch.modules.org.application.InstitutionService;
 import africa.credresearch.modules.org.domain.model.Institution;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
@@ -16,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/institutions")
+@Tag(name = "Institutions", description = "Institution (tenant) management. Tenant-scoped: "
+        + "non-platform admins may only access their own institution.")
 public class InstitutionController {
 
     private final InstitutionService service;
@@ -38,18 +44,30 @@ public class InstitutionController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('DEPARTMENT_ADMIN','INSTITUTION_ADMIN','PLATFORM_ADMIN')")
+    @Operation(summary = "Get an institution",
+            description = "Roles: DEPARTMENT_ADMIN+. Returns 403 for another tenant's institution.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Institution"),
+            @ApiResponse(responseCode = "403", description = "Cross-tenant access denied", content = @io.swagger.v3.oas.annotations.media.Content()),
+            @ApiResponse(responseCode = "404", description = "Not found", content = @io.swagger.v3.oas.annotations.media.Content())
+    })
     public InstitutionResponse get(@PathVariable UUID id) {
         return InstitutionResponse.from(service.get(id));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @Operation(summary = "Create an institution", description = "Role: PLATFORM_ADMIN only.")
+    @ApiResponse(responseCode = "200", description = "Created institution")
     public InstitutionResponse create(@Valid @RequestBody CreateInstitutionRequest req) {
         return InstitutionResponse.from(service.create(req.name(), req.country(), req.type()));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('INSTITUTION_ADMIN','PLATFORM_ADMIN')")
+    @Operation(summary = "Update an institution",
+            description = "Roles: INSTITUTION_ADMIN (own tenant) or PLATFORM_ADMIN.")
+    @ApiResponse(responseCode = "200", description = "Updated institution")
     public InstitutionResponse update(@PathVariable UUID id, @RequestBody UpdateInstitutionRequest req) {
         return InstitutionResponse.from(service.update(id, req.name(), req.country(), req.type()));
     }

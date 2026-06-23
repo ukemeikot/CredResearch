@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     authenticated callers (anonymous sees status only).
 - **Swagger UI / live API docs** (springdoc-openapi) at `/swagger-ui/index.html`, with a Bearer-JWT
   Authorize button; OpenAPI JSON at `/v3/api-docs`.
+- **Per-endpoint documentation**: every controller annotated with `@Tag`/`@Operation`/`@ApiResponses`
+  (summaries, descriptions, response codes, role requirements) and request-field `@Schema`s; public
+  auth endpoints marked as not requiring a bearer token.
+- CodeRabbit config now on `dev` so it auto-reviews PRs into `dev` (and stays off for staging/main).
 - **CI security**: secret scanning (gitleaks), dependency/config vulnerability scanning (Trivy),
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 
