@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 2 — Project Workspace (backend).** `modules/project` (Clean Architecture): create/list/get/
+  update projects; status lifecycle with a validated state machine + history; members & co-supervisors;
+  milestones; activity feed; dashboard aggregation. `ProjectAccessGuard` enforces tenant **and**
+  membership (FR-PROJ-1..7). Flyway `V4__projects.sql`; `@Scheduled` milestone-reminder sweeper;
+  unit tests (state machine, access guard, project service).
+- **Frontend (Next.js App Router) — initial implementation.** Cosmic dark design system (Tailwind
+  theme, animated canvas starfield, glassmorphism, Space Grotesk display font) with framer-motion
+  microinteractions (button/card hover & tap, page/scroll reveals, animated counters, floating hero
+  orb). Pages: landing, login, register (wired to the live auth API), and an authenticated project
+  **dashboard** (stats + project grid + create-project modal) consuming the Phase 2 `/projects` API.
+  TanStack Query for server state; Zustand for the session; typed fetch client.
 - **Phase 1 — Auth, Roles & Multi-Tenant Base.**
   - Email/password auth: register, login, refresh-token rotation, logout, logout-all, email
     verification, and password reset (`FR-AUTH-1..5`). Passwords hashed with **Argon2id**;
@@ -24,10 +35,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     rotation, throttling, and tenant isolation.
   - Hardening: JWT issuer validation on parse; actuator health details restricted to
     authenticated callers (anonymous sees status only).
+- **Swagger UI / live API docs** (springdoc-openapi) at `/swagger-ui/index.html`, with a Bearer-JWT
+  Authorize button; OpenAPI JSON at `/v3/api-docs`.
+- **Per-endpoint documentation**: every controller annotated with `@Tag`/`@Operation`/`@ApiResponses`
+  (summaries, descriptions, response codes, role requirements) and request-field `@Schema`s; public
+  auth endpoints marked as not requiring a bearer token.
+- CodeRabbit config now on `dev` so it auto-reviews PRs into `dev` (and stays off for staging/main).
 - **CI security**: secret scanning (gitleaks), dependency/config vulnerability scanning (Trivy),
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 
 ### Changed
+- Frontend performance: dropped `background-attachment: fixed`, reduced glass `backdrop-blur`
+  (xl→md), lighter starfield (lower density, pauses when the tab is hidden, capped DPR).
+- Hero "globe" replaced with a real CSS planet (`Globe`): shaded sphere, rotating surface texture,
+  atmosphere glow, sun glint, orbiting moon.
+- Responsive pass: mobile nav menu, always-visible sign-in, fluid hero sizing, `overflow-x` guard,
+  reduced-motion support.
 - Rewrote the root `README.md` to describe the CredResearch product, architecture, and quick start.
 - `docker-compose.yml`: added MailHog; wired backend email + app-base-url env.
 - CI `security` workflow: run Trivy via `ghcr.io/aquasecurity/trivy` (fixes an invalid action version).
