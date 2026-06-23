@@ -7,5 +7,8 @@ RUN pip install --no-cache-dir \
     "fastapi>=0.115" "uvicorn[standard]>=0.30" "pydantic>=2.7" "pydantic-settings>=2.3"
 
 COPY . .
+# Run as a non-root user (defense-in-depth; Trivy DS-0002).
+RUN useradd -r -u 10001 appuser
+USER appuser
 EXPOSE 8001
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
