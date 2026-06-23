@@ -45,6 +45,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 
 ### Changed
+- Frontend performance: dropped `background-attachment: fixed`, reduced glass `backdrop-blur`
+  (xl→md), lighter starfield (lower density, pauses when the tab is hidden, capped DPR).
+- Hero "globe" replaced with a real CSS planet (`Globe`): shaded sphere, rotating surface texture,
+  atmosphere glow, sun glint, orbiting moon.
+- Responsive pass: mobile nav menu, always-visible sign-in, fluid hero sizing, `overflow-x` guard,
+  reduced-motion support.
 - Rewrote the root `README.md` to describe the CredResearch product, architecture, and quick start.
 - `docker-compose.yml`: added MailHog; wired backend email + app-base-url env.
 - CI `security` workflow: run Trivy via `ghcr.io/aquasecurity/trivy` (fixes an invalid action version).

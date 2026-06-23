@@ -15,7 +15,7 @@ export function Starfield() {
     let raf = 0;
     let w = 0;
     let h = 0;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let stars: { x: number; y: number; r: number; a: number; tw: number; vx: number }[] = [];
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -26,7 +26,7 @@ export function Starfield() {
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(180, Math.floor((w * h) / 9000));
+      const count = Math.min(110, Math.floor((w * h) / 15000));
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -54,12 +54,22 @@ export function Starfield() {
       raf = requestAnimationFrame(draw);
     };
 
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+      } else {
+        raf = requestAnimationFrame(draw);
+      }
+    };
+
     resize();
     draw();
     window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

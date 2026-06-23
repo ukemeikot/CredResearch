@@ -4,22 +4,20 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Globe } from "@/components/globe";
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-6 pt-24">
-      {/* Floating cosmic orb */}
+    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-6 pt-28 pb-16">
+      {/* Floating planet */}
       <motion.div
         aria-hidden
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.4, ease: "easeOut" }}
-        className="pointer-events-none absolute top-1/2 left-1/2 -z-[1] h-[clamp(320px,46vw,640px)] w-[clamp(320px,46vw,640px)] -translate-x-1/2 -translate-y-1/2"
+        className="animate-float pointer-events-none absolute top-1/2 left-1/2 -z-[1] w-[min(78vw,540px)] -translate-x-1/2 -translate-y-1/2"
       >
-        <div className="absolute inset-0 animate-float rounded-full bg-[radial-gradient(circle_at_32%_28%,#3a4b8f_0%,#141a3e_45%,#0a0e27_72%)] shadow-[0_0_120px_-10px_rgba(45,226,255,0.5)]" />
-        <div className="absolute inset-0 rounded-full ring-1 ring-white/10" />
-        <div className="absolute right-[12%] top-[14%] h-3 w-3 animate-pulse-glow rounded-full bg-accent" />
-        <div className="absolute inset-[-6%] animate-spin-slow rounded-full border border-dashed border-white/10" />
+        <Globe />
       </motion.div>
 
       <div className="relative mx-auto max-w-3xl text-center">
@@ -36,7 +34,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.32, duration: 0.7 }}
-          className="mt-5 font-display text-6xl leading-[0.95] sm:text-7xl md:text-8xl"
+          className="mt-5 font-display text-5xl leading-[0.95] sm:text-7xl md:text-8xl"
         >
           <span className="font-bold text-white text-glow">RESEARCH!</span>
           <br />
