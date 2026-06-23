@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 2 — Project Workspace (backend).** `modules/project` (Clean Architecture): create/list/get/
+  update projects; status lifecycle with a validated state machine + history; members & co-supervisors;
+  milestones; activity feed; dashboard aggregation. `ProjectAccessGuard` enforces tenant **and**
+  membership (FR-PROJ-1..7). Flyway `V4__projects.sql`; `@Scheduled` milestone-reminder sweeper;
+  unit tests (state machine, access guard, project service).
+- **Frontend (Next.js App Router) — initial implementation.** Cosmic dark design system (Tailwind
+  theme, animated canvas starfield, glassmorphism, Space Grotesk display font) with framer-motion
+  microinteractions (button/card hover & tap, page/scroll reveals, animated counters, floating hero
+  orb). Pages: landing, login, register (wired to the live auth API), and an authenticated project
+  **dashboard** (stats + project grid + create-project modal) consuming the Phase 2 `/projects` API.
+  TanStack Query for server state; Zustand for the session; typed fetch client.
 - **Phase 1 — Auth, Roles & Multi-Tenant Base.**
   - Email/password auth: register, login, refresh-token rotation, logout, logout-all, email
     verification, and password reset (`FR-AUTH-1..5`). Passwords hashed with **Argon2id**;
