@@ -41,7 +41,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
     // UUID v7 (time-ordered) primary keys
-    implementation 'com.fasterxml.uuid:java-uuid-generator:5.1.0'
+    implementation 'com.fasterxml.uuid:java-uuid-generator:5.2.0'
 
     // Tests
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
