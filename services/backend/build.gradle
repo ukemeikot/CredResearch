@@ -31,7 +31,7 @@ dependencies {
 
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.40'          // RS256 access tokens
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.9.1'          // RS256 access tokens
     implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'     // Argon2id encoder backend
 
     // Cache / rate limiting
