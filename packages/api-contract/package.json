@@ -20,7 +20,7 @@
     "check": "pnpm run generate && git diff --exit-code generated"
   },
   "devDependencies": {
-    "@redocly/cli": "^1.25.0",
+    "@redocly/cli": "^2.37.0",
     "openapi-typescript": "^7.4.0"
   }
 }
