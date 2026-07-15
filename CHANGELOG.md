@@ -44,6 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI security**: secret scanning (gitleaks), dependency/config vulnerability scanning (Trivy),
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 
+### Security
+- Bumped Next.js 14.2.15 → 14.2.35 (fixes CVE-2025-29927 middleware auth-bypass + 14.2.x HIGHs).
+  Remaining DoS/SSRF advisories fixed only in Next 15+/16 are tracked in `.trivyignore` for a
+  follow-up Next 15 migration.
+
+### Fixed
+- CI: removed the `pnpm/action-setup` `version:` input that clashed with `packageManager` in
+  `package.json` (ERR_PNPM_BAD_PM_VERSION) in the `web` and `contract` workflows.
+
 ### Changed
 - Frontend performance: dropped `background-attachment: fixed`, reduced glass `backdrop-blur`
   (xl→md), lighter starfield (lower density, pauses when the tab is hidden, capped DPR).

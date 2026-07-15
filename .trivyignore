@@ -1,0 +1,11 @@
+# Accepted (temporarily) — Next.js advisories fixed only in Next 15.5.16+ / 16.x.
+# We are on the 14.2.x line (latest patch 14.2.35), which fixes the CRITICAL
+# middleware auth-bypass (CVE-2025-29927) and the HIGHs fixed within 14.2.x.
+# The remaining items below are DoS / SSRF classes that require a major upgrade to
+# Next 15/16 (and React 19). Tracked as a follow-up migration; not in the MVP threat
+# model (DoS/SSRF against the web tier). Re-evaluate after the Next 15 upgrade.
+CVE-2026-44573
+CVE-2026-44578
+GHSA-8h8q-6873-q5fj
+GHSA-h25m-26qc-wcjf
+GHSA-q4gf-8mx6-v5v3
