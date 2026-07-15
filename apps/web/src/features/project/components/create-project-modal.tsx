@@ -5,39 +5,29 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { api, ApiError, type ProjectSummary } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { useCreateProject } from "../api/use-projects";
 
 const LEVELS = ["UG", "MSc", "PhD"];
 
-export function CreateProjectModal({
-  open,
-  onClose,
-  onCreated,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onCreated: (p: ProjectSummary) => void;
-}) {
+export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const create = useCreateProject();
   const [title, setTitle] = useState("");
   const [level, setLevel] = useState("UG");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
     try {
-      const created = await api.createProject({ title, level });
+      await create.mutateAsync({ title, level });
       setTitle("");
-      onCreated(created);
       onClose();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not create project");
-    } finally {
-      setLoading(false);
+    } catch {
+      /* error surfaced via create.error */
     }
   }
+
+  const error =
+    create.error instanceof ApiError ? create.error.message : create.isError ? "Could not create project" : null;
 
   return (
     <AnimatePresence>
@@ -90,8 +80,8 @@ export function CreateProjectModal({
 
               {error && <p className="text-sm text-rose-400">{error}</p>}
 
-              <Button type="submit" size="lg" className="w-full" disabled={loading || !title}>
-                {loading ? "Creating…" : "Create project"}
+              <Button type="submit" size="lg" className="w-full" disabled={create.isPending || !title}>
+                {create.isPending ? "Creating…" : "Create project"}
               </Button>
             </form>
           </motion.div>

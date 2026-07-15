@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `package.json` (ERR_PNPM_BAD_PM_VERSION) in the `web` and `contract` workflows.
 
 ### Changed
+- Web refactored to feature-sliced clean architecture: data/mutation logic moved out of page files
+  into `features/<feature>/{api,components,model}` (TanStack Query hooks, screen components, pure
+  stat/status helpers); `app/**/page.tsx` are now thin route entries.
 - Frontend performance: dropped `background-attachment: fixed`, reduced glass `backdrop-blur`
   (xl→md), lighter starfield (lower density, pauses when the tab is hidden, capped DPR).
 - Hero "globe" replaced with a real CSS planet (`Globe`): shaded sphere, rotating surface texture,
