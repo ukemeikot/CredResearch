@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Web production image + deploy pipeline**: `apps/web/Dockerfile` (Next standalone, built with a
+  relative `NEXT_PUBLIC_API_BASE_URL`) and `.github/workflows/release.yml` — on push to `main` it
+  builds/pushes the three service images to ECR and triggers the infra repo to sync (gated behind
+  the `DEPLOY_ENABLED` repo variable). Infrastructure lives in the separate `credresearch-infra`
+  Terraform repo (AWS: VM-per-service + RDS + ElastiCache + ALB; GCP scaffolded).
 - **Phase 2 — Project Workspace (backend).** `modules/project` (Clean Architecture): create/list/get/
   update projects; status lifecycle with a validated state machine + history; members & co-supervisors;
   milestones; activity feed; dashboard aggregation. `ProjectAccessGuard` enforces tenant **and**
