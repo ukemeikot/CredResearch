@@ -45,9 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 
 ### Security
-- Bumped Next.js 14.2.15 → 14.2.35 (fixes CVE-2025-29927 middleware auth-bypass + 14.2.x HIGHs).
-  Remaining DoS/SSRF advisories fixed only in Next 15+/16 are tracked in `.trivyignore` for a
-  follow-up Next 15 migration.
+- Upgraded to **Next.js 16.2.10 + React 19** (from 14.2.15). Clears all outstanding Next.js
+  advisories (CVE-2025-29927 auth-bypass and the 15/16-only DoS/SSRF items), so `.trivyignore`
+  was removed. Peers bumped: framer-motion 12, lucide-react latest, `@types/react` 19.
 
 ### Fixed
 - CI: removed the `pnpm/action-setup` `version:` input that clashed with `packageManager` in
