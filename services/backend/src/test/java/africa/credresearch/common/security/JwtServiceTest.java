@@ -19,7 +19,8 @@ class JwtServiceTest {
                         Duration.ofHours(24), "credresearch-test"),
                 new CredResearchProperties.Throttle(5, Duration.ofMinutes(15)),
                 new CredResearchProperties.App("http://localhost:3000"),
-                new CredResearchProperties.Email("no-reply@test.local"));
+                new CredResearchProperties.Email("no-reply@test.local"),
+                new CredResearchProperties.Cors(java.util.List.of("http://localhost:3000")));
     }
 
     @Test
