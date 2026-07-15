@@ -1,11 +1,12 @@
 package africa.credresearch.common.config;
 
 import java.time.Duration;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /** Strongly-typed configuration for the platform, bound from {@code credresearch.*}. */
 @ConfigurationProperties(prefix = "credresearch")
-public record CredResearchProperties(Auth auth, Throttle throttle, App app, Email email) {
+public record CredResearchProperties(Auth auth, Throttle throttle, App app, Email email, Cors cors) {
 
     public record Auth(
             String jwtPrivateKey,
@@ -20,4 +21,6 @@ public record CredResearchProperties(Auth auth, Throttle throttle, App app, Emai
     public record App(String baseUrl) {}
 
     public record Email(String from) {}
+
+    public record Cors(List<String> allowedOrigins) {}
 }

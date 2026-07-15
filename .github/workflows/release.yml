@@ -1,0 +1,52 @@
+name: release
+
+# On push to main: build each service image, push to ECR (tag = git SHA + latest),
+# then tell the infra repo to sync the stack. Gated behind the DEPLOY_ENABLED repo
+# variable so it stays inert until AWS/infra secrets are configured.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-dispatch:
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push images
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          build() {
+            local name="$1" ctx="$2"; shift 2
+            docker build "$ctx" -t "$REGISTRY/credresearch-$name:$SHA" -t "$REGISTRY/credresearch-$name:latest" "$@"
+            docker push "$REGISTRY/credresearch-$name:$SHA"
+            docker push "$REGISTRY/credresearch-$name:latest"
+          }
+          build backend   services/backend
+          build ai-worker services/ai-worker
+          build web       apps/web --build-arg NEXT_PUBLIC_API_BASE_URL=/api/v1
+
+      - name: Trigger infra sync
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_DISPATCH_TOKEN }}
+          repository: ukemeikot/credresearch-infra
+          event-type: deploy
+          client-payload: '{"image_tag": "${{ github.sha }}", "environment": "production"}'

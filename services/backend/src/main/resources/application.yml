@@ -24,9 +24,11 @@ spring:
   mail:
     host: ${EMAIL_HOST:localhost}
     port: ${EMAIL_PORT:1025}
+    username: ${EMAIL_USERNAME:}
+    password: ${EMAIL_PASSWORD:}
     properties:
-      mail.smtp.auth: false
-      mail.smtp.starttls.enable: false
+      mail.smtp.auth: ${EMAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${EMAIL_SMTP_STARTTLS:false}
 
 credresearch:
   auth:
@@ -44,6 +46,9 @@ credresearch:
     login-window: PT15M
   app:
     base-url: ${APP_BASE_URL:http://localhost:3000}
+  cors:
+    # Comma-separated list of allowed browser origins for the SPA.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 management:
   endpoints:

@@ -33,7 +33,8 @@ class LoginThrottleTest {
                     Duration.ofHours(24), "t"),
             new CredResearchProperties.Throttle(3, Duration.ofMinutes(15)),
             new CredResearchProperties.App("http://localhost"),
-            new CredResearchProperties.Email("x@y.z")));
+            new CredResearchProperties.Email("x@y.z"),
+            new CredResearchProperties.Cors(java.util.List.of("http://localhost:3000"))));
 
     @Test
     void blocksAfterMaxFailures() {

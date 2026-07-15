@@ -2,7 +2,8 @@
 FROM gradle:8.10-jdk21 AS build
 WORKDIR /app
 COPY . .
-RUN gradle clean bootJar --no-daemon
+# BuildKit cache mount keeps the Gradle dependency cache across image builds.
+RUN --mount=type=cache,target=/home/gradle/.gradle gradle clean bootJar --no-daemon
 
 # ---- runtime stage ----
 FROM eclipse-temurin:21-jre

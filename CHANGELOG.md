@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Web production image + deploy pipeline**: `apps/web/Dockerfile` (Next standalone, built with a
+  relative `NEXT_PUBLIC_API_BASE_URL`) and `.github/workflows/release.yml` — on push to `main` it
+  builds/pushes the three service images to ECR and triggers the infra repo to sync (gated behind
+  the `DEPLOY_ENABLED` repo variable). Infrastructure lives in the separate `credresearch-infra`
+  Terraform repo (AWS: VM-per-service + RDS + ElastiCache + ALB; GCP scaffolded).
+- **Phase 2 — Project Workspace (backend).** `modules/project` (Clean Architecture): create/list/get/
+  update projects; status lifecycle with a validated state machine + history; members & co-supervisors;
+  milestones; activity feed; dashboard aggregation. `ProjectAccessGuard` enforces tenant **and**
+  membership (FR-PROJ-1..7). Flyway `V4__projects.sql`; `@Scheduled` milestone-reminder sweeper;
+  unit tests (state machine, access guard, project service).
+- **Frontend (Next.js App Router) — initial implementation.** Cosmic dark design system (Tailwind
+  theme, animated canvas starfield, glassmorphism, Space Grotesk display font) with framer-motion
+  microinteractions (button/card hover & tap, page/scroll reveals, animated counters, floating hero
+  orb). Pages: landing, login, register (wired to the live auth API), and an authenticated project
+  **dashboard** (stats + project grid + create-project modal) consuming the Phase 2 `/projects` API.
+  TanStack Query for server state; Zustand for the session; typed fetch client.
 - **Phase 1 — Auth, Roles & Multi-Tenant Base.**
   - Email/password auth: register, login, refresh-token rotation, logout, logout-all, email
     verification, and password reset (`FR-AUTH-1..5`). Passwords hashed with **Argon2id**;
@@ -33,7 +49,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CI security**: secret scanning (gitleaks), dependency/config vulnerability scanning (Trivy),
   Dependabot (gradle/pip/npm/actions/docker), and a changelog-required check on every PR.
 
+### Security
+- Upgraded to **Next.js 16.2.10 + React 19** (from 14.2.15). Clears all outstanding Next.js
+  advisories (CVE-2025-29927 auth-bypass and the 15/16-only DoS/SSRF items), so `.trivyignore`
+  was removed. Peers bumped: framer-motion 12, lucide-react latest, `@types/react` 19.
+
+### Fixed
+- **CORS**: backend now allows the web-app origin (configurable via `CORS_ALLOWED_ORIGINS`,
+  default `http://localhost:3000`) and handles preflight `OPTIONS` — the browser SPA could not
+  call the API before (403 on preflight).
+- CI: removed the `pnpm/action-setup` `version:` input that clashed with `packageManager` in
+  `package.json` (ERR_PNPM_BAD_PM_VERSION) in the `web` and `contract` workflows.
+- Backend Docker image build uses a BuildKit cache mount for the Gradle cache (faster rebuilds).
+
 ### Changed
+- Web refactored to feature-sliced clean architecture: data/mutation logic moved out of page files
+  into `features/<feature>/{api,components,model}` (TanStack Query hooks, screen components, pure
+  stat/status helpers); `app/**/page.tsx` are now thin route entries.
+- Frontend performance: dropped `background-attachment: fixed`, reduced glass `backdrop-blur`
+  (xl→md), lighter starfield (lower density, pauses when the tab is hidden, capped DPR).
+- Hero "globe" replaced with a real CSS planet (`Globe`): shaded sphere, rotating surface texture,
+  atmosphere glow, sun glint, orbiting moon.
+- Responsive pass: mobile nav menu, always-visible sign-in, fluid hero sizing, `overflow-x` guard,
+  reduced-motion support.
 - Rewrote the root `README.md` to describe the CredResearch product, architecture, and quick start.
 - `docker-compose.yml`: added MailHog; wired backend email + app-base-url env.
 - CI `security` workflow: run Trivy via `ghcr.io/aquasecurity/trivy` (fixes an invalid action version).
