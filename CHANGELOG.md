@@ -50,8 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was removed. Peers bumped: framer-motion 12, lucide-react latest, `@types/react` 19.
 
 ### Fixed
+- **CORS**: backend now allows the web-app origin (configurable via `CORS_ALLOWED_ORIGINS`,
+  default `http://localhost:3000`) and handles preflight `OPTIONS` — the browser SPA could not
+  call the API before (403 on preflight).
 - CI: removed the `pnpm/action-setup` `version:` input that clashed with `packageManager` in
   `package.json` (ERR_PNPM_BAD_PM_VERSION) in the `web` and `contract` workflows.
+- Backend Docker image build uses a BuildKit cache mount for the Gradle cache (faster rebuilds).
 
 ### Changed
 - Web refactored to feature-sliced clean architecture: data/mutation logic moved out of page files

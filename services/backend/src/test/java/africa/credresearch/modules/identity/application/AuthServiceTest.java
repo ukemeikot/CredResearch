@@ -62,7 +62,8 @@ class AuthServiceTest {
                         Duration.ofHours(24), "credresearch"),
                 new CredResearchProperties.Throttle(5, Duration.ofMinutes(15)),
                 new CredResearchProperties.App("http://localhost:3000"),
-                new CredResearchProperties.Email("no-reply@test.local"));
+                new CredResearchProperties.Email("no-reply@test.local"),
+                new CredResearchProperties.Cors(java.util.List.of("http://localhost:3000")));
         service = new AuthService(users, roles, refreshTokens, authTokens, encoder, jwtService,
                 throttle, notifications, orgProvisioning, audit, props);
     }
