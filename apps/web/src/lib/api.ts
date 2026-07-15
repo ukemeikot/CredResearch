@@ -1,4 +1,4 @@
-import { getAccessToken } from "./auth-store";
+import { useAuth } from "./auth-store";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:18080/api/v1";
@@ -13,8 +13,36 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getAccessToken();
+/** Exchange the refresh token for a fresh session. Returns true on success. */
+async function tryRefresh(): Promise<boolean> {
+  const refreshToken = useAuth.getState().refreshToken;
+  if (!refreshToken) return false;
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      useAuth.getState().clear();
+      return false;
+    }
+    const data = (await res.json()) as TokenResponse;
+    useAuth.getState().setSession({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      user: data.user,
+    });
+    return true;
+  } catch {
+    useAuth.getState().clear();
+    return false;
+  }
+}
+
+async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+  const token = useAuth.getState().accessToken;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -24,6 +52,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     },
     cache: "no-store",
   });
+
+  // Access token expired → refresh once and retry (never for /auth/* endpoints).
+  if (res.status === 401 && retry && !path.startsWith("/auth/")) {
+    if (await tryRefresh()) return request<T>(path, init, false);
+  }
 
   if (res.status === 204) return undefined as T;
 
@@ -51,6 +84,12 @@ export const api = {
 
   login: (b: { email: string; password: string }) =>
     request<TokenResponse>("/auth/login", { method: "POST", body: JSON.stringify(b) }),
+
+  verifyEmail: (token: string) =>
+    request<{ message: string }>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
 
   me: () =>
     request<{
