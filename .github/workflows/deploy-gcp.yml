@@ -1,0 +1,66 @@
+name: deploy-gcp
+
+# Branch → environment:
+#   push to `staging` → deploys the STAGING GCP env
+#   push to `main`    → deploys the PRODUCTION GCP env
+# Auth is keyless via Workload Identity Federation (no stored key).
+# Gated behind the GCP_DEPLOY_ENABLED repo variable.
+on:
+  push:
+    branches: [staging, main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "staging | production"
+        default: staging
+
+permissions:
+  contents: read
+  id-token: write # required for Workload Identity Federation
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ vars.GCP_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: xental-501115
+      REGION: europe-west1
+      ZONE: europe-west1-b
+      REGISTRY: europe-west1-docker.pkg.dev/xental-501115/credresearch
+      ENVIRONMENT: ${{ github.event.inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/907872692877/locations/global/workloadIdentityPools/github/providers/github-oidc
+          service_account: ci-deployer@xental-501115.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build & push images (tag = git SHA + latest)
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          for svc in backend ai-worker web; do
+            ctx="services/$svc"; [ "$svc" = "web" ] && ctx="apps/web"
+            docker build -t "$REGISTRY/$svc:$SHA" -t "$REGISTRY/$svc:latest" "$ctx"
+            docker push "$REGISTRY/$svc:$SHA"
+            docker push "$REGISTRY/$svc:latest"
+          done
+
+      - name: Roll ${{ env.ENVIRONMENT }} VMs onto the new image
+        run: |
+          set -euo pipefail
+          for svc in web backend ai-worker; do
+            gcloud compute instances reset "credresearch-${ENVIRONMENT}-${svc}" \
+              --zone "$ZONE" --project "$PROJECT"
+          done
