@@ -29,10 +29,10 @@ export function VerifyEmailScreen() {
     api
       .verifyEmail(token)
       .then(() => setState("success"))
-      .catch((e) =>
-        setState("error") ||
-        setMessage(e instanceof ApiError ? e.message : "Verification failed."),
-      );
+      .catch((e) => {
+        setState("error");
+        setMessage(e instanceof ApiError ? e.message : "Verification failed.");
+      });
   }, [token]);
 
   return (
