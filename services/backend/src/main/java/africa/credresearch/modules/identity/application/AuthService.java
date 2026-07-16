@@ -71,7 +71,8 @@ public class AuthService {
                 roles.assignRoleToUser(created.id(), roleId, institutionId));
 
         issueAndSendEmailToken(created, AuthTokenRepository.Type.EMAIL_VERIFY,
-                "Verify your CredResearch email", "/verify-email");
+                "Verify your CredResearch email", "/verify-email", "Verify email",
+                "Confirm your email address to activate your CredResearch account.");
 
         audit.record("USER_REGISTERED", "user", created.id(), institutionId, created.id(), null, ip);
         return created.id();
@@ -141,7 +142,8 @@ public class AuthService {
         users.findByEmail(email).ifPresent(user -> {
             authTokens.invalidateAllForUser(user.id(), AuthTokenRepository.Type.PASSWORD_RESET);
             issueAndSendEmailToken(user, AuthTokenRepository.Type.PASSWORD_RESET,
-                    "Reset your CredResearch password", "/reset-password");
+                    "Reset your CredResearch password", "/reset-password", "Reset password",
+                    "We received a request to reset your password. Click below to choose a new one.");
         });
     }
 
@@ -174,13 +176,33 @@ public class AuthService {
     }
 
     private void issueAndSendEmailToken(User user, AuthTokenRepository.Type type,
-                                        String subject, String path) {
+                                        String subject, String path, String buttonLabel, String intro) {
         String raw = TokenHasher.randomToken();
         Instant expiresAt = Instant.now().plus(props.auth().emailTokenTtl());
         authTokens.store(user.id(), type, TokenHasher.sha256(raw), expiresAt);
         String link = props.app().baseUrl() + path + "?token=" + raw;
-        notifications.sendEmail(user.email(), subject,
-                "Hello " + (user.fullName() == null ? "" : user.fullName())
-                        + ",\n\nUse this link: " + link + "\n\nThis link expires soon.");
+        String name = (user.fullName() == null || user.fullName().isBlank()) ? "there" : user.fullName();
+        notifications.sendEmail(user.email(), subject, emailHtml(name, intro, buttonLabel, link));
+    }
+
+    /** Branded HTML email; the action link is only in the button's href (not shown as text). */
+    private static String emailHtml(String name, String intro, String buttonLabel, String link) {
+        return """
+                <div style="font-family:Arial,Helvetica,sans-serif;background:#f4f6fb;padding:32px">
+                  <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;border:1px solid #e5e9f2">
+                    <h1 style="margin:0 0 12px;color:#0b1026;font-size:20px">CredResearch</h1>
+                    <p style="color:#334155;font-size:15px;margin:0 0 6px">Hello %s,</p>
+                    <p style="color:#334155;font-size:15px;line-height:1.5;margin:0">%s</p>
+                    <p style="text-align:center;margin:28px 0">
+                      <a href="%s" style="background:#2563eb;color:#ffffff;text-decoration:none;padding:13px 32px;border-radius:8px;display:inline-block;font-weight:bold;font-size:15px">%s</a>
+                    </p>
+                    <p style="color:#94a3b8;font-size:12px;line-height:1.5;margin:0">This link expires soon. If you didn't request this, you can safely ignore this email.</p>
+                  </div>
+                </div>
+                """.formatted(escapeHtml(name), escapeHtml(intro), link, escapeHtml(buttonLabel));
+    }
+
+    private static String escapeHtml(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }

@@ -3,6 +3,9 @@ package africa.credresearch.modules.identity.interfaces.rest;
 import africa.credresearch.common.tenant.TenantContextHolder;
 import africa.credresearch.modules.identity.application.ProfileService;
 import africa.credresearch.modules.identity.domain.model.User;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@Tag(name = "Users", description = "Current user's profile. Requires a bearer token.")
 public class UserController {
 
     private final ProfileService profileService;
@@ -35,12 +39,17 @@ public class UserController {
                                        String fieldOfStudy, String orcid) {}
 
     @GetMapping("/me")
+    @Operation(summary = "Get my profile", description = "Returns the authenticated user's profile and roles.")
+    @ApiResponse(responseCode = "200", description = "Current profile")
     public ProfileResponse me() {
         Set<String> roles = TenantContextHolder.require().roles();
         return ProfileResponse.from(profileService.currentUser(), roles);
     }
 
     @PatchMapping("/me")
+    @Operation(summary = "Update my profile",
+            description = "Updates name and academic fields only. Null fields are left unchanged.")
+    @ApiResponse(responseCode = "200", description = "Updated profile")
     public ProfileResponse updateMe(@RequestBody UpdateProfileRequest req) {
         Set<String> roles = TenantContextHolder.require().roles();
         User updated = profileService.updateCurrent(

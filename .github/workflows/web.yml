@@ -1,18 +1,15 @@
 name: web
 
-# Activates once apps/web is initialized (has its own package.json). Path-filtered
-# so backend/worker-only changes never trigger a web build, and vice versa.
+# Path-filtered: only runs for web/package changes.
 on:
   push:
     branches: [main]
     paths:
       - "apps/web/**"
-      - "packages/**"
       - ".github/workflows/web.yml"
   pull_request:
     paths:
       - "apps/web/**"
-      - "packages/**"
       - ".github/workflows/web.yml"
 
 jobs:
@@ -21,14 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Generate API client from contract
-        run: pnpm --filter @credresearch/api-client build
-      - name: Lint + build web
-        run: pnpm --filter @credresearch/web lint build
+      # next build runs type-checking; ESLint is ignored during build (next.config.mjs).
+      # (`next lint` was removed in Next 16, so it's not used here.)
+      - name: Build web
+        run: pnpm --filter @credresearch/web build

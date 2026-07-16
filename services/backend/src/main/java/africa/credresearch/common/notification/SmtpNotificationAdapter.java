@@ -1,13 +1,14 @@
 package africa.credresearch.common.notification;
 
 import africa.credresearch.common.config.CredResearchProperties;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-/** Sends mail via SMTP (MailHog locally). Failures are logged, not fatal to the request flow. */
+/** Sends HTML mail via SMTP (Resend in cloud, MailHog locally). Failures are logged, not fatal. */
 @Component
 public class SmtpNotificationAdapter implements NotificationPort {
 
@@ -22,13 +23,14 @@ public class SmtpNotificationAdapter implements NotificationPort {
     }
 
     @Override
-    public void sendEmail(String to, String subject, String body) {
+    public void sendEmail(String to, String subject, String htmlBody) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(props.email().from());
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            helper.setFrom(props.email().from());
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true); // true = HTML
             mailSender.send(message);
         } catch (Exception e) {
             log.warn("Failed to send email to {} ({})", to, subject, e);
