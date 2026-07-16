@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 4 — AI Research Assistant (v1).** The FastAPI worker now exposes AI features behind a
+  provider-agnostic LLM gateway: **topic generator + feasibility**, **aim/objectives/research
+  questions/hypotheses**, **problem-statement refinement**, **section drafting assistant**, and the
+  **research alignment engine** — all returning validated JSON. The gateway targets a self-hosted
+  open model (Ollama) via `LLM_BASE_URL`, and falls back to a deterministic stub when no model is
+  wired, so the whole feature works end-to-end offline (graceful degradation, NFR-AVAIL-5). The Java
+  backend proxies `/api/v1/ai/*` to the private worker (shared-secret; verified-email gate,
+  FR-AUTH-1). Frontend: an **AI assist** control in the section editor that drafts/improves the
+  current section and inserts the result. (Self-hosted Ollama VM, per-plan credits, and
+  disclosure-ledger writes follow as the next increments.)
 - **Editable document structure.** The project owner can now restructure a document from the
   outline — add a section, rename its heading, reorder (move up/down), and delete a section (with
   its version history). Owner-gated section CRUD (`POST/PATCH/DELETE /documents/{id}/sections`).
