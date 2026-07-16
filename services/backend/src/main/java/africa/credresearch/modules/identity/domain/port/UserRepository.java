@@ -22,6 +22,9 @@ public interface UserRepository {
 
     void updateStatus(UUID userId, String status);
 
+    /** Reassigns the user to another institution (tenant) — used by institution onboarding. */
+    void updateInstitution(UUID userId, UUID institutionId);
+
     void updateProfile(UUID userId, String fullName, String academicLevel, String fieldOfStudy, String orcid);
 
     /** Tenant-scoped listing — never returns users outside {@code institutionId} (FR-TEN-1). */

@@ -21,4 +21,11 @@ public class OrgProvisioningService implements OrgProvisioning {
                 new Institution(null, name, null, "personal", true, "active"));
         return created.id();
     }
+
+    @Override
+    public UUID createInstitution(String name, String country, String type) {
+        Institution created = institutions.create(new Institution(null, name, country,
+                type == null || type.isBlank() ? "university" : type, false, "active"));
+        return created.id();
+    }
 }
