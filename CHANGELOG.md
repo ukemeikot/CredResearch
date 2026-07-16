@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Resilient DB migrations on rolling deploys.** A rolling replace interrupted mid-migration could
+  leave the schema-history half-applied (object created, history row not finalised), then crash-loop
+  the new backend on "relation already exists". Migrations are now idempotent (`IF NOT EXISTS` +
+  guarded seeds) and a repair-then-migrate strategy realigns/repairs history on startup, so
+  first-deploy migrations self-heal instead of needing manual DB surgery. The deploy also now waits
+  for the MIG to become healthy, failing loudly rather than silently serving the old image.
+
 ### Added
 - **Phase 3 — Template & Document Builder.** New `document` module (Clean Architecture): global
   UG/MSc/PhD templates with ordered sections + format rules (seeded); create a document from a

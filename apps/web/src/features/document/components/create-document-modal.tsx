@@ -6,6 +6,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { Portal } from "@/components/ui/portal";
 import { ApiError } from "@/lib/api";
 import { useCreateDocument, useTemplates } from "../api/use-documents";
 
@@ -40,6 +41,7 @@ export function CreateDocumentModal({
   const error = create.error instanceof ApiError ? create.error.message : null;
 
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -113,5 +115,6 @@ export function CreateDocumentModal({
         </motion.div>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }

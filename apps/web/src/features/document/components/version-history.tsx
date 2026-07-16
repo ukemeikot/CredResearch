@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Portal } from "@/components/ui/portal";
 import { useRestoreSection, useSectionVersions } from "../api/use-documents";
 
 export function VersionHistory({
@@ -30,6 +31,7 @@ export function VersionHistory({
   const items = versions.data ?? [];
 
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -85,5 +87,6 @@ export function VersionHistory({
         </motion.div>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }
