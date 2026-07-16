@@ -38,7 +38,8 @@ class LlmGateway:
             ],
             "stream": False,
             "format": "json",
-            "options": {"temperature": 0.4},
+            "keep_alive": "30m",  # keep the model resident so requests don't pay reload cost
+            "options": {"temperature": 0.3, "num_predict": self._s.llm_max_tokens},
         }
         try:
             with httpx.Client(timeout=self._s.llm_timeout_seconds) as client:

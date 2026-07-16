@@ -2,7 +2,10 @@ package africa.credresearch.modules.ai.infrastructure;
 
 import africa.credresearch.common.error.ApiException;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;
+import org.springframework.boot.web.client.ClientHttpRequestFactories;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -20,7 +23,15 @@ public class AiWorkerClient {
 
     public AiWorkerClient(@Value("${credresearch.ai.worker-url}") String workerUrl,
                           @Value("${credresearch.ai.internal-secret:}") String internalSecret) {
-        this.client = RestClient.builder().baseUrl(workerUrl).build();
+        // Generous read timeout: self-hosted CPU inference can take tens of seconds, and a valid
+        // slow generation must not be turned into a spurious 503.
+        var settings = ClientHttpRequestFactorySettings.DEFAULTS
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(Duration.ofSeconds(180));
+        this.client = RestClient.builder()
+                .requestFactory(ClientHttpRequestFactories.get(settings))
+                .baseUrl(workerUrl)
+                .build();
         this.internalSecret = internalSecret;
     }
 
@@ -34,6 +45,8 @@ public class AiWorkerClient {
                     .retrieve()
                     .body(JsonNode.class);
         } catch (RestClientException e) {
+            org.slf4j.LoggerFactory.getLogger(AiWorkerClient.class)
+                    .warn("AI worker call to /ai/{} failed: {}", path, e.toString());
             throw ApiException.serviceUnavailable("AI_UNAVAILABLE",
                     "The AI service is temporarily unavailable. Please try again shortly.");
         }
