@@ -16,8 +16,11 @@ import {
   ListOrdered,
   Loader2,
   Quote,
+  Sparkles,
 } from "lucide-react";
-import type { DocSection } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { ApiError, type DocSection } from "@/lib/api";
+import { useSectionAssist } from "../api/use-ai";
 import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
 
 const AUTOSAVE_DELAY = 1200;
@@ -34,12 +37,15 @@ export function SectionEditor({
   onOpenHistory: () => void;
 }) {
   const { status, save } = useSectionAutosave(docId, section);
+  const assist = useSectionAssist();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<unknown>(null); // most recent editor JSON (may be un-flushed)
   const dirty = useRef(false);
   const saveRef = useRef(save);
   saveRef.current = save;
   const [, force] = useState(0);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [instruction, setInstruction] = useState("");
 
   // Prefer locally-buffered offline edits over the (possibly older) server content.
   const initialContent = (readSectionBuffer(section.id) ?? section.content ?? "") as Content;
@@ -80,6 +86,29 @@ export function SectionEditor({
     };
   }, []);
 
+  async function runAssist() {
+    if (!editor) return;
+    try {
+      const res = await assist.mutateAsync({
+        heading: section.heading,
+        current_text: editor.getText(),
+        instruction: instruction.trim() || "Draft or improve this section.",
+      });
+      const html = res.suggestion
+        .split(/\n{2,}/)
+        .filter(Boolean)
+        .map((p) => `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`)
+        .join("");
+      editor.chain().focus().insertContent(html).run();
+      setAiOpen(false);
+      setInstruction("");
+    } catch {
+      /* surfaced via assist.error */
+    }
+  }
+
+  const aiError = assist.error instanceof ApiError ? assist.error.message : null;
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -114,6 +143,39 @@ export function SectionEditor({
       )}
 
       {editor && <Toolbar editor={editor} />}
+
+      <div className="mt-2">
+        {!aiOpen ? (
+          <button
+            onClick={() => setAiOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-3 py-1.5 text-xs text-accent transition-colors hover:bg-accent/10"
+          >
+            <Sparkles size={13} /> AI assist
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-2">
+            <Sparkles size={14} className="ml-1 shrink-0 text-accent" />
+            <input
+              autoFocus
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") runAssist();
+                if (e.key === "Escape") setAiOpen(false);
+              }}
+              placeholder="Draft this section, make it more concise, add examples…"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white outline-none"
+            />
+            <Button size="sm" onClick={runAssist} disabled={assist.isPending}>
+              {assist.isPending ? "Generating…" : "Generate"}
+            </Button>
+            <button onClick={() => setAiOpen(false)} className="px-1 text-xs text-slate-400 hover:text-white">
+              Cancel
+            </button>
+          </div>
+        )}
+        {aiError && <p className="mt-1 text-xs text-rose-400">{aiError}</p>}
+      </div>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <EditorContent editor={editor} />

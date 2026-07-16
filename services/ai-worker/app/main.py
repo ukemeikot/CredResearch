@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.interfaces.routers import health
+from app.interfaces.routers import ai, health
 
 
 def create_app() -> FastAPI:
@@ -8,6 +8,7 @@ def create_app() -> FastAPI:
     domain logic stay framework-agnostic per app/ARCHITECTURE.md."""
     app = FastAPI(title="CredResearch AI Worker", version="0.1.0")
     app.include_router(health.router)
+    app.include_router(ai.router)
     return app
 
 
