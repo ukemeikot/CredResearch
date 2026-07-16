@@ -1,11 +1,25 @@
-"""AI feature request/response contracts (Phase 4). Outputs are validated JSON (FR-AI)."""
+"""AI feature request/response contracts (Phase 4). Outputs are validated JSON (FR-AI).
 
-from typing import Literal
+Response models are intentionally lenient (extra fields ignored, generous defaults, string enums
+normalised) so a small self-hosted model's slightly-off JSON is accepted and coerced rather than
+rejected into the stub. Requests stay strict."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-Feasibility = Literal["LOW", "MEDIUM", "HIGH"]
-Severity = Literal["LOW", "MEDIUM", "HIGH"]
+# Accepted as free text but normalised to LOW/MEDIUM/HIGH; unknown values fall back to MEDIUM.
+Feasibility = str
+Severity = str
+
+
+def _norm_level(v: object) -> str:
+    s = str(v).strip().upper()
+    return s if s in {"LOW", "MEDIUM", "HIGH"} else "MEDIUM"
+
+
+class _Lenient(BaseModel):
+    """Base for AI outputs: ignore unexpected fields the model may add."""
+
+    model_config = ConfigDict(extra="ignore")
 
 
 # ── Topic generator + feasibility ────────────────────────────────────────────
@@ -15,15 +29,17 @@ class TopicRequest(BaseModel):
     level: str = "UG"  # UG | MSc | PhD
 
 
-class TopicIdea(BaseModel):
-    title: str
-    rationale: str
+class TopicIdea(_Lenient):
+    title: str = ""
+    rationale: str = ""
     feasibility: Feasibility = "MEDIUM"
     suggested_methods: list[str] = Field(default_factory=list)
 
+    _nf = field_validator("feasibility", mode="before")(lambda v: _norm_level(v))
 
-class TopicResponse(BaseModel):
-    topics: list[TopicIdea]
+
+class TopicResponse(_Lenient):
+    topics: list[TopicIdea] = Field(default_factory=list)
 
 
 # ── Objectives / research questions / hypotheses ─────────────────────────────
@@ -33,10 +49,10 @@ class ObjectivesRequest(BaseModel):
     level: str = "UG"
 
 
-class ObjectivesResponse(BaseModel):
-    aim: str
-    objectives: list[str]
-    research_questions: list[str]
+class ObjectivesResponse(_Lenient):
+    aim: str = ""
+    objectives: list[str] = Field(default_factory=list)
+    research_questions: list[str] = Field(default_factory=list)
     hypotheses: list[str] = Field(default_factory=list)
 
 
@@ -46,9 +62,9 @@ class ProblemStatementRequest(BaseModel):
     context: str = ""
 
 
-class ProblemStatementResponse(BaseModel):
-    problem_statement: str
-    significance: str
+class ProblemStatementResponse(_Lenient):
+    problem_statement: str = ""
+    significance: str = ""
 
 
 # ── Section assistant (proposal / methodology / general drafting) ────────────
@@ -59,8 +75,8 @@ class SectionAssistRequest(BaseModel):
     instruction: str = "Draft or improve this section."
 
 
-class SectionAssistResponse(BaseModel):
-    suggestion: str
+class SectionAssistResponse(_Lenient):
+    suggestion: str = ""
     notes: list[str] = Field(default_factory=list)
 
 
@@ -77,14 +93,24 @@ class AlignmentRequest(BaseModel):
     sections: list[AlignmentSection] = Field(default_factory=list)
 
 
-class AlignmentFinding(BaseModel):
-    area: str
-    issue: str
-    suggestion: str
+class AlignmentFinding(_Lenient):
+    area: str = ""
+    issue: str = ""
+    suggestion: str = ""
     severity: Severity = "MEDIUM"
 
+    _ns = field_validator("severity", mode="before")(lambda v: _norm_level(v))
 
-class AlignmentResponse(BaseModel):
-    overall_score: int = Field(ge=0, le=100)
-    summary: str
-    findings: list[AlignmentFinding]
+
+class AlignmentResponse(_Lenient):
+    overall_score: int = 60
+    summary: str = ""
+    findings: list[AlignmentFinding] = Field(default_factory=list)
+
+    @field_validator("overall_score", mode="before")
+    @classmethod
+    def _clamp(cls, v: object) -> int:
+        try:
+            return max(0, min(100, int(float(v))))
+        except (TypeError, ValueError):
+            return 60

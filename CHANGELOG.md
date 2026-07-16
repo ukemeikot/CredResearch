@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Lenient AI output schemas** — a small self-hosted model's slightly-off JSON is coerced/accepted (normalised enums, generous defaults, extra fields ignored) instead of falling back to the stub.
 - **AI worker tuning + resilience.** Bounded generation length (`num_predict`) and a warm
   keep-alive for the self-hosted model, a generous backend read timeout so slow CPU inferences
   aren't turned into spurious 503s, and diagnostic logging on AI-worker call failures.
