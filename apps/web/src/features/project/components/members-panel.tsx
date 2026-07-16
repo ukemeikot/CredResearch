@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, UserRound } from "lucide-react";
+import { MailPlus, Trash2, UserRound, X } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { useMe } from "@/features/user/api/use-me";
 import { ApiError, type ProjectMember, type ProjectMemberRole } from "@/lib/api";
-import { useAddMember, useRemoveMember } from "../api/use-projects";
+import { useRemoveMember } from "../api/use-projects";
+import { useInvitations, useInvite, useRevokeInvite } from "../api/use-invitations";
 
-const ADDABLE_ROLES: ProjectMemberRole[] = ["SUPERVISOR", "CONSULTANT", "VIEWER"];
+const INVITE_ROLES: ProjectMemberRole[] = ["SUPERVISOR", "CONSULTANT", "VIEWER"];
 
 export function MembersPanel({
   id,
@@ -23,26 +24,29 @@ export function MembersPanel({
   isOwner: boolean;
 }) {
   const me = useMe();
-  const add = useAddMember(id);
   const remove = useRemoveMember(id);
+  const invite = useInvite(id);
+  const revoke = useRevokeInvite(id);
+  const invitations = useInvitations(id, isOwner);
   const [open, setOpen] = useState(false);
-  const [userId, setUserId] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState<ProjectMemberRole>("SUPERVISOR");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await add.mutateAsync({ userId: userId.trim(), role });
-      setUserId("");
+      await invite.mutateAsync({ email: email.trim(), role });
+      setEmail("");
       setOpen(false);
     } catch {
-      /* surfaced via add.error */
+      /* surfaced via invite.error */
     }
   }
 
+  const pending = invitations.data ?? [];
   const error =
-    add.error instanceof ApiError
-      ? add.error.message
+    invite.error instanceof ApiError
+      ? invite.error.message
       : remove.error instanceof ApiError
         ? remove.error.message
         : null;
@@ -56,7 +60,7 @@ export function MembersPanel({
             onClick={() => setOpen(true)}
             className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-soft"
           >
-            <Plus size={14} /> Add member
+            <MailPlus size={14} /> Invite
           </button>
         )}
       </div>
@@ -96,21 +100,49 @@ export function MembersPanel({
         })}
       </ul>
 
+      {/* Pending invitations (owner only) */}
+      {isOwner && pending.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">Pending invites</p>
+          <ul className="space-y-2">
+            {pending.map((inv) => (
+              <li
+                key={inv.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-white/10 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-xs text-slate-300">{inv.email}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-slate-500">{inv.role} · invited</p>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => revoke.mutate(inv.id)}
+                    disabled={revoke.isPending}
+                    className="text-slate-500 transition-colors hover:text-rose-400 disabled:opacity-40"
+                    aria-label="Revoke invitation"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {open && (
         <form onSubmit={submit} className="mt-4 space-y-3 border-t border-white/10 pt-4">
           <Field
-            label="User ID"
-            type="text"
-            value={userId}
-            onChange={setUserId}
-            placeholder="UUID of the user to add"
+            label="Invite by email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="colleague@university.edu"
           />
           <label className="block">
-            <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">
-              Role
-            </span>
+            <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Role</span>
             <div className="flex gap-2">
-              {ADDABLE_ROLES.map((r) => (
+              {INVITE_ROLES.map((r) => (
                 <button
                   type="button"
                   key={r}
@@ -128,8 +160,8 @@ export function MembersPanel({
           </label>
           {error && <p className="text-sm text-rose-400">{error}</p>}
           <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={add.isPending || !userId.trim()}>
-              {add.isPending ? "Adding…" : "Add"}
+            <Button type="submit" size="sm" disabled={invite.isPending || !email.trim()}>
+              {invite.isPending ? "Sending…" : "Send invite"}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
               Cancel

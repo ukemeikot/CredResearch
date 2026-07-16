@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 3 — Template & Document Builder.** New `document` module (Clean Architecture): global
+  UG/MSc/PhD templates with ordered sections + format rules (seeded); create a document from a
+  template (instantiates its sections); per-section rich-text editing (Tiptap/ProseMirror JSON)
+  with **optimistic-lock autosave** (409 on conflict), **offline buffering** with reconnect flush,
+  and **per-section version history + restore** (FR-TMPL-1/2/3, FR-DOC-1..5). Flyway `V5__documents.sql`.
+  Frontend: `/projects/[id]/documents/[docId]` editor with section nav, toolbar, save/offline/conflict
+  indicators, template picker, and a Documents panel in the project workspace.
+- **Team invitations by email.** Adding a member is now an email invite (tokenized magic-link),
+  not a raw user id: `POST /projects/{id}/invitations`, pending list, revoke, and `POST
+  /invitations/accept`. Flyway `V6__invitations.sql`. Acceptance is intra-institution (preserves
+  tenant isolation). Frontend: invite-by-email UI, pending invites, and an `/invite/accept` page.
+- **Institution onboarding.** A signed-in user can create an institution from Settings and become
+  its INSTITUTION_ADMIN (`POST /onboarding/institution`), unlocking institution + department
+  management. The client refreshes its session afterward to pick up the new tenant + role.
 - **Frontend — full API integration.** The web app now consumes every backend endpoint. New
   **project workspace** at `/projects/[id]` (dashboard stats, milestones, team members with
   add/remove, activity feed, lifecycle status transitions honouring the server state machine, and

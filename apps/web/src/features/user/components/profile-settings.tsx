@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { DepartmentsSection } from "@/features/org/components/departments-section";
 import { InstitutionSection } from "@/features/org/components/institution-section";
+import { OnboardInstitutionCard } from "@/features/org/components/onboard-institution-card";
 import { ApiError, type Profile } from "@/lib/api";
 import { useMe } from "../api/use-me";
 import { useUpdateProfile } from "../api/use-update-profile";
@@ -43,8 +44,14 @@ export function ProfileSettings() {
 
       <ProfileForm profile={profile} />
 
-      {isOrgAdmin && <InstitutionSection institutionId={profile.institutionId} canEdit={canEditInstitution} />}
-      {isOrgAdmin && <DepartmentsSection canCreate={roles.includes("INSTITUTION_ADMIN")} />}
+      {isOrgAdmin ? (
+        <>
+          <InstitutionSection institutionId={profile.institutionId} canEdit={canEditInstitution} />
+          <DepartmentsSection canCreate={roles.includes("INSTITUTION_ADMIN")} />
+        </>
+      ) : (
+        <OnboardInstitutionCard />
+      )}
     </div>
   );
 }

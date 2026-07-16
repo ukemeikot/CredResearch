@@ -1,0 +1,154 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { EditorContent, useEditor, type Content } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import {
+  AlertTriangle,
+  Bold,
+  Check,
+  CloudOff,
+  Heading2,
+  Heading3,
+  History,
+  Italic,
+  List,
+  ListOrdered,
+  Loader2,
+  Quote,
+} from "lucide-react";
+import type { DocSection } from "@/lib/api";
+import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
+
+const AUTOSAVE_DELAY = 1200;
+
+export function SectionEditor({
+  docId,
+  section,
+  onReload,
+  onOpenHistory,
+}: {
+  docId: string;
+  section: DocSection;
+  onReload: () => void;
+  onOpenHistory: () => void;
+}) {
+  const { status, save } = useSectionAutosave(docId, section);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef<unknown>(null); // most recent editor JSON (may be un-flushed)
+  const dirty = useRef(false);
+  const saveRef = useRef(save);
+  saveRef.current = save;
+  const [, force] = useState(0);
+
+  // Prefer locally-buffered offline edits over the (possibly older) server content.
+  const initialContent = (readSectionBuffer(section.id) ?? section.content ?? "") as Content;
+
+  const editor = useEditor(
+    {
+      extensions: [StarterKit],
+      content: initialContent,
+      immediatelyRender: false,
+      editorProps: {
+        attributes: {
+          class: "tiptap min-h-[52vh] w-full max-w-none px-1 py-2 text-slate-200 outline-none",
+        },
+      },
+      onUpdate: ({ editor }) => {
+        const json = editor.getJSON();
+        latest.current = json;
+        dirty.current = true;
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => {
+          dirty.current = false;
+          save(json);
+        }, AUTOSAVE_DELAY);
+      },
+      onSelectionUpdate: () => force((n) => n + 1),
+    },
+    [section.id],
+  );
+
+  // Flush a pending debounced save when the section/page unmounts, so the last edits aren't lost.
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (dirty.current && latest.current != null) {
+        dirty.current = false;
+        saveRef.current(latest.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          {section.chapter && (
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+              {section.chapter}
+            </p>
+          )}
+          <h2 className="font-display text-xl font-bold text-white">{section.heading}</h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <SaveIndicator status={status} />
+          <button
+            onClick={onOpenHistory}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+          >
+            <History size={14} /> History
+          </button>
+        </div>
+      </div>
+
+      {status === "conflict" && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+          <span className="flex items-center gap-2">
+            <AlertTriangle size={16} /> This section changed elsewhere. Reload to get the latest, then re-apply your edits.
+          </span>
+          <button onClick={onReload} className="shrink-0 rounded-lg bg-amber-400/20 px-3 py-1 font-medium hover:bg-amber-400/30">
+            Reload
+          </button>
+        </div>
+      )}
+
+      {editor && <Toolbar editor={editor} />}
+
+      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+        <EditorContent editor={editor} />
+      </div>
+    </div>
+  );
+}
+
+function SaveIndicator({ status }: { status: string }) {
+  const map: Record<string, { icon: React.ReactNode; text: string; cls: string }> = {
+    saving: { icon: <Loader2 size={13} className="animate-spin" />, text: "Saving…", cls: "text-slate-400" },
+    saved: { icon: <Check size={13} />, text: "Saved", cls: "text-emerald-400" },
+    offline: { icon: <CloudOff size={13} />, text: "Offline — will sync", cls: "text-amber-300" },
+    error: { icon: <CloudOff size={13} />, text: "Save failed — buffered", cls: "text-rose-300" },
+    conflict: { icon: <AlertTriangle size={13} />, text: "Conflict", cls: "text-amber-300" },
+  };
+  const s = map[status];
+  if (!s) return null;
+  return <span className={`inline-flex items-center gap-1.5 text-xs ${s.cls}`}>{s.icon} {s.text}</span>;
+}
+
+function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>> }) {
+  const btn = (active: boolean) =>
+    `grid h-8 w-8 place-items-center rounded-lg border text-slate-300 transition-colors ${
+      active ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 hover:border-white/30"
+    }`;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      <button type="button" className={btn(editor.isActive("bold"))} onClick={() => editor.chain().focus().toggleBold().run()} aria-label="Bold"><Bold size={15} /></button>
+      <button type="button" className={btn(editor.isActive("italic"))} onClick={() => editor.chain().focus().toggleItalic().run()} aria-label="Italic"><Italic size={15} /></button>
+      <button type="button" className={btn(editor.isActive("heading", { level: 2 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} aria-label="Heading 2"><Heading2 size={15} /></button>
+      <button type="button" className={btn(editor.isActive("heading", { level: 3 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} aria-label="Heading 3"><Heading3 size={15} /></button>
+      <button type="button" className={btn(editor.isActive("bulletList"))} onClick={() => editor.chain().focus().toggleBulletList().run()} aria-label="Bullet list"><List size={15} /></button>
+      <button type="button" className={btn(editor.isActive("orderedList"))} onClick={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Ordered list"><ListOrdered size={15} /></button>
+      <button type="button" className={btn(editor.isActive("blockquote"))} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Quote"><Quote size={15} /></button>
+    </div>
+  );
+}
