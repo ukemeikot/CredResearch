@@ -67,6 +67,40 @@ public class DocumentService {
         return documents.findByProject(projectId);
     }
 
+    // ── Section structure editing (add / rename / reorder / delete) — owner-only ──
+    /** Adds a new (empty) section, appended at the end of the document. */
+    @Transactional
+    public DocumentSection addSection(UUID documentId, String heading, String chapter) {
+        Document doc = requireDocumentOwner(documentId);
+        if (heading == null || heading.isBlank()) {
+            throw ApiException.badRequest("INVALID_HEADING", "A section heading is required");
+        }
+        int next = sections.maxOrderIndex(doc.id()) + 1;
+        return sections.add(new DocumentSection(null, doc.id(), next, chapter, heading, null, null, 1));
+    }
+
+    /** Renames / re-chapters / moves a section (structural metadata only, not content). */
+    @Transactional
+    public DocumentSection updateSection(UUID documentId, UUID sectionId, String heading,
+                                         String chapter, Integer orderIndex) {
+        Document doc = requireDocumentOwner(documentId);
+        requireSection(doc.id(), sectionId);
+        if (heading != null && heading.isBlank()) {
+            throw ApiException.badRequest("INVALID_HEADING", "A section heading cannot be blank");
+        }
+        sections.updateMeta(sectionId, heading, chapter, orderIndex);
+        return sections.findById(sectionId).orElseThrow();
+    }
+
+    /** Deletes a section and its version history. */
+    @Transactional
+    public void deleteSection(UUID documentId, UUID sectionId) {
+        Document doc = requireDocumentOwner(documentId);
+        requireSection(doc.id(), sectionId);
+        versions.deleteBySection(sectionId);
+        sections.delete(sectionId);
+    }
+
     public DocumentDetail get(UUID documentId) {
         Document doc = requireDocumentMember(documentId);
         return new DocumentDetail(doc, sections.findByDocument(documentId));

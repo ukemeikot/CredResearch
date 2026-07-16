@@ -7,4 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DocumentVersionJpaRepository extends JpaRepository<DocumentVersionEntity, UUID> {
     List<DocumentVersionEntity> findByDocumentSectionIdOrderByVersionDesc(UUID sectionId);
+    void deleteByDocumentSectionId(UUID sectionId);
 }

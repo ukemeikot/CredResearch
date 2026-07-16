@@ -274,6 +274,15 @@ export const api = {
     request<DocSection>(`/documents/${docId}/sections/${sectionId}`),
   autosaveSection: (docId: string, sectionId: string, b: { content: unknown; version: number }) =>
     request<DocSection>(`/documents/${docId}/sections/${sectionId}`, json("PUT", b)),
+  addSection: (docId: string, b: { heading: string; chapter?: string }) =>
+    request<DocSection>(`/documents/${docId}/sections`, json("POST", b)),
+  updateSection: (
+    docId: string,
+    sectionId: string,
+    b: { heading?: string; chapter?: string; orderIndex?: number },
+  ) => request<DocSection>(`/documents/${docId}/sections/${sectionId}`, json("PATCH", b)),
+  deleteSection: (docId: string, sectionId: string) =>
+    request<void>(`/documents/${docId}/sections/${sectionId}`, json("DELETE")),
   listSectionVersions: (docId: string, sectionId: string) =>
     request<DocVersion[]>(`/documents/${docId}/sections/${sectionId}/versions`),
   restoreSection: (docId: string, sectionId: string, versionId: string) =>

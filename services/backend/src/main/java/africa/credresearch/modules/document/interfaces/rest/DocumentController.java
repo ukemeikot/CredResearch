@@ -18,7 +18,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -62,6 +64,10 @@ public class DocumentController {
 
     public record RestoreRequest(@NotNull UUID versionId) {}
 
+    public record AddSectionRequest(String heading, String chapter) {}
+
+    public record UpdateSectionRequest(String heading, String chapter, Integer orderIndex) {}
+
     // ── Endpoints ──────────────────────────────────────────────────────────────
     @GetMapping
     @Operation(summary = "List a project's documents")
@@ -97,6 +103,25 @@ public class DocumentController {
     public SectionResponse autosave(@PathVariable UUID id, @PathVariable UUID sectionId,
                                     @Valid @RequestBody AutosaveRequest req) {
         return toSection(service.autosave(id, sectionId, req.content(), req.version()));
+    }
+
+    @PostMapping("/{id}/sections")
+    @Operation(summary = "Add a section (owner-only)", description = "Appends a new empty section.")
+    public SectionResponse addSection(@PathVariable UUID id, @RequestBody AddSectionRequest req) {
+        return toSection(service.addSection(id, req.heading(), req.chapter()));
+    }
+
+    @PatchMapping("/{id}/sections/{sectionId}")
+    @Operation(summary = "Rename / re-chapter / reorder a section (owner-only)")
+    public SectionResponse updateSection(@PathVariable UUID id, @PathVariable UUID sectionId,
+                                         @RequestBody UpdateSectionRequest req) {
+        return toSection(service.updateSection(id, sectionId, req.heading(), req.chapter(), req.orderIndex()));
+    }
+
+    @DeleteMapping("/{id}/sections/{sectionId}")
+    @Operation(summary = "Delete a section and its history (owner-only)")
+    public void deleteSection(@PathVariable UUID id, @PathVariable UUID sectionId) {
+        service.deleteSection(id, sectionId);
     }
 
     @GetMapping("/{id}/sections/{sectionId}/versions")
