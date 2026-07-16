@@ -57,10 +57,18 @@ jobs:
             docker push "$REGISTRY/$svc:latest"
           done
 
-      - name: Roll ${{ env.ENVIRONMENT }} VMs onto the new image
+      - name: Roll ${{ env.ENVIRONMENT }} onto the new image
         run: |
           set -euo pipefail
-          for svc in web backend ai-worker; do
-            gcloud compute instances reset "credresearch-${ENVIRONMENT}-${svc}" \
-              --zone "$ZONE" --project "$PROJECT"
+          # web + backend are Managed Instance Groups → rolling replace (surge 1, 0 unavailable)
+          # spins up a fresh VM that pulls :latest before the old one is drained.
+          for svc in web backend; do
+            gcloud compute instance-groups managed rolling-action replace \
+              "credresearch-${ENVIRONMENT}-${svc}-mig" \
+              --zone "$ZONE" --project "$PROJECT" \
+              --max-surge 1 --max-unavailable 0
           done
+          # ai-worker is a single instance (stable internal IP) → reset re-runs the
+          # startup script, which re-pulls :latest.
+          gcloud compute instances reset "credresearch-${ENVIRONMENT}-ai-worker" \
+            --zone "$ZONE" --project "$PROJECT"
