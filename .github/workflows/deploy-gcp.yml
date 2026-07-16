@@ -72,3 +72,14 @@ jobs:
           # startup script, which re-pulls :latest.
           gcloud compute instances reset "credresearch-${ENVIRONMENT}-ai-worker" \
             --zone "$ZONE" --project "$PROJECT"
+
+      - name: Wait for MIGs to stabilize (fail the deploy if the new VM is unhealthy)
+        run: |
+          set -euo pipefail
+          # rolling-action replace returns immediately; without this a crash-looping new VM
+          # (e.g. a failed DB migration) would leave the deploy "green" while the old image serves.
+          for svc in web backend; do
+            gcloud compute instance-groups managed wait-until \
+              "credresearch-${ENVIRONMENT}-${svc}-mig" \
+              --stable --zone "$ZONE" --project "$PROJECT" --timeout 600
+          done
