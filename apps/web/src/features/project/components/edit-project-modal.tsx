@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { Portal } from "@/components/ui/portal";
 import { ApiError, type ProjectSummary } from "@/lib/api";
 import { useUpdateProject } from "../api/use-projects";
 
@@ -47,6 +48,7 @@ export function EditProjectModal({
   const error = update.error instanceof ApiError ? update.error.message : null;
 
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -117,5 +119,6 @@ export function EditProjectModal({
         </motion.div>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }

@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { Portal } from "@/components/ui/portal";
 import { ApiError } from "@/lib/api";
 import { useCreateProject } from "../api/use-projects";
 
@@ -30,6 +31,7 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
     create.error instanceof ApiError ? create.error.message : create.isError ? "Could not create project" : null;
 
   return (
+    <Portal>
     <AnimatePresence>
       {open && (
         <motion.div
@@ -88,5 +90,6 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
         </motion.div>
       )}
     </AnimatePresence>
+    </Portal>
   );
 }
