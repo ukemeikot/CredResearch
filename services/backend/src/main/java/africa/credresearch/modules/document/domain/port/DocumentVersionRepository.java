@@ -12,4 +12,7 @@ public interface DocumentVersionRepository {
     List<DocumentVersion> findBySection(UUID sectionId);
 
     Optional<DocumentVersion> findById(UUID id);
+
+    /** Removes all version history for a section (called before deleting the section). */
+    void deleteBySection(UUID sectionId);
 }

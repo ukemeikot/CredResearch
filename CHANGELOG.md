@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Editable document structure.** The project owner can now restructure a document from the
+  outline — add a section, rename its heading, reorder (move up/down), and delete a section (with
+  its version history). Owner-gated section CRUD (`POST/PATCH/DELETE /documents/{id}/sections`).
+
 ### Fixed
+- **Modal overlays render correctly.** Modals/drawers now portal to `document.body` so they aren't
+  trapped by a transformed (framer-motion) ancestor — the New Document modal was rendering mid-page
+  behind the panels, making its template buttons unclickable and blocking document creation.
+
+### Fixed (earlier)
 - **Resilient DB migrations on rolling deploys.** A rolling replace interrupted mid-migration could
   leave the schema-history half-applied (object created, history row not finalised), then crash-loop
   the new backend on "relation already exists". Migrations are now idempotent (`IF NOT EXISTS` +
