@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { DocumentsPanel } from "@/features/document/components/documents-panel";
 import { useMe } from "@/features/user/api/use-me";
 import type { ProjectMemberRole } from "@/lib/api";
 import { useProject } from "../api/use-projects";
@@ -119,6 +120,7 @@ export function ProjectWorkspace({ id }: { id: string }) {
       <div className="mt-10 grid items-start gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <StatusControl id={id} status={project.status} canManage={canManage} />
+          <DocumentsPanel projectId={id} canCreate={isOwner} />
           <MilestonesPanel id={id} milestones={milestones} canManage={canManage} />
         </div>
         <div className="space-y-6">
