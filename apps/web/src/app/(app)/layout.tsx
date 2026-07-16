@@ -1,15 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { LogOut } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { useLogout } from "@/features/auth/api/use-logout";
 import { useAuth } from "@/lib/auth-store";
+
+// Roles arrive as an unordered set; show the highest-privilege one deterministically.
+const ROLE_PRIORITY = ["PLATFORM_ADMIN", "INSTITUTION_ADMIN", "DEPARTMENT_ADMIN", "SUPERVISOR", "STUDENT"];
+function primaryRole(roles?: string[]): string {
+  if (!roles?.length) return "STUDENT";
+  return ROLE_PRIORITY.find((r) => roles.includes(r)) ?? roles[0];
+}
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { accessToken, hydrated, user, clear } = useAuth();
+  const pathname = usePathname();
+  const logout = useLogout();
+  const { accessToken, hydrated, user } = useAuth();
 
   useEffect(() => {
     if (hydrated && !accessToken) router.replace("/login");
@@ -31,17 +41,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Logo />
           </Link>
           <nav className="hidden gap-7 text-sm font-medium uppercase tracking-wider text-slate-300 md:flex">
-            <Link href="/dashboard" className="text-white">Dashboard</Link>
+            <Link
+              href="/dashboard"
+              className={pathname === "/dashboard" ? "text-white" : "hover:text-white"}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/settings"
+              className={pathname === "/settings" ? "text-white" : "hover:text-white"}
+            >
+              Settings
+            </Link>
             <span className="cursor-not-allowed text-slate-600">Library</span>
-            <span className="cursor-not-allowed text-slate-600">Supervision</span>
           </nav>
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-slate-400 sm:block">
-              {user?.roles?.[0] ?? "STUDENT"}
+              {primaryRole(user?.roles)}
             </span>
             <button
-              onClick={() => {
-                clear();
+              onClick={async () => {
+                await logout();
                 router.replace("/login");
               }}
               className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-slate-300 transition-colors hover:border-rose-400/50 hover:text-rose-400"

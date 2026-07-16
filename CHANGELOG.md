@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Frontend — full API integration.** The web app now consumes every backend endpoint. New
+  **project workspace** at `/projects/[id]` (dashboard stats, milestones, team members with
+  add/remove, activity feed, lifecycle status transitions honouring the server state machine, and
+  project editing), a **/settings** page (profile update, plus role-gated institution and
+  departments management), and **forgot-/reset-password** flows. Logout now revokes the refresh
+  token server-side and clears cached state; the API client dedupes concurrent token refreshes into
+  a single in-flight request. TanStack Query hooks per feature with targeted cache updates.
+- **CI — MIG-aware deploys + rollback.** `deploy-gcp.yml` rolls web/backend via managed
+  instance-group rolling-replace (zero-downtime) instead of resetting fixed VMs; new
+  `rollback-gcp.yml` re-points `:latest` to a prior image SHA and rolls a chosen environment onto it.
 - **Web production image + deploy pipeline**: `apps/web/Dockerfile` (Next standalone, built with a
   relative `NEXT_PUBLIC_API_BASE_URL`) and `.github/workflows/release.yml` — on push to `main` it
   builds/pushes the three service images to ECR and triggers the infra repo to sync (gated behind
