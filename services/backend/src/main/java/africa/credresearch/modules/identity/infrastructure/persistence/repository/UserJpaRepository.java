@@ -33,6 +33,10 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, UUID> {
     void updateStatus(@Param("id") UUID id, @Param("status") String status);
 
     @Modifying
+    @Query("update UserEntity u set u.institutionId = :institutionId where u.id = :id")
+    void updateInstitution(@Param("id") UUID id, @Param("institutionId") UUID institutionId);
+
+    @Modifying
     @Query("update UserEntity u set u.fullName = :fullName, u.academicLevel = :academicLevel, "
             + "u.fieldOfStudy = :fieldOfStudy, u.orcid = :orcid where u.id = :id")
     void updateProfile(@Param("id") UUID id, @Param("fullName") String fullName,

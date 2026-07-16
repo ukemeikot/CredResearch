@@ -71,6 +71,12 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     @Transactional
+    public void updateInstitution(UUID userId, UUID institutionId) {
+        jpa.updateInstitution(userId, institutionId);
+    }
+
+    @Override
+    @Transactional
     public void updateProfile(UUID userId, String fullName, String academicLevel,
                               String fieldOfStudy, String orcid) {
         jpa.updateProfile(userId, fullName, academicLevel, fieldOfStudy, orcid);

@@ -10,4 +10,7 @@ public interface OrgProvisioning {
 
     /** Creates a synthetic personal tenant for an independent user (FR-ORG-4); returns its id. */
     UUID createPersonalTenant(String displayName);
+
+    /** Creates a real (non-personal) institution and returns its id — used by onboarding. */
+    UUID createInstitution(String name, String country, String type);
 }

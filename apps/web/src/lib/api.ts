@@ -54,6 +54,14 @@ function refreshOnce(): Promise<boolean> {
   return refreshInFlight;
 }
 
+/**
+ * Force a token refresh (e.g. after institution onboarding changes the caller's tenant/roles, which
+ * are embedded in the access token). Returns true if a new session was issued.
+ */
+export function refreshSession(): Promise<boolean> {
+  return refreshOnce();
+}
+
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const token = useAuth.getState().accessToken;
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -247,4 +255,107 @@ export const api = {
     request<Department>("/departments", json("POST", b)),
   updateDepartment: (id: string, b: { name?: string; code?: string }) =>
     request<Department>(`/departments/${id}`, json("PATCH", b)),
+
+  // Onboarding
+  onboardInstitution: (b: { name: string; country?: string; type?: string }) =>
+    request<{ institutionId: string }>("/onboarding/institution", json("POST", b)),
+
+  // Templates
+  listTemplates: () => request<Template[]>("/templates"),
+  getTemplate: (id: string) => request<TemplateDetail>(`/templates/${id}`),
+
+  // Documents
+  listDocuments: (projectId: string) =>
+    request<DocumentSummary[]>(`/documents?projectId=${projectId}`),
+  createDocument: (b: { projectId: string; templateId: string; title?: string }) =>
+    request<DocumentDetail>("/documents", json("POST", b)),
+  getDocument: (id: string) => request<DocumentDetail>(`/documents/${id}`),
+  getSection: (docId: string, sectionId: string) =>
+    request<DocSection>(`/documents/${docId}/sections/${sectionId}`),
+  autosaveSection: (docId: string, sectionId: string, b: { content: unknown; version: number }) =>
+    request<DocSection>(`/documents/${docId}/sections/${sectionId}`, json("PUT", b)),
+  listSectionVersions: (docId: string, sectionId: string) =>
+    request<DocVersion[]>(`/documents/${docId}/sections/${sectionId}/versions`),
+  restoreSection: (docId: string, sectionId: string, versionId: string) =>
+    request<DocSection>(`/documents/${docId}/sections/${sectionId}/restore`, json("POST", { versionId })),
+
+  // Invitations
+  listInvitations: (projectId: string) =>
+    request<Invitation[]>(`/projects/${projectId}/invitations`),
+  invite: (projectId: string, b: { email: string; role: ProjectMemberRole }) =>
+    request<Invitation>(`/projects/${projectId}/invitations`, json("POST", b)),
+  revokeInvite: (projectId: string, invitationId: string) =>
+    request<void>(`/projects/${projectId}/invitations/${invitationId}`, json("DELETE")),
+  acceptInvite: (token: string) =>
+    request<{ projectId: string }>("/invitations/accept", json("POST", { token })),
 };
+
+// ── Phase 3 & invitation types ──────────────────────────────────────────────
+export interface Template {
+  id: string;
+  name: string;
+  level: string | null;
+  global: boolean;
+  citationStyle: string;
+}
+
+export interface TemplateSection {
+  id: string;
+  orderIndex: number;
+  chapter: string | null;
+  heading: string;
+  guidance: string | null;
+}
+
+export interface FormatRule {
+  fontFamily: string;
+  fontSizePt: number;
+  lineSpacing: number;
+  margins: unknown;
+  headingNumbering: string;
+  citationStyle: string;
+}
+
+export interface TemplateDetail {
+  template: Template;
+  sections: TemplateSection[];
+  formatRule: FormatRule | null;
+}
+
+export interface DocumentSummary {
+  id: string;
+  projectId: string;
+  templateId: string;
+  title: string;
+  status: string;
+}
+
+export interface DocSection {
+  id: string;
+  documentId: string;
+  orderIndex: number;
+  chapter: string | null;
+  heading: string;
+  content: unknown | null;
+  version: number;
+}
+
+export interface DocumentDetail {
+  document: DocumentSummary;
+  sections: DocSection[];
+}
+
+export interface DocVersion {
+  id: string;
+  version: number;
+  authoredBy: string | null;
+  createdAt: string;
+}
+
+export interface Invitation {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  expiresAt: string;
+}
