@@ -33,7 +33,7 @@ jobs:
       REGISTRY: europe-west1-docker.pkg.dev/xental-501115/credresearch
       ENVIRONMENT: ${{ github.event.inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - id: auth
         uses: google-github-actions/auth@v2
