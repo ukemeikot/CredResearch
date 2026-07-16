@@ -50,6 +50,12 @@ export function LoginScreen() {
             <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="ada@example.com" />
             <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
 
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-xs text-slate-400 hover:text-accent">
+                Forgot password?
+              </Link>
+            </div>
+
             {error && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-rose-400">
                 {error}
