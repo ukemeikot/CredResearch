@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **AI worker tuning + resilience.** Bounded generation length (`num_predict`) and a warm
+  keep-alive for the self-hosted model, a generous backend read timeout so slow CPU inferences
+  aren't turned into spurious 503s, and diagnostic logging on AI-worker call failures.
+
 ### Added
 - **Phase 4 — AI Research Assistant (v1).** The FastAPI worker now exposes AI features behind a
   provider-agnostic LLM gateway: **topic generator + feasibility**, **aim/objectives/research
