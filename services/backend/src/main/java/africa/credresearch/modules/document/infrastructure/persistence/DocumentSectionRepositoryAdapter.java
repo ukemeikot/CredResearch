@@ -36,9 +36,43 @@ public class DocumentSectionRepositoryAdapter implements DocumentSectionReposito
     }
 
     @Override
+    public DocumentSection add(DocumentSection s) {
+        DocumentSectionEntity e = new DocumentSectionEntity();
+        e.setDocumentId(s.documentId());
+        e.setOrderIndex(s.orderIndex());
+        e.setChapter(s.chapter());
+        e.setHeading(s.heading());
+        e.setContent(s.content());
+        e.setContentText(s.contentText());
+        e.setVersion(s.version() <= 0 ? 1 : s.version());
+        return toDomain(jpa.save(e));
+    }
+
+    @Override
     public List<DocumentSection> findByDocument(UUID documentId) {
         return jpa.findByDocumentIdOrderByOrderIndexAsc(documentId).stream()
                 .map(DocumentSectionRepositoryAdapter::toDomain).toList();
+    }
+
+    @Override
+    public int maxOrderIndex(UUID documentId) {
+        return jpa.maxOrderIndex(documentId);
+    }
+
+    @Override
+    @Transactional
+    public void updateMeta(UUID sectionId, String heading, String chapter, Integer orderIndex) {
+        DocumentSectionEntity e = jpa.findById(sectionId).orElseThrow();
+        if (heading != null) e.setHeading(heading);
+        if (chapter != null) e.setChapter(chapter);
+        if (orderIndex != null) e.setOrderIndex(orderIndex);
+        jpa.save(e);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID sectionId) {
+        jpa.deleteById(sectionId);
     }
 
     @Override

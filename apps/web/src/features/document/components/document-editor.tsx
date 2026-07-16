@@ -4,15 +4,21 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
+import { useProject } from "@/features/project/api/use-projects";
+import { useMe } from "@/features/user/api/use-me";
 import { documentKeys, useDocument } from "../api/use-documents";
 import { SectionEditor } from "./section-editor";
+import { SectionNav } from "./section-nav";
 import { VersionHistory } from "./version-history";
 
 export function DocumentEditor({ docId }: { docId: string }) {
   const qc = useQueryClient();
   const query = useDocument(docId);
+  const me = useMe();
+  const projectId = query.data?.document.projectId;
+  const project = useProject(projectId ?? "");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   // Bumped on an explicit reload (conflict/restore) to force the editor to re-init from the
@@ -30,7 +36,12 @@ export function DocumentEditor({ docId }: { docId: string }) {
     [sections, activeId],
   );
 
-  const projectId = query.data?.document.projectId;
+  // Only the project OWNER can restructure the document (the backend enforces this too).
+  const isOwner = useMemo(() => {
+    const uid = me.data?.id;
+    if (!uid || !project.data) return false;
+    return project.data.members.some((m) => m.userId === uid && m.role === "OWNER");
+  }, [me.data?.id, project.data]);
 
   if (query.isLoading) {
     return (
@@ -65,35 +76,15 @@ export function DocumentEditor({ docId }: { docId: string }) {
       </motion.h1>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[260px_1fr]">
-        {/* Section navigation */}
+        {/* Section navigation + structure editing (owner) */}
         <nav className="lg:sticky lg:top-24 lg:self-start">
-          <GlassCard className="p-3">
-            <ul className="space-y-0.5">
-              {sections.map((s) => {
-                const isActive = active?.id === s.id;
-                return (
-                  <li key={s.id}>
-                    <button
-                      onClick={() => setActiveId(s.id)}
-                      className={`flex w-full items-start gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                        isActive ? "bg-accent/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"
-                      }`}
-                    >
-                      <FileText size={14} className="mt-0.5 shrink-0 opacity-70" />
-                      <span className="min-w-0">
-                        {s.chapter && (
-                          <span className="block truncate text-[10px] uppercase tracking-wider text-slate-500">
-                            {s.chapter}
-                          </span>
-                        )}
-                        <span className="block truncate">{s.heading}</span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </GlassCard>
+          <SectionNav
+            docId={docId}
+            sections={sections}
+            activeId={active?.id ?? null}
+            onSelect={setActiveId}
+            canManage={isOwner}
+          />
         </nav>
 
         {/* Active section editor */}

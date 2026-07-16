@@ -72,4 +72,37 @@ export function useRestoreSection(docId: string) {
   });
 }
 
+// ── Section structure editing (add / rename / reorder / delete) ──────────────
+export function useAddSection(docId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (b: { heading: string; chapter?: string }) => api.addSection(docId, b),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.doc(docId) }),
+  });
+}
+
+export function useUpdateSection(docId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      sectionId,
+      ...b
+    }: {
+      sectionId: string;
+      heading?: string;
+      chapter?: string;
+      orderIndex?: number;
+    }) => api.updateSection(docId, sectionId, b),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.doc(docId) }),
+  });
+}
+
+export function useDeleteSection(docId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sectionId: string) => api.deleteSection(docId, sectionId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.doc(docId) }),
+  });
+}
+
 export const documentKeys = keys;
