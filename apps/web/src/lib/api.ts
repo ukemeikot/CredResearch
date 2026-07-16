@@ -260,6 +260,26 @@ export const api = {
   onboardInstitution: (b: { name: string; country?: string; type?: string }) =>
     request<{ institutionId: string }>("/onboarding/institution", json("POST", b)),
 
+  // AI Research Assistant (Phase 4) — backend proxies to the private worker
+  aiTopics: (b: { field: string; interests?: string; level?: string }) =>
+    request<{ topics: AiTopic[] }>("/ai/topics", json("POST", b)),
+  aiObjectives: (b: { topic: string; problem?: string; level?: string }) =>
+    request<AiObjectives>("/ai/objectives", json("POST", b)),
+  aiProblemStatement: (b: { topic: string; context?: string }) =>
+    request<{ problem_statement: string; significance: string }>("/ai/problem-statement", json("POST", b)),
+  aiSectionAssist: (b: {
+    heading: string;
+    guidance?: string;
+    current_text?: string;
+    instruction?: string;
+  }) => request<{ suggestion: string; notes: string[] }>("/ai/section-assist", json("POST", b)),
+  aiAlignment: (b: {
+    title: string;
+    abstract?: string;
+    objectives?: string[];
+    sections?: { heading: string; text: string }[];
+  }) => request<AiAlignment>("/ai/alignment", json("POST", b)),
+
   // Templates
   listTemplates: () => request<Template[]>("/templates"),
   getTemplate: (id: string) => request<TemplateDetail>(`/templates/${id}`),
@@ -367,4 +387,32 @@ export interface Invitation {
   role: string;
   status: string;
   expiresAt: string;
+}
+
+// ── AI (Phase 4) ─────────────────────────────────────────────────────────────
+export interface AiTopic {
+  title: string;
+  rationale: string;
+  feasibility: "LOW" | "MEDIUM" | "HIGH";
+  suggested_methods: string[];
+}
+
+export interface AiObjectives {
+  aim: string;
+  objectives: string[];
+  research_questions: string[];
+  hypotheses: string[];
+}
+
+export interface AiAlignmentFinding {
+  area: string;
+  issue: string;
+  suggestion: string;
+  severity: "LOW" | "MEDIUM" | "HIGH";
+}
+
+export interface AiAlignment {
+  overall_score: number;
+  summary: string;
+  findings: AiAlignmentFinding[];
 }
