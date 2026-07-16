@@ -1,0 +1,88 @@
+name: rollback-gcp
+
+# Manual rollback: re-point every service's `:latest` tag to a previously-built
+# image (identified by its git SHA) and roll the target environment onto it.
+#
+# Usage: Actions → rollback-gcp → Run workflow →
+#   • environment: staging | production
+#   • image_tag:   the git SHA of the deploy you want to return to
+#                  (must already exist in Artifact Registry — no rebuild happens)
+#
+# Trigger it from the `staging` branch for staging, or the `main` branch for
+# production. Auth is keyless via Workload Identity Federation.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: "Git SHA to roll back to (must exist in Artifact Registry)"
+        required: true
+
+permissions:
+  contents: read
+  id-token: write # required for Workload Identity Federation
+
+concurrency:
+  # Share the deploy concurrency group so a rollback can't race a deploy.
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    if: ${{ vars.GCP_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: xental-501115
+      REGION: europe-west1
+      ZONE: europe-west1-b
+      REGISTRY: europe-west1-docker.pkg.dev/xental-501115/credresearch
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      TAG: ${{ github.event.inputs.image_tag }}
+    steps:
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/907872692877/locations/global/workloadIdentityPools/github/providers/github-oidc
+          service_account: ci-deployer@xental-501115.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Verify the target images exist
+        run: |
+          set -euo pipefail
+          for svc in backend ai-worker web; do
+            echo "Checking $REGISTRY/$svc:$TAG ..."
+            gcloud artifacts docker images describe "$REGISTRY/$svc:$TAG" >/dev/null
+          done
+          echo "All three service images exist for tag $TAG."
+
+      - name: Re-point :latest to the rollback tag
+        run: |
+          set -euo pipefail
+          for svc in backend ai-worker web; do
+            gcloud artifacts docker tags add \
+              "$REGISTRY/$svc:$TAG" "$REGISTRY/$svc:latest" --quiet
+          done
+
+      - name: Roll ${{ env.ENVIRONMENT }} onto the rolled-back image
+        run: |
+          set -euo pipefail
+          for svc in web backend; do
+            gcloud compute instance-groups managed rolling-action replace \
+              "credresearch-${ENVIRONMENT}-${svc}-mig" \
+              --zone "$ZONE" --project "$PROJECT" \
+              --max-surge 1 --max-unavailable 0
+          done
+          gcloud compute instances reset "credresearch-${ENVIRONMENT}-ai-worker" \
+            --zone "$ZONE" --project "$PROJECT"
+
+      - name: Summary
+        run: |
+          echo "Rolled '${ENVIRONMENT}' back to image tag '${TAG}'." >> "$GITHUB_STEP_SUMMARY"
