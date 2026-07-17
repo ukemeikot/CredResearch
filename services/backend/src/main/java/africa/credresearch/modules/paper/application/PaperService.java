@@ -42,10 +42,23 @@ public class PaperService {
         UUID userId = TenantContextHolder.require().userId();
         JsonNode ex = extraction.extract(filename, bytes);
         boolean lowConfidence = ex.path("low_confidence").asBoolean(false);
+        String doi = text(ex, "doi");
+        String title = text(ex, "title");
+
+        // Deduplicate within the project by DOI, else by normalised title (FR-LIT-10).
+        List<Paper> existing = papers.findByProject(projectId);
+        boolean dup = existing.stream().anyMatch(p ->
+                (doi != null && doi.equalsIgnoreCase(p.doi()))
+                        || (title != null && normalize(title).equals(normalize(p.title()))));
+        if (dup) {
+            throw ApiException.conflict("DUPLICATE_PAPER",
+                    "This paper is already in the project (matched by DOI or title).");
+        }
+
         Paper meta = new Paper(
                 null, projectId, userId, filename,
-                text(ex, "title"), text(ex, "authors"), intOrNull(ex, "year"),
-                text(ex, "doi"), text(ex, "journal"),
+                title, text(ex, "authors"), intOrNull(ex, "year"),
+                doi, text(ex, "journal"),
                 lowConfidence ? "LOW_CONFIDENCE" : "DONE", null);
         return papers.create(meta, ex.path("text").asText(""));
     }
@@ -75,7 +88,19 @@ public class PaperService {
                 .toList();
     }
 
+    /** Serialise the project's papers to BibTeX or RIS for reference-manager import (FR-LIT-9). */
+    public String export(UUID projectId, String format) {
+        List<Paper> list = list(projectId);
+        return "ris".equalsIgnoreCase(format)
+                ? BibliographyExporter.toRis(list)
+                : BibliographyExporter.toBibtex(list);
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
+    private static String normalize(String s) {
+        return s == null ? "" : s.toLowerCase().replaceAll("[^a-z0-9]", "");
+    }
+
     private Paper require(UUID id) {
         Paper p = papers.findById(id)
                 .orElseThrow(() -> ApiException.notFound("PAPER_NOT_FOUND", "Paper not found"));

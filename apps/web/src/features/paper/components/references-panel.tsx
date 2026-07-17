@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AlertTriangle, Copy, FileText, Loader2, Pencil, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, Copy, Download, FileText, Loader2, Pencil, Trash2, Upload } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { ApiError, type Paper } from "@/lib/api";
+import { api, ApiError, type Paper } from "@/lib/api";
 import { useDeletePaper, usePapers, useReferences, useUpdatePaper, useUploadPaper } from "../api/use-papers";
 
 const STYLES = ["APA", "IEEE", "HARVARD"] as const;
@@ -87,6 +87,20 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
                 title="Copy all"
               >
                 <Copy size={13} /> Copy
+              </button>
+              <button
+                onClick={() => api.exportReferences(projectId, "bibtex")}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:border-white/30 hover:text-white"
+                title="Download BibTeX"
+              >
+                <Download size={13} /> BibTeX
+              </button>
+              <button
+                onClick={() => api.exportReferences(projectId, "ris")}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:border-white/30 hover:text-white"
+                title="Download RIS"
+              >
+                <Download size={13} /> RIS
               </button>
             </div>
           </div>
