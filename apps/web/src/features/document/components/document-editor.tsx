@@ -107,6 +107,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
             <SectionEditor
               key={`${active.id}:${reloadKey}`}
               docId={docId}
+              projectId={projectId ?? ""}
               section={active}
               onReload={reload}
               onOpenHistory={() => setHistoryOpen(true)}

@@ -18,6 +18,7 @@ import {
   Italic,
   List,
   ListOrdered,
+  BookMarked,
   Loader2,
   Palette,
   Quote,
@@ -25,8 +26,10 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ApiError, type DocSection } from "@/lib/api";
+import { ApiError, type DocSection, type Paper } from "@/lib/api";
 import { useMe } from "@/features/user/api/use-me";
+import { usePapers } from "@/features/paper/api/use-papers";
+import { citationLabel, inTextCitation } from "@/features/paper/model/cite";
 import { useAiCredits, useDisclosureAppend, useSectionAssist } from "../api/use-ai";
 import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
 import { useCollab, type CollabPeer } from "../hooks/use-collab";
@@ -48,11 +51,13 @@ const TEXT_COLORS = ["#e2e8f0", "#ffffff", "#f87171", "#fb923c", "#fbbf24", "#34
 
 export function SectionEditor({
   docId,
+  projectId,
   section,
   onReload,
   onOpenHistory,
 }: {
   docId: string;
+  projectId: string;
   section: DocSection;
   onReload: () => void;
   onOpenHistory: () => void;
@@ -77,6 +82,8 @@ export function SectionEditor({
   isLeaderRef.current = collab.isLeader;
   const seededRef = useRef(false);
   const [, force] = useState(0);
+  const papersQ = usePapers(projectId);
+  const [citeOpen, setCiteOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [instruction, setInstruction] = useState("");
 
@@ -237,6 +244,41 @@ export function SectionEditor({
             >
               <Sparkles size={13} /> AI assist
             </button>
+            {/* Insert an in-text citation from the project's papers (FR-LIT-6) */}
+            <div className="relative">
+              <button
+                onClick={() => setCiteOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+              >
+                <BookMarked size={13} /> Cite
+              </button>
+              {citeOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setCiteOpen(false)} />
+                  <div className="absolute left-0 z-20 mt-1 max-h-64 w-72 overflow-y-auto rounded-xl border border-white/10 bg-cosmos-900 p-1 shadow-xl">
+                    {(papersQ.data ?? []).length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-slate-500">
+                        No papers yet — upload sources in the project’s Papers &amp; references panel.
+                      </p>
+                    ) : (
+                      (papersQ.data ?? []).map((p: Paper) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            editor?.chain().focus().insertContent(`${inTextCitation(p)} `).run();
+                            setCiteOpen(false);
+                          }}
+                          className="block w-full truncate rounded-lg px-3 py-2 text-left text-xs text-slate-200 hover:bg-white/5"
+                          title={citationLabel(p)}
+                        >
+                          <span className="text-accent">{inTextCitation(p)}</span> {citationLabel(p)}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
             {credits.data && (
               <span className={`text-[11px] ${creditsLow ? "text-rose-400" : "text-slate-500"}`}>
                 {credits.data.remaining}/{credits.data.limit} AI credits left
