@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     # exposed publicly). Empty disables the check (local dev only).
     internal_service_secret: str = ""
 
+    # Gotenberg (LibreOffice) URL for DOCX->PDF conversion. Empty = PDF export disabled
+    # (DOCX still works); e.g. http://10.x.x.x:3000
+    gotenberg_url: str = ""
+
+    @property
+    def pdf_enabled(self) -> bool:
+        return bool(self.gotenberg_url)
+
     @property
     def use_ollama(self) -> bool:
         return self.llm_provider.lower() == "ollama" and bool(self.llm_base_url)
