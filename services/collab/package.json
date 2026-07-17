@@ -1,0 +1,18 @@
+{
+  "name": "credresearch-collab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CredResearch real-time collaboration (Yjs) WebSocket sync server (Hocuspocus).",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@hocuspocus/server": "^2.13.5",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
