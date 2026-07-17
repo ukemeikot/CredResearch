@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Editor text formatting — font family, size & colour.** The section toolbar now has a typeface
+  picker, a font-size selector, and a text-colour control (swatches + full colour picker, with a
+  clear option), backed by Tiptap's TextStyle marks. Works in both the standard and collaborative
+  editors and is preserved through DOCX/PDF export where the format supports it.
 - **Real-time collaboration (Yjs), staging.** Sections can now be co-edited live, Google-Docs style:
   a new `collab` WebSocket service (Hocuspocus) syncs a shared Yjs document per section and shows
   live presence (who's editing, coloured caret avatars). Access tokens are verified (RS256) on
