@@ -43,7 +43,9 @@ export function SectionEditor({
 }) {
   const me = useMe();
   const collab = useCollab(docId, section.id, me.data?.fullName ?? "", me.data?.id ?? "");
-  const collabReady = collab.enabled && !!collab.ydoc && !!collab.provider;
+  // "active" = we expect collab here and haven't fallen back; "ready" = actually connected.
+  const collabActive = collab.enabled && !collab.unavailable;
+  const collabReady = collabActive && collab.connected && !!collab.ydoc && !!collab.provider;
   const { status, save } = useSectionAutosave(docId, section, { collab: collab.enabled });
   const assist = useSectionAssist();
   const disclosure = useDisclosureAppend(docId);
@@ -71,8 +73,8 @@ export function SectionEditor({
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       dirty.current = false;
-      // Non-collab: always persist. Collab: only the leader writes back to the API.
-      if (!collab.enabled || isLeaderRef.current) saveRef.current(json);
+      // Non-collab (or collab fallback): always persist. Live collab: only the leader writes back.
+      if (!collabActive || isLeaderRef.current) saveRef.current(json);
     }, AUTOSAVE_DELAY);
   }
 
@@ -112,11 +114,12 @@ export function SectionEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collabReady, editor, collab.synced, collab.isLeader]);
 
-  // Prevent typing until the live session is connected (avoids edits that wouldn't be shared/saved).
+  // While actively connecting to a live session, prevent typing (avoids edits that wouldn't be
+  // shared). Once connected (ready) or fallen back (unavailable), editing is allowed.
   useEffect(() => {
     if (!editor) return;
-    editor.setEditable(!(collab.enabled && !collabReady));
-  }, [editor, collab.enabled, collabReady]);
+    editor.setEditable(!(collabActive && !collabReady));
+  }, [editor, collabActive, collabReady]);
 
   // A fresh Yjs doc is built per section — allow the next section to seed again.
   useEffect(() => {
@@ -178,7 +181,7 @@ export function SectionEditor({
           <h2 className="font-display text-xl font-bold text-white">{section.heading}</h2>
         </div>
         <div className="flex items-center gap-3">
-          {collab.enabled && <Presence peers={collab.peers} connecting={!collabReady} />}
+          {collabActive && <Presence peers={collab.peers} connecting={!collabReady} />}
           <SaveIndicator status={status} />
           <button
             onClick={onOpenHistory}
@@ -189,7 +192,7 @@ export function SectionEditor({
         </div>
       </div>
 
-      {collab.enabled && !collabReady && (
+      {collabActive && !collabReady && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-slate-400">
           <Loader2 size={16} className="animate-spin" /> Connecting to the live editing session…
         </div>

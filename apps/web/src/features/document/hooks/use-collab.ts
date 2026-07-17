@@ -35,14 +35,20 @@ function colorFor(id: string): string {
 }
 
 export interface CollabState {
-  enabled: boolean;
+  enabled: boolean; // a collab server is expected on this host
+  unavailable: boolean; // enabled, but the server didn't connect in time → fall back to autosave
   ydoc: Y.Doc | null;
   provider: HocuspocusProvider | null;
   isLeader: boolean; // exactly one connected client persists to the API
   peers: CollabPeer[];
   synced: boolean;
+  connected: boolean;
   user: { name: string; color: string };
 }
+
+// If the collab socket hasn't connected within this window, fall back to plain autosave editing
+// (e.g. the collab service isn't deployed in this environment yet) rather than blocking the editor.
+const CONNECT_TIMEOUT_MS = 8000;
 
 /**
  * Creates a Yjs document + Hocuspocus provider for one section (room = `${docId}:${sectionId}`),
@@ -63,11 +69,16 @@ export function useCollab(docId: string, sectionId: string, userName: string, us
   const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
   const [isLeader, setIsLeader] = useState(false);
   const [synced, setSynced] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const [peers, setPeers] = useState<CollabPeer[]>([]);
   const clientIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled || !endpoint || !token) return;
+    setConnected(false);
+    setUnavailable(false);
+    setSynced(false);
     const doc = new Y.Doc();
     clientIdRef.current = doc.clientID;
     const p = new HocuspocusProvider({
@@ -79,7 +90,18 @@ export function useCollab(docId: string, sectionId: string, userName: string, us
     setYdoc(doc);
     setProvider(p);
 
+    // Give up (fall back to plain autosave) if we never connect — e.g. no collab server here.
+    const timeout = setTimeout(() => setUnavailable(true), CONNECT_TIMEOUT_MS);
     p.on("synced", () => setSynced(true));
+    p.on("status", ({ status }: { status: string }) => {
+      if (status === "connected") {
+        clearTimeout(timeout); // connected in time → never fall back
+        setConnected(true);
+        setUnavailable(false);
+      } else {
+        setConnected(false);
+      }
+    });
 
     const awareness = p.awareness;
     if (awareness) {
@@ -101,6 +123,7 @@ export function useCollab(docId: string, sectionId: string, userName: string, us
       awareness.on("change", onChange);
       onChange();
       return () => {
+        clearTimeout(timeout);
         awareness.off("change", onChange);
         p.destroy();
         doc.destroy();
@@ -108,11 +131,13 @@ export function useCollab(docId: string, sectionId: string, userName: string, us
         setYdoc(null);
         setSynced(false);
         setIsLeader(false);
+        setConnected(false);
         setPeers([]);
       };
     }
 
     return () => {
+      clearTimeout(timeout);
       p.destroy();
       doc.destroy();
       setProvider(null);
@@ -121,5 +146,5 @@ export function useCollab(docId: string, sectionId: string, userName: string, us
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, endpoint, token, docId, sectionId]);
 
-  return { enabled, ydoc, provider, isLeader, peers, synced, user };
+  return { enabled, unavailable, ydoc, provider, isLeader, peers, synced, connected, user };
 }
