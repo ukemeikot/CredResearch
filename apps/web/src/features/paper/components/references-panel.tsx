@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AlertTriangle, Copy, Download, FileText, Loader2, Pencil, Sparkles, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, Copy, Download, FileText, Loader2, Pencil, Search, Sparkles, Trash2, Upload } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { api, ApiError, type Paper } from "@/lib/api";
 import {
+  useAskPapers,
   useDeletePaper,
   usePapers,
   useReferences,
@@ -13,6 +14,7 @@ import {
   useUpdatePaper,
   useUploadPaper,
 } from "../api/use-papers";
+import { LiteratureMatrix } from "./literature-matrix";
 
 const STYLES = ["APA", "IEEE", "HARVARD"] as const;
 
@@ -120,7 +122,63 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
           </ol>
         </div>
       )}
+
+      {list.length > 0 && <AskPapers projectId={projectId} />}
+      {list.length > 0 && <LiteratureMatrix papers={list} />}
     </GlassCard>
+  );
+}
+
+/** Ask a question answered from the project's uploaded papers (RAG, FR-LIT-8). */
+function AskPapers({ projectId }: { projectId: string }) {
+  const ask = useAskPapers(projectId);
+  const [q, setQ] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!q.trim()) return;
+    setError(null);
+    try {
+      await ask.mutateAsync(q.trim());
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Couldn’t answer that");
+    }
+  }
+
+  return (
+    <div className="mt-8">
+      <h4 className="flex items-center gap-2 text-sm font-semibold text-white">
+        <Search size={15} className="text-accent" /> Ask your papers
+      </h4>
+      <p className="mt-0.5 text-xs text-slate-500">Answers are grounded only in the papers you’ve uploaded.</p>
+      <div className="mt-3 flex gap-2">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="e.g. What methods are used to measure rural energy access?"
+          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none focus:border-accent/50"
+        />
+        <Button size="sm" onClick={submit} disabled={ask.isPending || !q.trim()}>
+          {ask.isPending ? <Loader2 size={14} className="animate-spin" /> : "Ask"}
+        </Button>
+      </div>
+      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+      {ask.data && (
+        <div className="mt-3 rounded-xl border border-accent/15 bg-accent/[0.03] p-4">
+          <p className="whitespace-pre-wrap text-sm text-slate-200">{ask.data.answer}</p>
+          {ask.data.used_sources.length > 0 && (
+            <p className="mt-2 flex flex-wrap gap-1.5">
+              {ask.data.used_sources.map((sname, i) => (
+                <span key={i} className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-slate-400">
+                  {sname}
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

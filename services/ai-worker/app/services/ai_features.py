@@ -183,3 +183,38 @@ def _stub_summary() -> s.SummaryResponse:
         limitations=[],
         gaps=[],
     )
+
+
+# ── RAG over uploaded papers (Phase 5, FR-LIT-8) ─────────────────────────────
+def embed(req: s.EmbedRequest) -> s.EmbedResponse:
+    try:
+        vecs = _gateway().embed(list(req.texts))
+        return s.EmbedResponse(embeddings=vecs, dim=len(vecs[0]) if vecs else 0)
+    except LlmError:
+        # No embedding model wired → empty result; the backend skips indexing gracefully.
+        return s.EmbedResponse(embeddings=[], dim=0)
+
+
+def rag_answer(req: s.RagAnswerRequest) -> s.RagAnswerResponse:
+    if not req.contexts:
+        return s.RagAnswerResponse(
+            answer="I couldn't find anything in your uploaded papers about that.",
+            used_sources=[], grounded=True,
+        )
+    blocks = "\n\n".join(f"[{c.source}]\n{c.text}" for c in req.contexts)
+    user = (
+        "Answer the QUESTION using ONLY the SOURCES below. Cite the sources you use by their "
+        "bracketed label. If the sources don't contain the answer, say so plainly. "
+        'JSON shape: {"answer": "...", "used_sources": ["label", ...]}\n\n'
+        f"QUESTION: {req.question}\n\nSOURCES:\n{blocks}"
+    )
+    result = _try_llm(user, s.RagAnswerResponse)
+    if result is None:
+        # LLM offline → return the most relevant snippets so the user still gets grounded material.
+        joined = "\n\n".join(f"• ({c.source}) {c.text[:280]}" for c in req.contexts[:3])
+        return s.RagAnswerResponse(
+            answer="AI synthesis is unavailable, but here are the most relevant passages from your "
+            f"papers:\n\n{joined}",
+            used_sources=[c.source for c in req.contexts[:3]], grounded=True,
+        )
+    return result

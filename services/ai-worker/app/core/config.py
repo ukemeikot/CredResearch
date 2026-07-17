@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     llm_provider: str = "stub"          # ollama | stub
     llm_base_url: str = ""              # e.g. http://10.x.x.x:11434 (Ollama)
     llm_model: str = "llama3.2:3b"
+    embed_model: str = "nomic-embed-text"  # Ollama embedding model for RAG (768-dim), FR-LIT-8
     llm_timeout_seconds: float = 180.0
     llm_max_tokens: int = 768  # cap generation length so CPU inference stays bounded
 

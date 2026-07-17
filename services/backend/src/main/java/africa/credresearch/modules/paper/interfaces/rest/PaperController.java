@@ -70,7 +70,18 @@ public class PaperController {
         } catch (Exception e) {
             throw ApiException.badRequest("UPLOAD_READ_FAILED", "Could not read the uploaded file");
         }
-        return toResponse(service.upload(projectId, file.getOriginalFilename(), bytes));
+        Paper p = service.upload(projectId, file.getOriginalFilename(), bytes);
+        // Index for RAG (best-effort; never fails the upload).
+        service.indexPaperQuietly(p.id(), p.projectId());
+        return toResponse(p);
+    }
+
+    public record AskRequest(UUID projectId, String question) {}
+
+    @PostMapping("/ask")
+    @Operation(summary = "Ask a question answered from the project's uploaded papers (RAG, FR-LIT-8)")
+    public JsonNode ask(@RequestBody AskRequest req) {
+        return service.ask(req.projectId(), req.question());
     }
 
     @GetMapping
