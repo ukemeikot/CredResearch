@@ -340,6 +340,15 @@ export const ReviewThreadSchema = z.object({
 });
 export type ReviewThread = z.infer<typeof ReviewThreadSchema>;
 
+export const ExternalReviewSchema = z.object({
+  request: ReviewRequestSchema,
+  sectionHeading: z.string().nullable(),
+  sectionContent: z.string().nullable(),
+  comments: z.array(ReviewCommentSchema),
+  decisions: z.array(ReviewDecisionSchema),
+});
+export type ExternalReview = z.infer<typeof ExternalReviewSchema>;
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });

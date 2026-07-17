@@ -18,6 +18,8 @@ public class ReviewRequestEntity {
     private String note;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "decided_at") private Instant decidedAt;
+    @Column(name = "review_token_hash") private String reviewTokenHash;
+    @Column(name = "token_expires_at") private Instant tokenExpiresAt;
 
     @PrePersist void pre() { if (id == null) id = UuidV7.generate(); if (createdAt == null) createdAt = Instant.now(); }
 
@@ -31,4 +33,6 @@ public class ReviewRequestEntity {
     public String getNote() { return note; } public void setNote(String v) { note = v; }
     public Instant getCreatedAt() { return createdAt; } public void setCreatedAt(Instant v) { createdAt = v; }
     public Instant getDecidedAt() { return decidedAt; } public void setDecidedAt(Instant v) { decidedAt = v; }
+    public String getReviewTokenHash() { return reviewTokenHash; } public void setReviewTokenHash(String v) { reviewTokenHash = v; }
+    public Instant getTokenExpiresAt() { return tokenExpiresAt; } public void setTokenExpiresAt(Instant v) { tokenExpiresAt = v; }
 }

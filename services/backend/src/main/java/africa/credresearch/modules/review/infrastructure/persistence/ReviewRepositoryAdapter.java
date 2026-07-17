@@ -68,6 +68,19 @@ public class ReviewRepositoryAdapter implements ReviewRepository {
     }
 
     @Override
+    public void setReviewToken(UUID requestId, String tokenHash, Instant expiresAt) {
+        ReviewRequestEntity e = requests.findById(requestId).orElseThrow();
+        e.setReviewTokenHash(tokenHash);
+        e.setTokenExpiresAt(expiresAt);
+        requests.save(e);
+    }
+
+    @Override
+    public Optional<ReviewRequest> findByValidToken(String tokenHash, Instant now) {
+        return requests.findByReviewTokenHashAndTokenExpiresAtAfter(tokenHash, now).map(ReviewRepositoryAdapter::toRequest);
+    }
+
+    @Override
     public ReviewComment addComment(ReviewComment c) {
         ReviewCommentEntity e = new ReviewCommentEntity();
         e.setReviewRequestId(c.reviewRequestId());

@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { useProject } from "@/features/project/api/use-projects";
 import { useMe } from "@/features/user/api/use-me";
 import type { ReviewThread } from "@/lib/api";
-import { useAddComment, useDecide, useResolveComment, useResubmit, useReviews, useSubmitReview } from "../api/use-reviews";
+import {
+  useAddComment,
+  useDecide,
+  useResolveComment,
+  useResubmit,
+  useReviews,
+  useSubmitReview,
+  useSubmitReviewExternal,
+} from "../api/use-reviews";
 
 const STATUS_STYLE: Record<string, string> = {
   PENDING: "border-amber-400/40 text-amber-300",
@@ -32,18 +40,27 @@ export function ReviewPanel({
   const project = useProject(projectId);
   const reviews = useReviews(docId);
   const submit = useSubmitReview(docId);
+  const submitExternal = useSubmitReviewExternal(docId);
   const [reviewer, setReviewer] = useState("");
   const [note, setNote] = useState("");
+  const [mode, setMode] = useState<"member" | "external">("member");
+  const [email, setEmail] = useState("");
 
   const uid = me.data?.id;
   const members = (project.data?.members ?? []).filter((m) => m.userId !== uid);
   const threads = reviews.data ?? [];
 
   async function requestReview() {
-    if (!reviewer) return;
-    await submit.mutateAsync({ documentId: docId, reviewerUserId: reviewer, note: note.trim() || undefined });
+    if (mode === "member") {
+      if (!reviewer) return;
+      await submit.mutateAsync({ documentId: docId, reviewerUserId: reviewer, note: note.trim() || undefined });
+      setReviewer("");
+    } else {
+      if (!email.trim()) return;
+      await submitExternal.mutateAsync({ documentId: docId, email: email.trim(), note: note.trim() || undefined });
+      setEmail("");
+    }
     setNote("");
-    setReviewer("");
   }
 
   return (
@@ -77,35 +94,58 @@ export function ReviewPanel({
               {/* Request a review */}
               <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
                 <p className="text-sm font-medium text-white">Request a review</p>
-                {members.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-500">
-                    Add a supervisor/collaborator to the project first (Team panel).
-                  </p>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    <select
-                      value={reviewer}
-                      onChange={(e) => setReviewer(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-cosmos-900 px-3 py-2 text-sm text-white outline-none"
+                <div className="mt-2 flex rounded-lg border border-white/10 p-0.5 text-xs">
+                  {(["member", "external"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className={`flex-1 rounded-md px-2 py-1 transition-colors ${mode === m ? "bg-accent/20 text-white" : "text-slate-400 hover:text-white"}`}
                     >
-                      <option value="">Choose a reviewer…</option>
-                      {members.map((m) => (
-                        <option key={m.userId} value={m.userId}>
-                          {m.role} · {m.userId.slice(0, 8)}
-                        </option>
-                      ))}
-                    </select>
+                      {m === "member" ? "Project member" : "External (email link)"}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 space-y-2">
+                  {mode === "member" ? (
+                    members.length === 0 ? (
+                      <p className="text-xs text-slate-500">Add a collaborator to the project first (Team panel), or invite one by email.</p>
+                    ) : (
+                      <select
+                        value={reviewer}
+                        onChange={(e) => setReviewer(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-cosmos-900 px-3 py-2 text-sm text-white outline-none"
+                      >
+                        <option value="">Choose a reviewer…</option>
+                        {members.map((m) => (
+                          <option key={m.userId} value={m.userId}>
+                            {m.role} · {m.userId.slice(0, 8)}
+                          </option>
+                        ))}
+                      </select>
+                    )
+                  ) : (
                     <input
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="Note for the reviewer (optional)"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="supervisor@university.edu"
                       className="w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none"
                     />
-                    <Button size="sm" onClick={requestReview} disabled={!reviewer || submit.isPending}>
-                      <Send size={13} /> {submit.isPending ? "Sending…" : "Request review"}
-                    </Button>
-                  </div>
-                )}
+                  )}
+                  <input
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Note for the reviewer (optional)"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={requestReview}
+                    disabled={(mode === "member" ? !reviewer : !email.trim()) || submit.isPending || submitExternal.isPending}
+                  >
+                    <Send size={13} /> {submit.isPending || submitExternal.isPending ? "Sending…" : "Request review"}
+                  </Button>
+                </div>
               </div>
 
               {/* Threads */}

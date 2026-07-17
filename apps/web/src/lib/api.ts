@@ -201,6 +201,7 @@ export type {
   ReviewComment,
   ReviewDecision,
   ReviewThread,
+  ExternalReview,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -392,4 +393,14 @@ export const api = {
     request(`/reviews/${reviewId}/decision`, json("POST", b), S.ReviewThreadSchema),
   resubmitReview: (reviewId: string, note?: string) =>
     request(`/reviews/${reviewId}/resubmit`, json("POST", { note }), S.ReviewRequestSchema),
+  submitReviewExternal: (b: { documentId: string; documentSectionId?: string; email: string; note?: string }) =>
+    request("/reviews/external", json("POST", b), S.ReviewRequestSchema),
+
+  // Magic-link external review surface (public; token in the path)
+  reviewAccessView: (token: string) =>
+    request(`/review-access/${token}`, undefined, S.ExternalReviewSchema),
+  reviewAccessComment: (token: string, body: string) =>
+    request(`/review-access/${token}/comments`, json("POST", { body }), S.ExternalReviewSchema),
+  reviewAccessDecide: (token: string, decision: string, summary?: string) =>
+    request(`/review-access/${token}/decision`, json("POST", { decision, summary }), S.ExternalReviewSchema),
 };
