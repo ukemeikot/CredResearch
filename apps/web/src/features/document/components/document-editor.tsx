@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Download, Loader2, MessageSquare, ShieldCheck } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { GlassCard } from "@/components/ui/glass-card";
+import { ReviewPanel } from "@/features/review/components/review-panel";
 import { useProject } from "@/features/project/api/use-projects";
 import { useMe } from "@/features/user/api/use-me";
 import { documentKeys, useDocument } from "../api/use-documents";
@@ -24,6 +25,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [disclosureOpen, setDisclosureOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   // Bumped on an explicit reload (conflict/restore) to force the editor to re-init from the
   // freshly-refetched content, since normal saves intentionally don't remount it.
   const [reloadKey, setReloadKey] = useState(0);
@@ -81,6 +83,12 @@ export function DocumentEditor({ docId }: { docId: string }) {
         <div className="flex items-center gap-2">
           <DownloadMenu docId={docId} />
           <button
+            onClick={() => setReviewOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+          >
+            <MessageSquare size={14} /> Reviews
+          </button>
+          <button
             onClick={() => setDisclosureOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
           >
@@ -128,6 +136,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
         />
       )}
       <DisclosureLedger docId={docId} open={disclosureOpen} onClose={() => setDisclosureOpen(false)} />
+      <ReviewPanel docId={docId} projectId={projectId ?? ""} open={reviewOpen} onClose={() => setReviewOpen(false)} />
     </div>
   );
 }

@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 6 (first increment) — Supervisor review loop.** Submit a document/section for review by a
+  project member, who leaves **resolvable inline comments** and records a **decision**
+  (APPROVED / NEEDS_REVISION / REJECTED) with a summary; the request moves through its status and
+  **decision history is preserved** across revision rounds, with a **resubmit** path. A reviewer
+  **inbox** lists their pending requests. New `review` module (Clean Architecture) + Flyway `V11`
+  (`review_requests`/`review_comments`/`review_decisions`); a **Reviews** drawer in the document
+  editor. (FR-SUP-3/4/5/6/7/8. Magic-link external reviewers + notifications follow next.)
+
+### Added
 - **Phase 5 — RAG over your papers + literature matrix (Phase 5 complete).** *Ask your papers*: a
   question is embedded (Ollama `nomic-embed-text`), matched against the project's chunked+embedded
   corpus (**pgvector**, Flyway `V10`), and answered by the model **grounded only in the retrieved

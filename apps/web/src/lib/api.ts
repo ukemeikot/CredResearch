@@ -197,6 +197,10 @@ export type {
   PaperSummary,
   Reference,
   ReferenceList,
+  ReviewRequest,
+  ReviewComment,
+  ReviewDecision,
+  ReviewThread,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -371,4 +375,21 @@ export const api = {
     request(`/papers/${id}/summarize`, json("POST"), S.PaperSummarySchema),
   askPapers: (projectId: string, question: string) =>
     request("/papers/ask", json("POST", { projectId, question }), S.RagAnswerSchema),
+
+  // Reviews (Phase 6)
+  listReviews: (documentId: string) =>
+    request(`/reviews?documentId=${documentId}`, undefined, z.array(S.ReviewThreadSchema)),
+  reviewInbox: () => request("/reviews/inbox", undefined, z.array(S.ReviewRequestSchema)),
+  submitReview: (b: { documentId: string; documentSectionId?: string; reviewerUserId: string; note?: string }) =>
+    request("/reviews", json("POST", b), S.ReviewRequestSchema),
+  addReviewComment: (
+    reviewId: string,
+    b: { body: string; anchorStart?: number; anchorEnd?: number; quote?: string },
+  ) => request(`/reviews/${reviewId}/comments`, json("POST", b), S.ReviewCommentSchema),
+  resolveReviewComment: (commentId: string, resolved: boolean) =>
+    request(`/reviews/comments/${commentId}`, json("PATCH", { resolved }), S.ReviewCommentSchema),
+  decideReview: (reviewId: string, b: { decision: string; summary?: string }) =>
+    request(`/reviews/${reviewId}/decision`, json("POST", b), S.ReviewThreadSchema),
+  resubmitReview: (reviewId: string, note?: string) =>
+    request(`/reviews/${reviewId}/resubmit`, json("POST", { note }), S.ReviewRequestSchema),
 };
