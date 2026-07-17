@@ -361,4 +361,9 @@ export const api = {
   deletePaper: (id: string) => request<void>(`/papers/${id}`, json("DELETE")),
   references: (projectId: string, style: string) =>
     request(`/papers/references?projectId=${projectId}&style=${style}`, undefined, S.ReferenceListSchema),
+  exportReferences: (projectId: string, format: "bibtex" | "ris") =>
+    downloadFile(
+      `/papers/export?projectId=${projectId}&format=${format}`,
+      `references.${format === "ris" ? "ris" : "bib"}`,
+    ),
 };
