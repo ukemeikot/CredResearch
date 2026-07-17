@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Phase 5 (first increment) — Papers & reference list.** Upload source papers (PDF/DOCX) to a
+  project; the worker extracts the full text and best-effort bibliographic metadata (title, authors,
+  year, DOI) with a low-confidence flag prompting review (FR-LIT-1/2/3). A **Papers & references**
+  panel lists uploads, lets you correct extracted details, and renders a formatted **reference list**
+  in **APA / IEEE / Harvard** with one-click copy (FR-LIT-7). New `paper` module + Flyway `V8`; worker
+  `/papers/extract` (pypdf/python-docx). (Chunking + embeddings for RAG, the literature matrix,
+  in-text citations, and BibTeX/RIS follow as the next Phase 5 increments.)
+
 ### Changed
 - **Web API client now validates responses with zod.** API response shapes live as zod schemas
   (`lib/schemas.ts`) — the single source of truth from which the TypeScript types are inferred — and

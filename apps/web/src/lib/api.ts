@@ -136,6 +136,27 @@ async function downloadFile(path: string, fallbackName: string, retry = true): P
   URL.revokeObjectURL(url);
 }
 
+/** POST a multipart form (file upload) with auth (+ one refresh-retry) and validate the response. */
+async function upload<T>(path: string, form: FormData, schema: z.ZodType<T>, retry = true): Promise<T> {
+  const token = useAuth.getState().accessToken;
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    // NB: no Content-Type — the browser sets multipart/form-data with the boundary.
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: form,
+    cache: "no-store",
+  });
+  if (res.status === 401 && retry) {
+    if (await refreshOnce()) return upload<T>(path, form, schema, false);
+  }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(res.status, body.detail || body.message || res.statusText, body.code);
+  }
+  const parsed = schema.safeParse(body);
+  return parsed.success ? parsed.data : (body as T);
+}
+
 const json = (method: string, body?: unknown): RequestInit => ({
   method,
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -172,6 +193,9 @@ export type {
   AiAlignment,
   AiCredits,
   DisclosureEntry,
+  Paper,
+  Reference,
+  ReferenceList,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -320,4 +344,21 @@ export const api = {
     request<void>(`/projects/${projectId}/invitations/${invitationId}`, json("DELETE")),
   acceptInvite: (token: string) =>
     request("/invitations/accept", json("POST", { token }), S.AcceptInviteResponseSchema),
+
+  // Papers / references (Phase 5)
+  listPapers: (projectId: string) =>
+    request(`/papers?projectId=${projectId}`, undefined, z.array(S.PaperSchema)),
+  uploadPaper: (projectId: string, file: File) => {
+    const form = new FormData();
+    form.append("projectId", projectId);
+    form.append("file", file);
+    return upload("/papers", form, S.PaperSchema);
+  },
+  updatePaper: (
+    id: string,
+    b: { title?: string; authors?: string; year?: number; doi?: string; journal?: string },
+  ) => request(`/papers/${id}`, json("PATCH", b), S.PaperSchema),
+  deletePaper: (id: string) => request<void>(`/papers/${id}`, json("DELETE")),
+  references: (projectId: string, style: string) =>
+    request(`/papers/references?projectId=${projectId}&style=${style}`, undefined, S.ReferenceListSchema),
 };

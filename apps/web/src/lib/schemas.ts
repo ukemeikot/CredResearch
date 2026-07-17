@@ -255,6 +255,28 @@ export const DisclosureEntrySchema = z.object({
 });
 export type DisclosureEntry = z.infer<typeof DisclosureEntrySchema>;
 
+// ── Papers / references (Phase 5) ────────────────────────────────────────────
+export const PaperSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  filename: z.string().nullable(),
+  title: z.string().nullable(),
+  authors: z.string().nullable(),
+  year: z.number().nullable(),
+  doi: z.string().nullable(),
+  journal: z.string().nullable(),
+  extractionStatus: z.string(),
+});
+export type Paper = z.infer<typeof PaperSchema>;
+
+export const ReferenceSchema = z.object({ paperId: z.string(), text: z.string() });
+export const ReferenceListSchema = z.object({
+  style: z.string(),
+  references: z.array(ReferenceSchema),
+});
+export type Reference = z.infer<typeof ReferenceSchema>;
+export type ReferenceList = z.infer<typeof ReferenceListSchema>;
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });

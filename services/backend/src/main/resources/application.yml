@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: credresearch-backend
+  servlet:
+    multipart:
+      max-file-size: 25MB      # uploaded papers (PDF/DOCX) — FR-LIT-1
+      max-request-size: 30MB
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/credresearch}
     username: ${SPRING_DATASOURCE_USERNAME:credresearch}
