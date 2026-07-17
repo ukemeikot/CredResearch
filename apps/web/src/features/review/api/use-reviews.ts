@@ -37,6 +37,15 @@ export function useSubmitReview(documentId: string) {
   }) => api.submitReview(b));
 }
 
+export function useSubmitReviewExternal(documentId: string) {
+  return useReviewMutation(documentId, (b: {
+    documentId: string;
+    documentSectionId?: string;
+    email: string;
+    note?: string;
+  }) => api.submitReviewExternal(b));
+}
+
 export function useAddComment(documentId: string) {
   return useReviewMutation(documentId, (v: {
     reviewId: string;

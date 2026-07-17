@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 6 — Magic-link external review + notifications.** A student can invite an **external
+  supervisor by email**; the reviewer opens a **scoped, single-review magic link** (opaque token,
+  hashed at rest, 14-day expiry) and can view the shared section, comment, and decide **without an
+  account** (FR-SUP-1/2). The token authorises exactly one review and nothing else. Email
+  **notifications** fire on invite, decision, and comment (FR-SUP-9). Flyway `V12`; public
+  `/review/{token}` surface + `/api/v1/review-access/**` (permitted without a bearer).
 - **Phase 6 (first increment) — Supervisor review loop.** Submit a document/section for review by a
   project member, who leaves **resolvable inline comments** and records a **decision**
   (APPROVED / NEEDS_REVISION / REJECTED) with a summary; the request moves through its status and
