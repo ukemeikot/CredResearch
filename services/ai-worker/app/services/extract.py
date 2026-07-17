@@ -73,12 +73,22 @@ def extract_paper(filename: str, data: bytes) -> dict:
 
     title = info.get("title")
     if not title:
-        # First substantial line of the document is a reasonable title guess.
-        for line in head.splitlines():
-            line = line.strip()
-            if len(line) >= 8 and not line.lower().startswith(("abstract", "doi", "http")):
-                title = line[:300]
-                break
+        # First substantial line of the document is a reasonable title guess — but skip common
+        # front-matter boilerplate (licence/attribution notices, arXiv stamps, page headers).
+        _skip = ("abstract", "doi", "http", "arxiv", "preprint", "copyright", "license",
+                 "licence", "provided proper attribution", "permission", "all rights reserved",
+                 "downloaded from", "www.")
+        for raw in head.splitlines():
+            line = raw.strip()
+            low = line.lower()
+            if len(line) < 8 or len(line) > 250:
+                continue
+            if any(low.startswith(p) or p in low for p in _skip):
+                continue
+            if sum(c.isdigit() for c in line) > len(line) / 2:
+                continue  # mostly digits → a date/line-number, not a title
+            title = line[:300]
+            break
 
     doi_match = DOI_RE.search(text)
     doi = doi_match.group(0).rstrip(".") if doi_match else None
