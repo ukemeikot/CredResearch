@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { useProject } from "@/features/project/api/use-projects";
 import { useMe } from "@/features/user/api/use-me";
 import { documentKeys, useDocument } from "../api/use-documents";
+import { DisclosureLedger } from "./disclosure-ledger";
 import { SectionEditor } from "./section-editor";
 import { SectionNav } from "./section-nav";
 import { VersionHistory } from "./version-history";
@@ -21,6 +22,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
   const project = useProject(projectId ?? "");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [disclosureOpen, setDisclosureOpen] = useState(false);
   // Bumped on an explicit reload (conflict/restore) to force the editor to re-init from the
   // freshly-refetched content, since normal saves intentionally don't remount it.
   const [reloadKey, setReloadKey] = useState(0);
@@ -67,13 +69,21 @@ export function DocumentEditor({ docId }: { docId: string }) {
         <ArrowLeft size={16} /> Back to project
       </Link>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 font-display text-2xl font-bold text-white"
-      >
-        {query.data.document.title}
-      </motion.h1>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <motion.h1
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="font-display text-2xl font-bold text-white"
+        >
+          {query.data.document.title}
+        </motion.h1>
+        <button
+          onClick={() => setDisclosureOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+        >
+          <ShieldCheck size={14} /> AI disclosure
+        </button>
+      </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[260px_1fr]">
         {/* Section navigation + structure editing (owner) */}
@@ -112,6 +122,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
           onRestored={reload}
         />
       )}
+      <DisclosureLedger docId={docId} open={disclosureOpen} onClose={() => setDisclosureOpen(false)} />
     </div>
   );
 }
