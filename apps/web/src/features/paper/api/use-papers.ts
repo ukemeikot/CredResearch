@@ -43,6 +43,14 @@ export function useUpdatePaper(projectId: string) {
   });
 }
 
+export function useAskPapers(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (question: string) => api.askPapers(projectId, question),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ai-credits"] }),
+  });
+}
+
 export function useSummarizePaper(projectId: string) {
   const qc = useQueryClient();
   return useMutation({

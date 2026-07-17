@@ -127,3 +127,29 @@ class SummaryResponse(_Lenient):
     findings: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
     gaps: list[str] = Field(default_factory=list)
+
+
+# ── RAG over uploaded papers (Phase 5, FR-LIT-8) ─────────────────────────────
+class EmbedRequest(BaseModel):
+    texts: list[str] = Field(default_factory=list)
+
+
+class EmbedResponse(_Lenient):
+    embeddings: list[list[float]] = Field(default_factory=list)
+    dim: int = 0
+
+
+class RagContext(_Lenient):
+    source: str = ""
+    text: str = ""
+
+
+class RagAnswerRequest(BaseModel):
+    question: str
+    contexts: list[RagContext] = Field(default_factory=list)
+
+
+class RagAnswerResponse(_Lenient):
+    answer: str = ""
+    used_sources: list[str] = Field(default_factory=list)
+    grounded: bool = True
