@@ -43,6 +43,17 @@ export function useUpdatePaper(projectId: string) {
   });
 }
 
+export function useSummarizePaper(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.summarizePaper(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: papersKey(projectId) });
+      qc.invalidateQueries({ queryKey: ["ai-credits"] });
+    },
+  });
+}
+
 export function useDeletePaper(projectId: string) {
   const qc = useQueryClient();
   return useMutation({

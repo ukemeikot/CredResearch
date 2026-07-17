@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 5 — AI paper summarization.** A **Summarize** action on each uploaded paper asks the AI
+  worker for a structured summary — overall summary, methodology, key findings, limitations, and
+  research gaps — shown inline and stored on the paper (`GET /papers` returns it). Credit-metered
+  and recorded like other AI features (verified-email gated). Flyway `V9`. (FR-LIT-4.)
 - **Phase 5 (first increment) — Papers & reference list.** Upload source papers (PDF/DOCX) to a
   project; the worker extracts the full text and best-effort bibliographic metadata (title, authors,
   year, DOI) with a low-confidence flag prompting review (FR-LIT-1/2/3). A **Papers & references**

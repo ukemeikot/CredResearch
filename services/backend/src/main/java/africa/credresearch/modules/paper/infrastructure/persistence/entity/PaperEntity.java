@@ -8,6 +8,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "papers")
@@ -33,6 +35,10 @@ public class PaperEntity {
 
     @Column(name = "text_content")
     private String textContent;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "summary_json")
+    private String summaryJson;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -64,6 +70,8 @@ public class PaperEntity {
     public void setExtractionStatus(String v) { extractionStatus = v; }
     public String getTextContent() { return textContent; }
     public void setTextContent(String v) { textContent = v; }
+    public String getSummaryJson() { return summaryJson; }
+    public void setSummaryJson(String v) { summaryJson = v; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant v) { createdAt = v; }
 }
