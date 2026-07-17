@@ -15,4 +15,5 @@ public record Paper(
         String doi,
         String journal,
         String extractionStatus,
-        Instant createdAt) {}
+        Instant createdAt,
+        String summaryJson) {}

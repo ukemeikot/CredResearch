@@ -161,3 +161,25 @@ def _stub_alignment(req: s.AlignmentRequest) -> s.AlignmentResponse:
         findings=findings or [s.AlignmentFinding(area="Overall", issue="No major gaps detected.",
                                                  suggestion="Proceed and refine with citations.", severity="LOW")],
     )
+
+
+# ── Paper summarization (Phase 5, FR-LIT-4) ──────────────────────────────────
+def summarize(req: s.SummaryRequest) -> s.SummaryResponse:
+    text = (req.text or "")[:6000]  # cap input so CPU inference stays bounded
+    user = (
+        "Summarize this academic paper for a literature review. Provide a 2-3 sentence overall "
+        "summary, the methodology, key findings, limitations, and research gaps it identifies. "
+        'JSON shape: {"summary","methodology","findings":[],"limitations":[],"gaps":[]}\n\n'
+        f"PAPER TEXT:\n{text}"
+    )
+    return _try_llm(user, s.SummaryResponse) or _stub_summary()
+
+
+def _stub_summary() -> s.SummaryResponse:
+    return s.SummaryResponse(
+        summary="AI summary is unavailable (no model configured). Review the paper manually.",
+        methodology="",
+        findings=[],
+        limitations=[],
+        gaps=[],
+    )

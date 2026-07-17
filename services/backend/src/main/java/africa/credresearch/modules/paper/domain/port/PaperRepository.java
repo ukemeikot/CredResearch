@@ -15,5 +15,10 @@ public interface PaperRepository {
 
     Paper updateMetadata(UUID id, String title, String authors, Integer year, String doi, String journal);
 
+    /** The extracted full text, for summarization/RAG (not returned in list responses). */
+    Optional<String> getText(UUID id);
+
+    Paper saveSummary(UUID id, String summaryJson);
+
     void delete(UUID id);
 }

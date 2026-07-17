@@ -194,6 +194,7 @@ export type {
   AiCredits,
   DisclosureEntry,
   Paper,
+  PaperSummary,
   Reference,
   ReferenceList,
 } from "./schemas";
@@ -366,4 +367,6 @@ export const api = {
       `/papers/export?projectId=${projectId}&format=${format}`,
       `references.${format === "ris" ? "ris" : "bib"}`,
     ),
+  summarizePaper: (id: string) =>
+    request(`/papers/${id}/summarize`, json("POST"), S.PaperSummarySchema),
 };

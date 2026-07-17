@@ -39,3 +39,8 @@ def section_assist(req: s.SectionAssistRequest) -> s.SectionAssistResponse:
 @router.post("/alignment", response_model=s.AlignmentResponse, dependencies=[Depends(require_internal)])
 def alignment(req: s.AlignmentRequest) -> s.AlignmentResponse:
     return ai_features.alignment(req)
+
+
+@router.post("/summarize", response_model=s.SummaryResponse, dependencies=[Depends(require_internal)])
+def summarize(req: s.SummaryRequest) -> s.SummaryResponse:
+    return ai_features.summarize(req)
