@@ -5,8 +5,10 @@ import { EditorContent, useEditor, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
+import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import {
   AlertTriangle,
+  Ban,
   Bold,
   Check,
   CloudOff,
@@ -17,6 +19,7 @@ import {
   List,
   ListOrdered,
   Loader2,
+  Palette,
   Quote,
   Sparkles,
   Users,
@@ -29,6 +32,19 @@ import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
 import { useCollab, type CollabPeer } from "../hooks/use-collab";
 
 const AUTOSAVE_DELAY = 1200;
+
+// Rich-text style marks: typeface, size, and colour (TextStyle is the shared base the others attach to).
+const STYLE_EXTENSIONS = [TextStyle, FontFamily, FontSize, Color];
+
+const FONT_FAMILIES: { label: string; value: string }[] = [
+  { label: "Default", value: "" },
+  { label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Sans", value: "Inter, system-ui, sans-serif" },
+  { label: "Mono", value: "'JetBrains Mono', ui-monospace, monospace" },
+  { label: "Times", value: "'Times New Roman', Times, serif" },
+];
+const FONT_SIZES = ["12px", "14px", "16px", "18px", "24px", "30px"];
+const TEXT_COLORS = ["#e2e8f0", "#ffffff", "#f87171", "#fb923c", "#fbbf24", "#34d399", "#38bdf8", "#a78bfa", "#f472b6"];
 
 export function SectionEditor({
   docId,
@@ -84,10 +100,11 @@ export function SectionEditor({
         ? [
             // Collaboration provides its own (shared) undo history — disable StarterKit's.
             StarterKit.configure({ undoRedo: false }),
+            ...STYLE_EXTENSIONS,
             Collaboration.configure({ document: collab.ydoc! }),
             CollaborationCaret.configure({ provider: collab.provider!, user: collab.user }),
           ]
-        : [StarterKit],
+        : [StarterKit, ...STYLE_EXTENSIONS],
       // In collab mode content comes from Yjs (seeded once, below) — don't set it here.
       content: collabReady ? undefined : initialContent,
       immediatelyRender: false,
@@ -311,6 +328,74 @@ function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>>
       <button type="button" className={btn(editor.isActive("bulletList"))} onClick={() => editor.chain().focus().toggleBulletList().run()} aria-label="Bullet list"><List size={15} /></button>
       <button type="button" className={btn(editor.isActive("orderedList"))} onClick={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Ordered list"><ListOrdered size={15} /></button>
       <button type="button" className={btn(editor.isActive("blockquote"))} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Quote"><Quote size={15} /></button>
+
+      <span className="mx-0.5 w-px self-stretch bg-white/10" />
+
+      {/* Typeface */}
+      <select
+        aria-label="Font"
+        className="h-8 rounded-lg border border-white/10 bg-cosmos-900 px-2 text-xs text-slate-300 outline-none hover:border-white/30"
+        value={editor.getAttributes("textStyle").fontFamily ?? ""}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v) editor.chain().focus().setFontFamily(v).run();
+          else editor.chain().focus().unsetFontFamily().run();
+        }}
+      >
+        {FONT_FAMILIES.map((f) => (
+          <option key={f.label} value={f.value}>{f.label}</option>
+        ))}
+      </select>
+
+      {/* Font size */}
+      <select
+        aria-label="Font size"
+        className="h-8 rounded-lg border border-white/10 bg-cosmos-900 px-2 text-xs text-slate-300 outline-none hover:border-white/30"
+        value={editor.getAttributes("textStyle").fontSize ?? ""}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v) editor.chain().focus().setFontSize(v).run();
+          else editor.chain().focus().unsetFontSize().run();
+        }}
+      >
+        <option value="">Size</option>
+        {FONT_SIZES.map((s) => (
+          <option key={s} value={s}>{s.replace("px", "")}</option>
+        ))}
+      </select>
+
+      {/* Text colour */}
+      <div className="flex items-center gap-1">
+        <label className={`${btn(false)} relative cursor-pointer`} aria-label="Text colour" title="Text colour">
+          <Palette size={15} />
+          <input
+            type="color"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            value={editor.getAttributes("textStyle").color ?? "#e2e8f0"}
+            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+          />
+        </label>
+        {TEXT_COLORS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            aria-label={`Colour ${c}`}
+            title={c}
+            onClick={() => editor.chain().focus().setColor(c).run()}
+            className="h-5 w-5 rounded-full border border-white/20 transition-transform hover:scale-110"
+            style={{ backgroundColor: c }}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().unsetColor().run()}
+          className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-400 transition-colors hover:border-white/30"
+          aria-label="Clear colour"
+          title="Clear colour"
+        >
+          <Ban size={14} />
+        </button>
+      </div>
     </div>
   );
 }
