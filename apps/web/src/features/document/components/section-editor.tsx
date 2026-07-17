@@ -3,8 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
+import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import {
   AlertTriangle,
+  Ban,
   Bold,
   Check,
   CloudOff,
@@ -14,60 +18,137 @@ import {
   Italic,
   List,
   ListOrdered,
+  BookMarked,
   Loader2,
+  Palette,
   Quote,
+  Sparkles,
+  Users,
 } from "lucide-react";
-import type { DocSection } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { ApiError, type DocSection, type Paper } from "@/lib/api";
+import { useMe } from "@/features/user/api/use-me";
+import { usePapers } from "@/features/paper/api/use-papers";
+import { citationLabel, inTextCitation } from "@/features/paper/model/cite";
+import { useAiCredits, useDisclosureAppend, useSectionAssist } from "../api/use-ai";
 import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
+import { useCollab, type CollabPeer } from "../hooks/use-collab";
 
 const AUTOSAVE_DELAY = 1200;
 
+// Rich-text style marks: typeface, size, and colour (TextStyle is the shared base the others attach to).
+const STYLE_EXTENSIONS = [TextStyle, FontFamily, FontSize, Color];
+
+const FONT_FAMILIES: { label: string; value: string }[] = [
+  { label: "Default", value: "" },
+  { label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Sans", value: "Inter, system-ui, sans-serif" },
+  { label: "Mono", value: "'JetBrains Mono', ui-monospace, monospace" },
+  { label: "Times", value: "'Times New Roman', Times, serif" },
+];
+const FONT_SIZES = ["12px", "14px", "16px", "18px", "24px", "30px"];
+const TEXT_COLORS = ["#e2e8f0", "#ffffff", "#f87171", "#fb923c", "#fbbf24", "#34d399", "#38bdf8", "#a78bfa", "#f472b6"];
+
 export function SectionEditor({
   docId,
+  projectId,
   section,
   onReload,
   onOpenHistory,
 }: {
   docId: string;
+  projectId: string;
   section: DocSection;
   onReload: () => void;
   onOpenHistory: () => void;
 }) {
-  const { status, save } = useSectionAutosave(docId, section);
+  const me = useMe();
+  const collab = useCollab(docId, section.id, me.data?.fullName ?? "", me.data?.id ?? "");
+  // "active" = we expect collab here and haven't fallen back; "ready" = actually connected.
+  const collabActive = collab.enabled && !collab.unavailable;
+  const collabReady = collabActive && collab.connected && !!collab.ydoc && !!collab.provider;
+  const { status, save } = useSectionAutosave(docId, section, { collab: collab.enabled });
+  const assist = useSectionAssist();
+  const disclosure = useDisclosureAppend(docId);
+  const credits = useAiCredits();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<unknown>(null); // most recent editor JSON (may be un-flushed)
   const dirty = useRef(false);
   const saveRef = useRef(save);
   saveRef.current = save;
+  // In collaboration mode exactly one client (the leader) persists to the API; keep the flag in a
+  // ref so the debounced save closure always reads the current value.
+  const isLeaderRef = useRef(collab.isLeader);
+  isLeaderRef.current = collab.isLeader;
+  const seededRef = useRef(false);
   const [, force] = useState(0);
+  const papersQ = usePapers(projectId);
+  const [citeOpen, setCiteOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [instruction, setInstruction] = useState("");
 
   // Prefer locally-buffered offline edits over the (possibly older) server content.
   const initialContent = (readSectionBuffer(section.id) ?? section.content ?? "") as Content;
 
+  function scheduleSave(json: unknown) {
+    latest.current = json;
+    dirty.current = true;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      dirty.current = false;
+      // Non-collab (or collab fallback): always persist. Live collab: only the leader writes back.
+      if (!collabActive || isLeaderRef.current) saveRef.current(json);
+    }, AUTOSAVE_DELAY);
+  }
+
   const editor = useEditor(
     {
-      extensions: [StarterKit],
-      content: initialContent,
+      extensions: collabReady
+        ? [
+            // Collaboration provides its own (shared) undo history — disable StarterKit's.
+            StarterKit.configure({ undoRedo: false }),
+            ...STYLE_EXTENSIONS,
+            Collaboration.configure({ document: collab.ydoc! }),
+            CollaborationCaret.configure({ provider: collab.provider!, user: collab.user }),
+          ]
+        : [StarterKit, ...STYLE_EXTENSIONS],
+      // In collab mode content comes from Yjs (seeded once, below) — don't set it here.
+      content: collabReady ? undefined : initialContent,
       immediatelyRender: false,
       editorProps: {
         attributes: {
           class: "tiptap min-h-[52vh] w-full max-w-none px-1 py-2 text-slate-200 outline-none",
         },
       },
-      onUpdate: ({ editor }) => {
-        const json = editor.getJSON();
-        latest.current = json;
-        dirty.current = true;
-        if (timer.current) clearTimeout(timer.current);
-        timer.current = setTimeout(() => {
-          dirty.current = false;
-          save(json);
-        }, AUTOSAVE_DELAY);
-      },
+      onUpdate: ({ editor }) => scheduleSave(editor.getJSON()),
       onSelectionUpdate: () => force((n) => n + 1),
     },
-    [section.id],
+    [section.id, collabReady],
   );
+
+  // Seed the shared Yjs doc from the persisted content the first time it's opened (empty fragment).
+  // Only the leader seeds, so peers don't each insert a copy.
+  useEffect(() => {
+    if (!collabReady || !editor || !collab.synced || !collab.isLeader || seededRef.current) return;
+    const fragment = collab.ydoc!.getXmlFragment("default");
+    if (fragment.length === 0 && initialContent) {
+      editor.commands.setContent(initialContent);
+    }
+    seededRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collabReady, editor, collab.synced, collab.isLeader]);
+
+  // While actively connecting to a live session, prevent typing (avoids edits that wouldn't be
+  // shared). Once connected (ready) or fallen back (unavailable), editing is allowed.
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!(collabActive && !collabReady));
+  }, [editor, collabActive, collabReady]);
+
+  // A fresh Yjs doc is built per section — allow the next section to seed again.
+  useEffect(() => {
+    seededRef.current = false;
+  }, [section.id]);
 
   // Flush a pending debounced save when the section/page unmounts, so the last edits aren't lost.
   useEffect(() => {
@@ -79,6 +160,38 @@ export function SectionEditor({
       }
     };
   }, []);
+
+  async function runAssist() {
+    if (!editor) return;
+    try {
+      const res = await assist.mutateAsync({
+        heading: section.heading,
+        current_text: editor.getText(),
+        instruction: instruction.trim() || "Draft or improve this section.",
+      });
+      const html = res.suggestion
+        .split(/\n{2,}/)
+        .filter(Boolean)
+        .map((p) => `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`)
+        .join("");
+      editor.chain().focus().insertContent(html).run();
+      // Record AI use in the document's disclosure ledger (FR-LEDGER).
+      disclosure.mutate({
+        documentSectionId: section.id,
+        featureKey: "section-assist",
+        suggestionSummary: res.suggestion.slice(0, 200),
+        action: "accepted",
+      });
+      setAiOpen(false);
+      setInstruction("");
+    } catch {
+      /* surfaced via assist.error */
+    }
+  }
+
+  const creditsLow = credits.data && credits.data.remaining <= 0;
+
+  const aiError = assist.error instanceof ApiError ? assist.error.message : null;
 
   return (
     <div>
@@ -92,6 +205,7 @@ export function SectionEditor({
           <h2 className="font-display text-xl font-bold text-white">{section.heading}</h2>
         </div>
         <div className="flex items-center gap-3">
+          {collabActive && <Presence peers={collab.peers} connecting={!collabReady} />}
           <SaveIndicator status={status} />
           <button
             onClick={onOpenHistory}
@@ -101,6 +215,12 @@ export function SectionEditor({
           </button>
         </div>
       </div>
+
+      {collabActive && !collabReady && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-slate-400">
+          <Loader2 size={16} className="animate-spin" /> Connecting to the live editing session…
+        </div>
+      )}
 
       {status === "conflict" && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
@@ -115,10 +235,111 @@ export function SectionEditor({
 
       {editor && <Toolbar editor={editor} />}
 
+      <div className="mt-2">
+        {!aiOpen ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-3 py-1.5 text-xs text-accent transition-colors hover:bg-accent/10"
+            >
+              <Sparkles size={13} /> AI assist
+            </button>
+            {/* Insert an in-text citation from the project's papers (FR-LIT-6) */}
+            <div className="relative">
+              <button
+                onClick={() => setCiteOpen((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+              >
+                <BookMarked size={13} /> Cite
+              </button>
+              {citeOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setCiteOpen(false)} />
+                  <div className="absolute left-0 z-20 mt-1 max-h-64 w-72 overflow-y-auto rounded-xl border border-white/10 bg-cosmos-900 p-1 shadow-xl">
+                    {(papersQ.data ?? []).length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-slate-500">
+                        No papers yet — upload sources in the project’s Papers &amp; references panel.
+                      </p>
+                    ) : (
+                      (papersQ.data ?? []).map((p: Paper) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            editor?.chain().focus().insertContent(`${inTextCitation(p)} `).run();
+                            setCiteOpen(false);
+                          }}
+                          className="block w-full truncate rounded-lg px-3 py-2 text-left text-xs text-slate-200 hover:bg-white/5"
+                          title={citationLabel(p)}
+                        >
+                          <span className="text-accent">{inTextCitation(p)}</span> {citationLabel(p)}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            {credits.data && (
+              <span className={`text-[11px] ${creditsLow ? "text-rose-400" : "text-slate-500"}`}>
+                {credits.data.remaining}/{credits.data.limit} AI credits left
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-2">
+            <Sparkles size={14} className="ml-1 shrink-0 text-accent" />
+            <input
+              autoFocus
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") runAssist();
+                if (e.key === "Escape") setAiOpen(false);
+              }}
+              placeholder="Draft this section, make it more concise, add examples…"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white outline-none"
+            />
+            <Button size="sm" onClick={runAssist} disabled={assist.isPending || !!creditsLow}>
+              {assist.isPending ? "Generating…" : creditsLow ? "No credits" : "Generate"}
+            </Button>
+            <button onClick={() => setAiOpen(false)} className="px-1 text-xs text-slate-400 hover:text-white">
+              Cancel
+            </button>
+          </div>
+        )}
+        {aiError && <p className="mt-1 text-xs text-rose-400">{aiError}</p>}
+      </div>
+
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <EditorContent editor={editor} />
       </div>
     </div>
+  );
+}
+
+function Presence({ peers, connecting }: { peers: CollabPeer[]; connecting: boolean }) {
+  if (connecting) return null;
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-400" title="People editing now">
+      <Users size={13} />
+      {peers.length === 0 ? (
+        "Only you"
+      ) : (
+        <span className="flex items-center -space-x-1.5">
+          {peers.slice(0, 4).map((p) => (
+            <span
+              key={p.clientId}
+              className="grid h-5 w-5 place-items-center rounded-full border border-cosmos-900 text-[9px] font-semibold text-white"
+              style={{ backgroundColor: p.color }}
+              title={p.name}
+            >
+              {p.name.charAt(0).toUpperCase()}
+            </span>
+          ))}
+          {peers.length > 4 && <span className="pl-2 text-[10px]">+{peers.length - 4}</span>}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -149,6 +370,74 @@ function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>>
       <button type="button" className={btn(editor.isActive("bulletList"))} onClick={() => editor.chain().focus().toggleBulletList().run()} aria-label="Bullet list"><List size={15} /></button>
       <button type="button" className={btn(editor.isActive("orderedList"))} onClick={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Ordered list"><ListOrdered size={15} /></button>
       <button type="button" className={btn(editor.isActive("blockquote"))} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Quote"><Quote size={15} /></button>
+
+      <span className="mx-0.5 w-px self-stretch bg-white/10" />
+
+      {/* Typeface */}
+      <select
+        aria-label="Font"
+        className="h-8 rounded-lg border border-white/10 bg-cosmos-900 px-2 text-xs text-slate-300 outline-none hover:border-white/30"
+        value={editor.getAttributes("textStyle").fontFamily ?? ""}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v) editor.chain().focus().setFontFamily(v).run();
+          else editor.chain().focus().unsetFontFamily().run();
+        }}
+      >
+        {FONT_FAMILIES.map((f) => (
+          <option key={f.label} value={f.value}>{f.label}</option>
+        ))}
+      </select>
+
+      {/* Font size */}
+      <select
+        aria-label="Font size"
+        className="h-8 rounded-lg border border-white/10 bg-cosmos-900 px-2 text-xs text-slate-300 outline-none hover:border-white/30"
+        value={editor.getAttributes("textStyle").fontSize ?? ""}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v) editor.chain().focus().setFontSize(v).run();
+          else editor.chain().focus().unsetFontSize().run();
+        }}
+      >
+        <option value="">Size</option>
+        {FONT_SIZES.map((s) => (
+          <option key={s} value={s}>{s.replace("px", "")}</option>
+        ))}
+      </select>
+
+      {/* Text colour */}
+      <div className="flex items-center gap-1">
+        <label className={`${btn(false)} relative cursor-pointer`} aria-label="Text colour" title="Text colour">
+          <Palette size={15} />
+          <input
+            type="color"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            value={editor.getAttributes("textStyle").color ?? "#e2e8f0"}
+            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+          />
+        </label>
+        {TEXT_COLORS.map((c) => (
+          <button
+            key={c}
+            type="button"
+            aria-label={`Colour ${c}`}
+            title={c}
+            onClick={() => editor.chain().focus().setColor(c).run()}
+            className="h-5 w-5 rounded-full border border-white/20 transition-transform hover:scale-110"
+            style={{ backgroundColor: c }}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => editor.chain().focus().unsetColor().run()}
+          className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-400 transition-colors hover:border-white/30"
+          aria-label="Clear colour"
+          title="Clear colour"
+        >
+          <Ban size={14} />
+        </button>
+      </div>
     </div>
   );
 }

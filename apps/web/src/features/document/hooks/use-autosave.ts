@@ -28,7 +28,8 @@ export function readSectionBuffer(sectionId: string): unknown | null {
  * latest queued content runs after the in-flight one). Edits made offline are buffered in
  * localStorage and flushed on reconnect, so authoring survives a flaky connection.
  */
-export function useSectionAutosave(docId: string, section: DocSection) {
+export function useSectionAutosave(docId: string, section: DocSection, options?: { collab?: boolean }) {
+  const collab = options?.collab ?? false;
   const qc = useQueryClient();
   const [status, setStatus] = useState<SaveStatus>("idle");
   const versionRef = useRef(section.version);
@@ -81,6 +82,34 @@ export function useSectionAutosave(docId: string, section: DocSection) {
         setStatus("saved");
       } catch (e) {
         if (e instanceof ApiError && e.status === 409) {
+          // In collaboration mode Yjs has already merged everyone's edits, so a version conflict
+          // just means our cached version is stale (e.g. leadership just changed hands). Re-sync
+          // the version from the server and retry once, silently — no conflict UI.
+          if (collab) {
+            try {
+              const latest = await api.getSection(docId, section.id);
+              versionRef.current = latest.version;
+              const res = await api.autosaveSection(docId, section.id, {
+                content,
+                version: versionRef.current,
+              });
+              versionRef.current = res.version;
+              qc.setQueryData<DocumentDetail>(documentKeys.doc(docId), (old) =>
+                old
+                  ? {
+                      ...old,
+                      sections: old.sections.map((s) =>
+                        s.id === section.id ? { ...s, content: res.content, version: res.version } : s,
+                      ),
+                    }
+                  : old,
+              );
+              setStatus("saved");
+            } catch {
+              setStatus("error");
+            }
+            return;
+          }
           setStatus("conflict");
           return;
         }
@@ -92,7 +121,7 @@ export function useSectionAutosave(docId: string, section: DocSection) {
         setStatus("error");
       }
     },
-    [docId, section.id, qc],
+    [docId, section.id, qc, collab],
   );
 
   // Serialize saves: never let two run concurrently with the same (stale) version. A save that

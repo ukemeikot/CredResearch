@@ -1,4 +1,7 @@
+import { z } from "zod";
 import { useAuth } from "./auth-store";
+import * as S from "./schemas";
+import type { ProjectMemberRole, ProjectStatus, TokenResponse } from "./schemas";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:18080/api/v1";
@@ -62,7 +65,12 @@ export function refreshSession(): Promise<boolean> {
   return refreshOnce();
 }
 
-async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+async function request<T>(
+  path: string,
+  init: RequestInit = {},
+  schema?: z.ZodType<T>,
+  retry = true,
+): Promise<T> {
   const token = useAuth.getState().accessToken;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
@@ -76,7 +84,7 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
 
   // Access token expired → refresh once and retry (never for /auth/* endpoints).
   if (res.status === 401 && retry && !path.startsWith("/auth/")) {
-    if (await refreshOnce()) return request<T>(path, init, false);
+    if (await refreshOnce()) return request<T>(path, init, schema, false);
   }
 
   if (res.status === 204) return undefined as T;
@@ -85,7 +93,68 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
   if (!res.ok) {
     throw new ApiError(res.status, body.detail || body.message || res.statusText, body.code);
   }
+  // Validate the response against its zod schema at the boundary. On drift we log (so contract
+  // mismatches surface in the console) but still return the payload, so a benign backend change
+  // never hard-breaks a working screen.
+  if (schema) {
+    const parsed = schema.safeParse(body);
+    if (parsed.success) return parsed.data;
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[api] response validation failed for ${path}:`, parsed.error.issues);
+    }
+    return body as T;
+  }
   return body as T;
+}
+
+/** Fetch a binary file with auth (+ one refresh-retry) and trigger a browser download. */
+async function downloadFile(path: string, fallbackName: string, retry = true): Promise<void> {
+  const token = useAuth.getState().accessToken;
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    cache: "no-store",
+  });
+  if (res.status === 401 && retry) {
+    if (await refreshOnce()) return downloadFile(path, fallbackName, false);
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, body.detail || body.message || res.statusText, body.code);
+  }
+  // Prefer the server-provided filename from Content-Disposition.
+  const cd = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename\*?=(?:UTF-8''|")?([^";]+)/i.exec(cd);
+  const name = match ? decodeURIComponent(match[1].replace(/"/g, "")) : fallbackName;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** POST a multipart form (file upload) with auth (+ one refresh-retry) and validate the response. */
+async function upload<T>(path: string, form: FormData, schema: z.ZodType<T>, retry = true): Promise<T> {
+  const token = useAuth.getState().accessToken;
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    // NB: no Content-Type — the browser sets multipart/form-data with the boundary.
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: form,
+    cache: "no-store",
+  });
+  if (res.status === 401 && retry) {
+    if (await refreshOnce()) return upload<T>(path, form, schema, false);
+  }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(res.status, body.detail || body.message || res.statusText, body.code);
+  }
+  const parsed = schema.safeParse(body);
+  return parsed.success ? parsed.data : (body as T);
 }
 
 const json = (method: string, body?: unknown): RequestInit => ({
@@ -94,268 +163,212 @@ const json = (method: string, body?: unknown): RequestInit => ({
 });
 
 // ── Types (mirror the backend DTOs) ──────────────────────────────────────────
-export type ProjectStatus =
-  | "DRAFT"
-  | "PROPOSAL"
-  | "IN_PROGRESS"
-  | "UNDER_REVIEW"
-  | "REVISIONS"
-  | "APPROVED"
-  | "COMPLETED";
-
-export type ProjectMemberRole = "OWNER" | "SUPERVISOR" | "CONSULTANT" | "VIEWER";
-
-export interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  user: { id: string; roles: string[]; institutionId: string; plan: string };
-}
-
-export interface Profile {
-  id: string;
-  email: string;
-  fullName: string;
-  institutionId: string;
-  departmentId: string | null;
-  academicLevel: string | null;
-  fieldOfStudy: string | null;
-  orcid: string | null;
-  emailVerified: boolean;
-  roles: string[];
-}
-
-export interface ProjectSummary {
-  id: string;
-  institutionId: string;
-  departmentId: string | null;
-  ownerUserId: string;
-  title: string;
-  level: string | null;
-  status: ProjectStatus;
-  abstractText: string | null;
-}
-
-export interface Milestone {
-  id: string;
-  projectId: string;
-  title: string;
-  dueDate: string | null;
-  status: string | null;
-  completedAt: string | null;
-}
-
-export interface ProjectMember {
-  id: string;
-  projectId: string;
-  userId: string;
-  role: ProjectMemberRole;
-}
-
-export interface Activity {
-  id: string;
-  projectId: string;
-  actorUserId: string;
-  type: string;
-  payload: string | null;
-  createdAt: string;
-}
-
-export interface Dashboard {
-  status: ProjectStatus;
-  totalMilestones: number;
-  completedMilestones: number;
-  nextMilestone: Milestone | null;
-  memberCount: number;
-}
-
-export interface ProjectDetail {
-  project: ProjectSummary;
-  dashboard: Dashboard;
-  members: ProjectMember[];
-  milestones: Milestone[];
-}
-
-export interface Institution {
-  id: string;
-  name: string;
-  country: string | null;
-  type: string | null;
-  personalTenant: boolean;
-  status: string;
-}
-
-export interface Department {
-  id: string;
-  institutionId: string;
-  name: string;
-  code: string | null;
-}
+// Types are inferred from the zod schemas in ./schemas (single source of truth). Responses are
+// validated against those schemas at the fetch boundary (see `request` above).
+export type {
+  ProjectStatus,
+  ProjectMemberRole,
+  TokenResponse,
+  Profile,
+  ProjectSummary,
+  Milestone,
+  ProjectMember,
+  Activity,
+  Dashboard,
+  ProjectDetail,
+  Institution,
+  Department,
+  Template,
+  TemplateSection,
+  FormatRule,
+  TemplateDetail,
+  DocumentSummary,
+  DocSection,
+  DocumentDetail,
+  DocVersion,
+  Invitation,
+  AiTopic,
+  AiObjectives,
+  AiAlignmentFinding,
+  AiAlignment,
+  AiCredits,
+  DisclosureEntry,
+  Paper,
+  PaperSummary,
+  Reference,
+  ReferenceList,
+} from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
+// Each response-returning call passes its zod schema so the payload is validated at the boundary.
 export const api = {
   // Auth
   register: (b: { email: string; password: string; fullName: string }) =>
-    request<{ userId: string; message: string }>("/auth/register", json("POST", b)),
+    request("/auth/register", json("POST", b), S.RegisterResponseSchema),
   login: (b: { email: string; password: string; device?: string }) =>
-    request<TokenResponse>("/auth/login", json("POST", b)),
+    request("/auth/login", json("POST", b), S.TokenResponseSchema),
   logout: (refreshToken: string) => request<void>("/auth/logout", json("POST", { refreshToken })),
   logoutAll: () => request<void>("/auth/logout-all", json("POST")),
   verifyEmail: (token: string) =>
-    request<{ message: string }>("/auth/verify-email", json("POST", { token })),
+    request("/auth/verify-email", json("POST", { token }), S.MessageSchema),
   forgotPassword: (email: string) =>
-    request<{ message: string }>("/auth/password/forgot", json("POST", { email })),
+    request("/auth/password/forgot", json("POST", { email }), S.MessageSchema),
   resetPassword: (b: { token: string; password: string }) =>
-    request<{ message: string }>("/auth/password/reset", json("POST", b)),
+    request("/auth/password/reset", json("POST", b), S.MessageSchema),
 
   // Users
-  me: () => request<Profile>("/users/me"),
+  me: () => request("/users/me", undefined, S.ProfileSchema),
   updateProfile: (b: {
     fullName?: string;
     academicLevel?: string;
     fieldOfStudy?: string;
     orcid?: string;
-  }) => request<Profile>("/users/me", json("PATCH", b)),
+  }) => request("/users/me", json("PATCH", b), S.ProfileSchema),
 
   // Projects
   listProjects: (p: { limit?: number; offset?: number } = {}) =>
-    request<ProjectSummary[]>(`/projects?limit=${p.limit ?? 20}&offset=${p.offset ?? 0}`),
+    request(`/projects?limit=${p.limit ?? 20}&offset=${p.offset ?? 0}`, undefined, z.array(S.ProjectSummarySchema)),
   createProject: (b: {
     title: string;
     level?: string;
     departmentId?: string;
     abstractText?: string;
-  }) => request<ProjectSummary>("/projects", json("POST", b)),
-  getProject: (id: string) => request<ProjectDetail>(`/projects/${id}`),
+  }) => request("/projects", json("POST", b), S.ProjectSummarySchema),
+  getProject: (id: string) => request(`/projects/${id}`, undefined, S.ProjectDetailSchema),
   updateProject: (
     id: string,
     b: { title?: string; level?: string; abstractText?: string; departmentId?: string },
-  ) => request<ProjectSummary>(`/projects/${id}`, json("PATCH", b)),
+  ) => request(`/projects/${id}`, json("PATCH", b), S.ProjectSummarySchema),
   transitionStatus: (id: string, status: ProjectStatus) =>
-    request<ProjectSummary>(`/projects/${id}/status`, json("POST", { status })),
+    request(`/projects/${id}/status`, json("POST", { status }), S.ProjectSummarySchema),
   addMember: (id: string, b: { userId: string; role: ProjectMemberRole }) =>
-    request<ProjectMember>(`/projects/${id}/members`, json("POST", b)),
+    request(`/projects/${id}/members`, json("POST", b), S.ProjectMemberSchema),
   removeMember: (id: string, userId: string) =>
     request<void>(`/projects/${id}/members/${userId}`, json("DELETE")),
   addMilestone: (id: string, b: { title: string; dueDate?: string; status?: string }) =>
-    request<Milestone>(`/projects/${id}/milestones`, json("POST", b)),
+    request(`/projects/${id}/milestones`, json("POST", b), S.MilestoneSchema),
   listActivities: (id: string, p: { limit?: number; offset?: number } = {}) =>
-    request<Activity[]>(
+    request(
       `/projects/${id}/activities?limit=${p.limit ?? 50}&offset=${p.offset ?? 0}`,
+      undefined,
+      z.array(S.ActivitySchema),
     ),
 
   // Organisation
-  getInstitution: (id: string) => request<Institution>(`/institutions/${id}`),
+  getInstitution: (id: string) => request(`/institutions/${id}`, undefined, S.InstitutionSchema),
   createInstitution: (b: { name: string; country?: string; type?: string }) =>
-    request<Institution>("/institutions", json("POST", b)),
+    request("/institutions", json("POST", b), S.InstitutionSchema),
   updateInstitution: (id: string, b: { name?: string; country?: string; type?: string }) =>
-    request<Institution>(`/institutions/${id}`, json("PATCH", b)),
-  listDepartments: () => request<Department[]>("/departments"),
+    request(`/institutions/${id}`, json("PATCH", b), S.InstitutionSchema),
+  listDepartments: () => request("/departments", undefined, z.array(S.DepartmentSchema)),
   createDepartment: (b: { name: string; code?: string }) =>
-    request<Department>("/departments", json("POST", b)),
+    request("/departments", json("POST", b), S.DepartmentSchema),
   updateDepartment: (id: string, b: { name?: string; code?: string }) =>
-    request<Department>(`/departments/${id}`, json("PATCH", b)),
+    request(`/departments/${id}`, json("PATCH", b), S.DepartmentSchema),
 
   // Onboarding
   onboardInstitution: (b: { name: string; country?: string; type?: string }) =>
-    request<{ institutionId: string }>("/onboarding/institution", json("POST", b)),
+    request("/onboarding/institution", json("POST", b), S.OnboardInstitutionResponseSchema),
+
+  // AI Research Assistant (Phase 4) — backend proxies to the private worker
+  aiTopics: (b: { field: string; interests?: string; level?: string }) =>
+    request("/ai/topics", json("POST", b), S.AiTopicsResponseSchema),
+  aiObjectives: (b: { topic: string; problem?: string; level?: string }) =>
+    request("/ai/objectives", json("POST", b), S.AiObjectivesSchema),
+  aiProblemStatement: (b: { topic: string; context?: string }) =>
+    request("/ai/problem-statement", json("POST", b), S.AiProblemStatementResponseSchema),
+  aiSectionAssist: (b: {
+    heading: string;
+    guidance?: string;
+    current_text?: string;
+    instruction?: string;
+  }) => request("/ai/section-assist", json("POST", b), S.AiSectionAssistResponseSchema),
+  aiAlignment: (b: {
+    title: string;
+    abstract?: string;
+    objectives?: string[];
+    sections?: { heading: string; text: string }[];
+  }) => request("/ai/alignment", json("POST", b), S.AiAlignmentSchema),
+  aiCredits: () => request("/ai/credits", undefined, S.AiCreditsSchema),
+
+  // AI-Use Disclosure Ledger (Phase 4)
+  disclosureList: (docId: string) =>
+    request(`/disclosure/documents/${docId}`, undefined, z.array(S.DisclosureEntrySchema)),
+  disclosureAppend: (
+    docId: string,
+    b: {
+      documentSectionId?: string;
+      aiRequestId?: string;
+      featureKey: string;
+      model?: string;
+      suggestionSummary?: string;
+      action?: string;
+    },
+  ) => request(`/disclosure/documents/${docId}/entries`, json("POST", b), S.DisclosureEntrySchema),
 
   // Templates
-  listTemplates: () => request<Template[]>("/templates"),
-  getTemplate: (id: string) => request<TemplateDetail>(`/templates/${id}`),
+  listTemplates: () => request("/templates", undefined, z.array(S.TemplateSchema)),
+  getTemplate: (id: string) => request(`/templates/${id}`, undefined, S.TemplateDetailSchema),
 
   // Documents
   listDocuments: (projectId: string) =>
-    request<DocumentSummary[]>(`/documents?projectId=${projectId}`),
+    request(`/documents?projectId=${projectId}`, undefined, z.array(S.DocumentSummarySchema)),
   createDocument: (b: { projectId: string; templateId: string; title?: string }) =>
-    request<DocumentDetail>("/documents", json("POST", b)),
-  getDocument: (id: string) => request<DocumentDetail>(`/documents/${id}`),
+    request("/documents", json("POST", b), S.DocumentDetailSchema),
+  getDocument: (id: string) => request(`/documents/${id}`, undefined, S.DocumentDetailSchema),
   getSection: (docId: string, sectionId: string) =>
-    request<DocSection>(`/documents/${docId}/sections/${sectionId}`),
+    request(`/documents/${docId}/sections/${sectionId}`, undefined, S.DocSectionSchema),
   autosaveSection: (docId: string, sectionId: string, b: { content: unknown; version: number }) =>
-    request<DocSection>(`/documents/${docId}/sections/${sectionId}`, json("PUT", b)),
+    request(`/documents/${docId}/sections/${sectionId}`, json("PUT", b), S.DocSectionSchema),
+  addSection: (docId: string, b: { heading: string; chapter?: string }) =>
+    request(`/documents/${docId}/sections`, json("POST", b), S.DocSectionSchema),
+  updateSection: (
+    docId: string,
+    sectionId: string,
+    b: { heading?: string; chapter?: string; orderIndex?: number },
+  ) => request(`/documents/${docId}/sections/${sectionId}`, json("PATCH", b), S.DocSectionSchema),
+  deleteSection: (docId: string, sectionId: string) =>
+    request<void>(`/documents/${docId}/sections/${sectionId}`, json("DELETE")),
   listSectionVersions: (docId: string, sectionId: string) =>
-    request<DocVersion[]>(`/documents/${docId}/sections/${sectionId}/versions`),
+    request(`/documents/${docId}/sections/${sectionId}/versions`, undefined, z.array(S.DocVersionSchema)),
   restoreSection: (docId: string, sectionId: string, versionId: string) =>
-    request<DocSection>(`/documents/${docId}/sections/${sectionId}/restore`, json("POST", { versionId })),
+    request(`/documents/${docId}/sections/${sectionId}/restore`, json("POST", { versionId }), S.DocSectionSchema),
+  downloadDocument: (docId: string, format: "docx" | "pdf") =>
+    downloadFile(`/documents/${docId}/export?format=${format}`, `document.${format}`),
 
   // Invitations
   listInvitations: (projectId: string) =>
-    request<Invitation[]>(`/projects/${projectId}/invitations`),
+    request(`/projects/${projectId}/invitations`, undefined, z.array(S.InvitationSchema)),
   invite: (projectId: string, b: { email: string; role: ProjectMemberRole }) =>
-    request<Invitation>(`/projects/${projectId}/invitations`, json("POST", b)),
+    request(`/projects/${projectId}/invitations`, json("POST", b), S.InvitationSchema),
   revokeInvite: (projectId: string, invitationId: string) =>
     request<void>(`/projects/${projectId}/invitations/${invitationId}`, json("DELETE")),
   acceptInvite: (token: string) =>
-    request<{ projectId: string }>("/invitations/accept", json("POST", { token })),
+    request("/invitations/accept", json("POST", { token }), S.AcceptInviteResponseSchema),
+
+  // Papers / references (Phase 5)
+  listPapers: (projectId: string) =>
+    request(`/papers?projectId=${projectId}`, undefined, z.array(S.PaperSchema)),
+  uploadPaper: (projectId: string, file: File) => {
+    const form = new FormData();
+    form.append("projectId", projectId);
+    form.append("file", file);
+    return upload("/papers", form, S.PaperSchema);
+  },
+  updatePaper: (
+    id: string,
+    b: { title?: string; authors?: string; year?: number; doi?: string; journal?: string },
+  ) => request(`/papers/${id}`, json("PATCH", b), S.PaperSchema),
+  deletePaper: (id: string) => request<void>(`/papers/${id}`, json("DELETE")),
+  references: (projectId: string, style: string) =>
+    request(`/papers/references?projectId=${projectId}&style=${style}`, undefined, S.ReferenceListSchema),
+  exportReferences: (projectId: string, format: "bibtex" | "ris") =>
+    downloadFile(
+      `/papers/export?projectId=${projectId}&format=${format}`,
+      `references.${format === "ris" ? "ris" : "bib"}`,
+    ),
+  summarizePaper: (id: string) =>
+    request(`/papers/${id}/summarize`, json("POST"), S.PaperSummarySchema),
+  askPapers: (projectId: string, question: string) =>
+    request("/papers/ask", json("POST", { projectId, question }), S.RagAnswerSchema),
 };
-
-// ── Phase 3 & invitation types ──────────────────────────────────────────────
-export interface Template {
-  id: string;
-  name: string;
-  level: string | null;
-  global: boolean;
-  citationStyle: string;
-}
-
-export interface TemplateSection {
-  id: string;
-  orderIndex: number;
-  chapter: string | null;
-  heading: string;
-  guidance: string | null;
-}
-
-export interface FormatRule {
-  fontFamily: string;
-  fontSizePt: number;
-  lineSpacing: number;
-  margins: unknown;
-  headingNumbering: string;
-  citationStyle: string;
-}
-
-export interface TemplateDetail {
-  template: Template;
-  sections: TemplateSection[];
-  formatRule: FormatRule | null;
-}
-
-export interface DocumentSummary {
-  id: string;
-  projectId: string;
-  templateId: string;
-  title: string;
-  status: string;
-}
-
-export interface DocSection {
-  id: string;
-  documentId: string;
-  orderIndex: number;
-  chapter: string | null;
-  heading: string;
-  content: unknown | null;
-  version: number;
-}
-
-export interface DocumentDetail {
-  document: DocumentSummary;
-  sections: DocSection[];
-}
-
-export interface DocVersion {
-  id: string;
-  version: number;
-  authoredBy: string | null;
-  createdAt: string;
-}
-
-export interface Invitation {
-  id: string;
-  email: string;
-  role: string;
-  status: string;
-  expiresAt: string;
-}

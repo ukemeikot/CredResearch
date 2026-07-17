@@ -7,7 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Phase 5 — RAG over your papers + literature matrix (Phase 5 complete).** *Ask your papers*: a
+  question is embedded (Ollama `nomic-embed-text`), matched against the project's chunked+embedded
+  corpus (**pgvector**, Flyway `V10`), and answered by the model **grounded only in the retrieved
+  passages**, with the source papers cited (FR-LIT-8). Papers are chunked and embedded on upload
+  (best-effort; degrades cleanly with no model). A **literature matrix** (FR-LIT-5) compares every
+  summarised paper — reference, methodology, findings, gaps — in one table. This closes the Phase 5
+  MVP (FR-LIT-1/2/3/4/5/6/7/8/9/10).
+- **Phase 5 — AI paper summarization.** A **Summarize** action on each uploaded paper asks the AI
+  worker for a structured summary — overall summary, methodology, key findings, limitations, and
+  research gaps — shown inline and stored on the paper (`GET /papers` returns it). Credit-metered
+  and recorded like other AI features (verified-email gated). Flyway `V9`. (FR-LIT-4.)
+- **Phase 5 (first increment) — Papers & reference list.** Upload source papers (PDF/DOCX) to a
+  project; the worker extracts the full text and best-effort bibliographic metadata (title, authors,
+  year, DOI) with a low-confidence flag prompting review (FR-LIT-1/2/3). A **Papers & references**
+  panel lists uploads, lets you correct extracted details, and renders a formatted **reference list**
+  in **APA / IEEE / Harvard** with one-click copy (FR-LIT-7). New `paper` module + Flyway `V8`; worker
+  `/papers/extract` (pypdf/python-docx). (Chunking + embeddings for RAG, the literature matrix,
+  in-text citations, and BibTeX/RIS follow as the next Phase 5 increments.)
+- **Phase 5 — BibTeX/RIS export & de-duplication.** Export a project's reference list as **BibTeX**
+  or **RIS** for import into Zotero/Mendeley/EndNote (`GET /papers/export`, FR-LIT-9), and uploads
+  are **de-duplicated** within a project by DOI (or normalised title) so the same source isn't added
+  twice (FR-LIT-10).
+- **Phase 5 — in-text citations.** A **Cite** control in the section editor lists the project's
+  papers and inserts a formatted in-text citation (e.g. *(Okafor & Adeyemi, 2023)*) at the cursor
+  (FR-LIT-6).
+
 ### Fixed
+- **Guessed paper titles are flagged for review.** A title taken from the document's embedded
+  metadata is trusted; a title *guessed* from the first page is now marked low-confidence so the
+  user is prompted to confirm it (rather than a wrong guess being shown as final).
+- **Paper title extraction skips front-matter boilerplate.** The title heuristic now ignores
+  licence/attribution notices, arXiv/preprint stamps, and page headers when guessing a paper's
+  title from its first page, so uploads land closer to the real title (still user-correctable).
+
+### Changed
+- **Web API client now validates responses with zod.** API response shapes live as zod schemas
+  (`lib/schemas.ts`) — the single source of truth from which the TypeScript types are inferred — and
+  every response-returning call validates its payload at the fetch boundary. On a contract mismatch
+  it logs (dev) and still returns the data, so drift surfaces without hard-breaking a screen.
+
+### Added
+- **Editor text formatting — font family, size & colour.** The section toolbar now has a typeface
+  picker, a font-size selector, and a text-colour control (swatches + full colour picker, with a
+  clear option), backed by Tiptap's TextStyle marks. Works in both the standard and collaborative
+  editors and is preserved through DOCX/PDF export where the format supports it.
+- **Real-time collaboration (Yjs), staging.** Sections can now be co-edited live, Google-Docs style:
+  a new `collab` WebSocket service (Hocuspocus) syncs a shared Yjs document per section and shows
+  live presence (who's editing, coloured caret avatars). Access tokens are verified (RS256) on
+  connect. The server is stateless — one elected client persists the merged content through the
+  existing autosave API, so version conflicts disappear during simultaneous editing. Deployed to
+  **staging only** (an always-on service); production keeps the optimistic-lock autosave model
+  (the same web image gates collab on the host). LB routes `/collab` when enabled. (FR-DOC-9.)
+- **Document export / download (DOCX + PDF).** Any project member can download a document from the
+  editor's **Download** menu. The worker renders the document (all sections, in order) to a **.docx**
+  via `python-docx`, applying the template's format rule (font family/size, line spacing); **.pdf**
+  is produced by a **Gotenberg (LibreOffice)** sidecar when wired (staging), and the UI degrades
+  gracefully to "try Word" when PDF isn't available. Backend `GET /documents/{id}/export?format=`
+  streams the file with a sensible filename. (FR-DOC-6/7.)
+- **AI topic assistance when starting a project.** The New-Project dialog now has an *"Get AI topic
+  ideas"* panel: enter a field of study (+ optional interests) and the AI **topic generator** returns
+  candidate titles with a feasibility rating, rationale, and suggested methods — click one to use it
+  as the project title. (FR-AI topic generator.)
+- **Phase 4 completion — credits, usage tracking & AI-Use Disclosure Ledger.** Every AI call is
+  recorded (`ai_requests`/`ai_responses`) and metered against a **per-plan monthly credit** limit
+  (`plans` seeded FREE/STUDENT/INSTITUTION); the editor shows remaining credits and blocks at zero
+  (402). Accepting an AI suggestion appends a tamper-evident, **hash-chained entry** to the
+  document's **disclosure ledger** (`ai_disclosure_entries`), viewable from an "AI disclosure"
+  drawer. Flyway `V7`. (FR-AI, FR-LEDGER.)
+
+### Changed
+- **Lenient AI output schemas** — a small self-hosted model's slightly-off JSON is coerced/accepted (normalised enums, generous defaults, extra fields ignored) instead of falling back to the stub.
+- **AI worker tuning + resilience.** Bounded generation length (`num_predict`) and a warm
+  keep-alive for the self-hosted model, a generous backend read timeout so slow CPU inferences
+  aren't turned into spurious 503s, and diagnostic logging on AI-worker call failures.
+
+### Added
+- **Phase 4 — AI Research Assistant (v1).** The FastAPI worker now exposes AI features behind a
+  provider-agnostic LLM gateway: **topic generator + feasibility**, **aim/objectives/research
+  questions/hypotheses**, **problem-statement refinement**, **section drafting assistant**, and the
+  **research alignment engine** — all returning validated JSON. The gateway targets a self-hosted
+  open model (Ollama) via `LLM_BASE_URL`, and falls back to a deterministic stub when no model is
+  wired, so the whole feature works end-to-end offline (graceful degradation, NFR-AVAIL-5). The Java
+  backend proxies `/api/v1/ai/*` to the private worker (shared-secret; verified-email gate,
+  FR-AUTH-1). Frontend: an **AI assist** control in the section editor that drafts/improves the
+  current section and inserts the result. (Self-hosted Ollama VM, per-plan credits, and
+  disclosure-ledger writes follow as the next increments.)
+- **Editable document structure.** The project owner can now restructure a document from the
+  outline — add a section, rename its heading, reorder (move up/down), and delete a section (with
+  its version history). Owner-gated section CRUD (`POST/PATCH/DELETE /documents/{id}/sections`).
+
+### Fixed
+- **Modal overlays render correctly.** Modals/drawers now portal to `document.body` so they aren't
+  trapped by a transformed (framer-motion) ancestor — the New Document modal was rendering mid-page
+  behind the panels, making its template buttons unclickable and blocking document creation.
+
+### Fixed (earlier)
 - **Resilient DB migrations on rolling deploys.** A rolling replace interrupted mid-migration could
   leave the schema-history half-applied (object created, history row not finalised), then crash-loop
   the new backend on "relation already exists". Migrations are now idempotent (`IF NOT EXISTS` +

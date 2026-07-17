@@ -1,5 +1,6 @@
 package africa.credresearch.modules.document.interfaces.rest;
 
+import africa.credresearch.modules.document.application.DocumentExportService;
 import africa.credresearch.modules.document.application.DocumentService;
 import africa.credresearch.modules.document.domain.model.Document;
 import africa.credresearch.modules.document.domain.model.DocumentDetail;
@@ -18,7 +19,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,10 +38,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class DocumentController {
 
     private final DocumentService service;
+    private final DocumentExportService exportService;
     private final ObjectMapper objectMapper;
 
-    public DocumentController(DocumentService service, ObjectMapper objectMapper) {
+    public DocumentController(DocumentService service, DocumentExportService exportService,
+                              ObjectMapper objectMapper) {
         this.service = service;
+        this.exportService = exportService;
         this.objectMapper = objectMapper;
     }
 
@@ -61,6 +67,10 @@ public class DocumentController {
     public record AutosaveRequest(JsonNode content, @NotNull Integer version) {}
 
     public record RestoreRequest(@NotNull UUID versionId) {}
+
+    public record AddSectionRequest(String heading, String chapter) {}
+
+    public record UpdateSectionRequest(String heading, String chapter, Integer orderIndex) {}
 
     // ── Endpoints ──────────────────────────────────────────────────────────────
     @GetMapping
@@ -99,6 +109,25 @@ public class DocumentController {
         return toSection(service.autosave(id, sectionId, req.content(), req.version()));
     }
 
+    @PostMapping("/{id}/sections")
+    @Operation(summary = "Add a section (owner-only)", description = "Appends a new empty section.")
+    public SectionResponse addSection(@PathVariable UUID id, @RequestBody AddSectionRequest req) {
+        return toSection(service.addSection(id, req.heading(), req.chapter()));
+    }
+
+    @PatchMapping("/{id}/sections/{sectionId}")
+    @Operation(summary = "Rename / re-chapter / reorder a section (owner-only)")
+    public SectionResponse updateSection(@PathVariable UUID id, @PathVariable UUID sectionId,
+                                         @RequestBody UpdateSectionRequest req) {
+        return toSection(service.updateSection(id, sectionId, req.heading(), req.chapter(), req.orderIndex()));
+    }
+
+    @DeleteMapping("/{id}/sections/{sectionId}")
+    @Operation(summary = "Delete a section and its history (owner-only)")
+    public void deleteSection(@PathVariable UUID id, @PathVariable UUID sectionId) {
+        service.deleteSection(id, sectionId);
+    }
+
     @GetMapping("/{id}/sections/{sectionId}/versions")
     @Operation(summary = "Section version history (FR-DOC-4)")
     public List<VersionResponse> versions(@PathVariable UUID id, @PathVariable UUID sectionId) {
@@ -112,6 +141,21 @@ public class DocumentController {
     public SectionResponse restore(@PathVariable UUID id, @PathVariable UUID sectionId,
                                    @Valid @RequestBody RestoreRequest req) {
         return toSection(service.restore(id, sectionId, req.versionId()));
+    }
+
+    @GetMapping("/{id}/export")
+    @Operation(summary = "Export/download a document (FR-DOC-6/7)",
+            description = "Renders the document to a downloadable file. format=docx (default) or pdf.")
+    public org.springframework.http.ResponseEntity<byte[]> export(
+            @PathVariable UUID id,
+            @RequestParam(name = "format", defaultValue = "docx") String format) {
+        DocumentExportService.ExportResult result = exportService.export(id, format);
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename(result.filename()).build().toString())
+                .contentType(org.springframework.http.MediaType.parseMediaType(result.contentType()))
+                .body(result.bytes());
     }
 
     // ── mapping ──────────────────────────────────────────────────────────────

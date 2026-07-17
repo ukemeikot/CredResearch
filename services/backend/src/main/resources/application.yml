@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: credresearch-backend
+  servlet:
+    multipart:
+      max-file-size: 25MB      # uploaded papers (PDF/DOCX) — FR-LIT-1
+      max-request-size: 30MB
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/credresearch}
     username: ${SPRING_DATASOURCE_USERNAME:credresearch}
@@ -46,6 +50,10 @@ credresearch:
     login-window: PT15M
   app:
     base-url: ${APP_BASE_URL:http://localhost:3000}
+  ai:
+    # The FastAPI AI worker (private; reached only from the backend with the shared secret).
+    worker-url: ${AI_WORKER_URL:http://localhost:8001}
+    internal-secret: ${INTERNAL_SERVICE_SECRET:}
   cors:
     # Comma-separated list of allowed browser origins for the SPA.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}

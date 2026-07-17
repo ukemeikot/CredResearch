@@ -12,6 +12,9 @@ public interface DocumentSectionJpaRepository extends JpaRepository<DocumentSect
 
     List<DocumentSectionEntity> findByDocumentIdOrderByOrderIndexAsc(UUID documentId);
 
+    @Query("select coalesce(max(s.orderIndex), -1) from DocumentSectionEntity s where s.documentId = :docId")
+    int maxOrderIndex(@Param("docId") UUID documentId);
+
     /**
      * Atomic compare-and-set autosave: only updates when the stored version still equals the
      * expected one, so concurrent edits can't silently clobber each other (FR-DOC-3).

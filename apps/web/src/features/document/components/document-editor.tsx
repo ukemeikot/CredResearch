@@ -4,17 +4,26 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, Download, Loader2, ShieldCheck } from "lucide-react";
+import { api, ApiError } from "@/lib/api";
 import { GlassCard } from "@/components/ui/glass-card";
+import { useProject } from "@/features/project/api/use-projects";
+import { useMe } from "@/features/user/api/use-me";
 import { documentKeys, useDocument } from "../api/use-documents";
+import { DisclosureLedger } from "./disclosure-ledger";
 import { SectionEditor } from "./section-editor";
+import { SectionNav } from "./section-nav";
 import { VersionHistory } from "./version-history";
 
 export function DocumentEditor({ docId }: { docId: string }) {
   const qc = useQueryClient();
   const query = useDocument(docId);
+  const me = useMe();
+  const projectId = query.data?.document.projectId;
+  const project = useProject(projectId ?? "");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [disclosureOpen, setDisclosureOpen] = useState(false);
   // Bumped on an explicit reload (conflict/restore) to force the editor to re-init from the
   // freshly-refetched content, since normal saves intentionally don't remount it.
   const [reloadKey, setReloadKey] = useState(0);
@@ -30,7 +39,12 @@ export function DocumentEditor({ docId }: { docId: string }) {
     [sections, activeId],
   );
 
-  const projectId = query.data?.document.projectId;
+  // Only the project OWNER can restructure the document (the backend enforces this too).
+  const isOwner = useMemo(() => {
+    const uid = me.data?.id;
+    if (!uid || !project.data) return false;
+    return project.data.members.some((m) => m.userId === uid && m.role === "OWNER");
+  }, [me.data?.id, project.data]);
 
   if (query.isLoading) {
     return (
@@ -56,44 +70,35 @@ export function DocumentEditor({ docId }: { docId: string }) {
         <ArrowLeft size={16} /> Back to project
       </Link>
 
-      <motion.h1
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 font-display text-2xl font-bold text-white"
-      >
-        {query.data.document.title}
-      </motion.h1>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <motion.h1
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="font-display text-2xl font-bold text-white"
+        >
+          {query.data.document.title}
+        </motion.h1>
+        <div className="flex items-center gap-2">
+          <DownloadMenu docId={docId} />
+          <button
+            onClick={() => setDisclosureOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+          >
+            <ShieldCheck size={14} /> AI disclosure
+          </button>
+        </div>
+      </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[260px_1fr]">
-        {/* Section navigation */}
+        {/* Section navigation + structure editing (owner) */}
         <nav className="lg:sticky lg:top-24 lg:self-start">
-          <GlassCard className="p-3">
-            <ul className="space-y-0.5">
-              {sections.map((s) => {
-                const isActive = active?.id === s.id;
-                return (
-                  <li key={s.id}>
-                    <button
-                      onClick={() => setActiveId(s.id)}
-                      className={`flex w-full items-start gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                        isActive ? "bg-accent/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"
-                      }`}
-                    >
-                      <FileText size={14} className="mt-0.5 shrink-0 opacity-70" />
-                      <span className="min-w-0">
-                        {s.chapter && (
-                          <span className="block truncate text-[10px] uppercase tracking-wider text-slate-500">
-                            {s.chapter}
-                          </span>
-                        )}
-                        <span className="block truncate">{s.heading}</span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </GlassCard>
+          <SectionNav
+            docId={docId}
+            sections={sections}
+            activeId={active?.id ?? null}
+            onSelect={setActiveId}
+            canManage={isOwner}
+          />
         </nav>
 
         {/* Active section editor */}
@@ -102,6 +107,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
             <SectionEditor
               key={`${active.id}:${reloadKey}`}
               docId={docId}
+              projectId={projectId ?? ""}
               section={active}
               onReload={reload}
               onOpenHistory={() => setHistoryOpen(true)}
@@ -120,6 +126,64 @@ export function DocumentEditor({ docId }: { docId: string }) {
           onClose={() => setHistoryOpen(false)}
           onRestored={reload}
         />
+      )}
+      <DisclosureLedger docId={docId} open={disclosureOpen} onClose={() => setDisclosureOpen(false)} />
+    </div>
+  );
+}
+
+/** Download the document as .docx or .pdf. PDF may be unavailable if no conversion service is wired. */
+function DownloadMenu({ docId }: { docId: string }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<null | "docx" | "pdf">(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function download(format: "docx" | "pdf") {
+    setBusy(format);
+    setError(null);
+    try {
+      await api.downloadDocument(docId, format);
+      setOpen(false);
+    } catch (e) {
+      setError(
+        e instanceof ApiError && e.status === 503
+          ? "PDF export isn’t available yet — try Word (.docx)."
+          : "Download failed. Please try again.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+      >
+        {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-white/10 bg-cosmos-900 shadow-xl">
+            <button
+              onClick={() => download("docx")}
+              disabled={!!busy}
+              className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
+            >
+              Word (.docx)
+            </button>
+            <button
+              onClick={() => download("pdf")}
+              disabled={!!busy}
+              className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
+            >
+              PDF (.pdf)
+            </button>
+            {error && <p className="px-4 py-2 text-[11px] text-rose-400">{error}</p>}
+          </div>
+        </>
       )}
     </div>
   );

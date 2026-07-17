@@ -40,6 +40,12 @@ public class DocumentVersionRepositoryAdapter implements DocumentVersionReposito
         return jpa.findById(id).map(DocumentVersionRepositoryAdapter::toDomain);
     }
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteBySection(UUID sectionId) {
+        jpa.deleteByDocumentSectionId(sectionId);
+    }
+
     static DocumentVersion toDomain(DocumentVersionEntity e) {
         return new DocumentVersion(e.getId(), e.getDocumentSectionId(), e.getVersion(),
                 e.getContent(), e.getContentText(), e.getAuthoredBy(), e.getCreatedAt());

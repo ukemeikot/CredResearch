@@ -54,4 +54,13 @@ public class ApiException extends RuntimeException {
     public static ApiException tooManyRequests(String code, String detail) {
         return new ApiException(HttpStatus.TOO_MANY_REQUESTS, code, "Too many requests", detail);
     }
+
+    public static ApiException serviceUnavailable(String code, String detail) {
+        return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, code, "Service unavailable", detail);
+    }
+
+    /** Generic factory for statuses without a dedicated helper (e.g. 402 Payment Required). */
+    public static ApiException of(HttpStatus status, String code, String detail) {
+        return new ApiException(status, code, status.getReasonPhrase(), detail);
+    }
 }
