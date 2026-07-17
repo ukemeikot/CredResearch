@@ -294,6 +294,52 @@ export const ReferenceListSchema = z.object({
 export type Reference = z.infer<typeof ReferenceSchema>;
 export type ReferenceList = z.infer<typeof ReferenceListSchema>;
 
+// ── Reviews (Phase 6) ────────────────────────────────────────────────────────
+export const ReviewRequestSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  documentSectionId: z.string().nullable(),
+  requestedBy: z.string(),
+  reviewerUserId: z.string().nullable(),
+  reviewerEmail: z.string().nullable(),
+  status: z.string(),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+  decidedAt: z.string().nullable(),
+});
+export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
+
+export const ReviewCommentSchema = z.object({
+  id: z.string(),
+  reviewRequestId: z.string(),
+  authorUserId: z.string().nullable(),
+  authorLabel: z.string().nullable(),
+  anchorStart: z.number().nullable(),
+  anchorEnd: z.number().nullable(),
+  quote: z.string().nullable(),
+  body: z.string(),
+  resolved: z.boolean(),
+  createdAt: z.string(),
+});
+export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
+
+export const ReviewDecisionSchema = z.object({
+  id: z.string(),
+  reviewRequestId: z.string(),
+  decision: z.string(),
+  summary: z.string().nullable(),
+  decidedBy: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type ReviewDecision = z.infer<typeof ReviewDecisionSchema>;
+
+export const ReviewThreadSchema = z.object({
+  request: ReviewRequestSchema,
+  comments: z.array(ReviewCommentSchema),
+  decisions: z.array(ReviewDecisionSchema),
+});
+export type ReviewThread = z.infer<typeof ReviewThreadSchema>;
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });
