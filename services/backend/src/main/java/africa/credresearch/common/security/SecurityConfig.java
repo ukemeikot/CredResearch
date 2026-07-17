@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/api/v1/ping",
                                 "/api/v1/auth/**",
                                 "/api/v1/invitations/accept",
+                                "/api/v1/review-access/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

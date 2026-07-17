@@ -14,6 +14,8 @@ public interface ReviewRepository {
     List<ReviewRequest> findRequestsByDocument(UUID documentId);
     List<ReviewRequest> findInbox(UUID reviewerUserId);
     ReviewRequest updateStatus(UUID id, String status, Instant decidedAt);
+    void setReviewToken(UUID requestId, String tokenHash, Instant expiresAt);
+    Optional<ReviewRequest> findByValidToken(String tokenHash, Instant now);
 
     ReviewComment addComment(ReviewComment c);
     List<ReviewComment> findComments(UUID reviewRequestId);

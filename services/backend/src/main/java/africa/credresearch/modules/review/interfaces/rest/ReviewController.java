@@ -34,6 +34,9 @@ public class ReviewController {
     public record SubmitRequest(@NotNull UUID documentId, UUID documentSectionId,
                                 @NotNull UUID reviewerUserId, String note) {}
 
+    public record SubmitExternalRequest(@NotNull UUID documentId, UUID documentSectionId,
+                                        @NotNull String email, String note) {}
+
     public record CommentRequest(String body, Integer anchorStart, Integer anchorEnd, String quote) {}
 
     public record ResolveRequest(boolean resolved) {}
@@ -46,6 +49,12 @@ public class ReviewController {
     @Operation(summary = "Submit a section/document for review (FR-SUP-3)")
     public ReviewRequest submit(@RequestBody SubmitRequest req) {
         return service.submit(req.documentId(), req.documentSectionId(), req.reviewerUserId(), req.note());
+    }
+
+    @PostMapping("/external")
+    @Operation(summary = "Invite an external supervisor by email (magic-link, no account) — FR-SUP-1/2")
+    public ReviewRequest submitExternal(@RequestBody SubmitExternalRequest req) {
+        return service.submitExternal(req.documentId(), req.documentSectionId(), req.email(), req.note());
     }
 
     @GetMapping
