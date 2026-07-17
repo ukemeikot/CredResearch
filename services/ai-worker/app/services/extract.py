@@ -72,12 +72,13 @@ def extract_paper(filename: str, data: bytes) -> dict:
     head = text[:4000]  # metadata heuristics look near the top of the document
 
     title = info.get("title")
+    title_from_metadata = bool(title)  # embedded /Title is reliable; a first-line guess is not
     if not title:
         # First substantial line of the document is a reasonable title guess — but skip common
         # front-matter boilerplate (licence/attribution notices, arXiv stamps, page headers).
         _skip = ("abstract", "doi", "http", "arxiv", "preprint", "copyright", "license",
                  "licence", "provided proper attribution", "permission", "all rights reserved",
-                 "downloaded from", "www.")
+                 "reproduce the tables", "solely for use", "downloaded from", "www.")
         for raw in head.splitlines():
             line = raw.strip()
             low = line.lower()
@@ -96,8 +97,10 @@ def extract_paper(filename: str, data: bytes) -> dict:
     year_match = YEAR_RE.search(head)
     year = int(year_match.group(0)) if year_match else None
 
-    # Confidence: we consider extraction weak if there's little text or no title.
-    low_confidence = len(text) < 200 or not title
+    # Confidence is weak if there's little text, no title at all, or the title was only *guessed*
+    # from the first line (embedded PDF/DOCX metadata is the only title we trust silently) — so the
+    # user is prompted to review a guessed title rather than it being presented as final.
+    low_confidence = len(text) < 200 or not title or not title_from_metadata
 
     return {
         "text": text,
@@ -107,5 +110,5 @@ def extract_paper(filename: str, data: bytes) -> dict:
         "doi": doi,
         "journal": None,
         "low_confidence": low_confidence,
-        "reason": None if not low_confidence else "Low-quality extraction — please review the details.",
+        "reason": None if not low_confidence else "Please review the extracted details.",
     }

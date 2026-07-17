@@ -19,8 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or **RIS** for import into Zotero/Mendeley/EndNote (`GET /papers/export`, FR-LIT-9), and uploads
   are **de-duplicated** within a project by DOI (or normalised title) so the same source isn't added
   twice (FR-LIT-10).
+- **Phase 5 — in-text citations.** A **Cite** control in the section editor lists the project's
+  papers and inserts a formatted in-text citation (e.g. *(Okafor & Adeyemi, 2023)*) at the cursor
+  (FR-LIT-6).
 
 ### Fixed
+- **Guessed paper titles are flagged for review.** A title taken from the document's embedded
+  metadata is trusted; a title *guessed* from the first page is now marked low-confidence so the
+  user is prompted to confirm it (rather than a wrong guess being shown as final).
 - **Paper title extraction skips front-matter boilerplate.** The title heuristic now ignores
   licence/attribution notices, arXiv/preprint stamps, and page headers when guessing a paper's
   title from its first page, so uploads land closer to the real title (still user-correctable).
