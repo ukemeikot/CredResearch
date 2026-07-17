@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Real-time collaboration (Yjs), staging.** Sections can now be co-edited live, Google-Docs style:
+  a new `collab` WebSocket service (Hocuspocus) syncs a shared Yjs document per section and shows
+  live presence (who's editing, coloured caret avatars). Access tokens are verified (RS256) on
+  connect. The server is stateless — one elected client persists the merged content through the
+  existing autosave API, so version conflicts disappear during simultaneous editing. Deployed to
+  **staging only** (an always-on service); production keeps the optimistic-lock autosave model
+  (the same web image gates collab on the host). LB routes `/collab` when enabled. (FR-DOC-9.)
 - **Document export / download (DOCX + PDF).** Any project member can download a document from the
   editor's **Download** menu. The worker renders the document (all sections, in order) to a **.docx**
   via `python-docx`, applying the template's format rule (font family/size, line spacing); **.pdf**

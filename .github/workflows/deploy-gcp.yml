@@ -50,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           SHA="${{ github.sha }}"
-          for svc in backend ai-worker web; do
+          for svc in backend ai-worker web collab; do
             ctx="services/$svc"; [ "$svc" = "web" ] && ctx="apps/web"
             docker build -t "$REGISTRY/$svc:$SHA" -t "$REGISTRY/$svc:latest" "$ctx"
             docker push "$REGISTRY/$svc:$SHA"
@@ -72,6 +72,13 @@ jobs:
           # startup script, which re-pulls :latest.
           gcloud compute instances reset "credresearch-${ENVIRONMENT}-ai-worker" \
             --zone "$ZONE" --project "$PROJECT"
+          # collab (Yjs) is a single instance that only exists where enabled (staging) — reset it
+          # if present so it re-pulls :latest; skip silently in environments without it.
+          if gcloud compute instances describe "credresearch-${ENVIRONMENT}-collab" \
+               --zone "$ZONE" --project "$PROJECT" >/dev/null 2>&1; then
+            gcloud compute instances reset "credresearch-${ENVIRONMENT}-collab" \
+              --zone "$ZONE" --project "$PROJECT"
+          fi
 
       - name: Wait for MIGs to stabilize (fail the deploy if the new VM is unhealthy)
         run: |
