@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Phase 4 completion — credits, usage tracking & AI-Use Disclosure Ledger.** Every AI call is
+  recorded (`ai_requests`/`ai_responses`) and metered against a **per-plan monthly credit** limit
+  (`plans` seeded FREE/STUDENT/INSTITUTION); the editor shows remaining credits and blocks at zero
+  (402). Accepting an AI suggestion appends a tamper-evident, **hash-chained entry** to the
+  document's **disclosure ledger** (`ai_disclosure_entries`), viewable from an "AI disclosure"
+  drawer. Flyway `V7`. (FR-AI, FR-LEDGER.)
+
 ### Changed
 - **Lenient AI output schemas** — a small self-hosted model's slightly-off JSON is coerced/accepted (normalised enums, generous defaults, extra fields ignored) instead of falling back to the stub.
 - **AI worker tuning + resilience.** Bounded generation length (`num_predict`) and a warm

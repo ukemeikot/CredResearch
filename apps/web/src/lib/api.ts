@@ -279,6 +279,21 @@ export const api = {
     objectives?: string[];
     sections?: { heading: string; text: string }[];
   }) => request<AiAlignment>("/ai/alignment", json("POST", b)),
+  aiCredits: () => request<AiCredits>("/ai/credits"),
+
+  // AI-Use Disclosure Ledger (Phase 4)
+  disclosureList: (docId: string) => request<DisclosureEntry[]>(`/disclosure/documents/${docId}`),
+  disclosureAppend: (
+    docId: string,
+    b: {
+      documentSectionId?: string;
+      aiRequestId?: string;
+      featureKey: string;
+      model?: string;
+      suggestionSummary?: string;
+      action?: string;
+    },
+  ) => request<DisclosureEntry>(`/disclosure/documents/${docId}/entries`, json("POST", b)),
 
   // Templates
   listTemplates: () => request<Template[]>("/templates"),
@@ -415,4 +430,22 @@ export interface AiAlignment {
   overall_score: number;
   summary: string;
   findings: AiAlignmentFinding[];
+}
+
+export interface AiCredits {
+  plan: string;
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
+export interface DisclosureEntry {
+  id: string;
+  documentSectionId: string | null;
+  featureKey: string;
+  model: string | null;
+  suggestionSummary: string | null;
+  action: string;
+  entryHash: string;
+  createdAt: string;
 }
