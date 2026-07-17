@@ -114,3 +114,16 @@ class AlignmentResponse(_Lenient):
             return max(0, min(100, int(float(v))))
         except (TypeError, ValueError):
             return 60
+
+
+# ── Paper summarization (Phase 5, FR-LIT-4) ──────────────────────────────────
+class SummaryRequest(BaseModel):
+    text: str = ""
+
+
+class SummaryResponse(_Lenient):
+    summary: str = ""
+    methodology: str = ""
+    findings: list[str] = Field(default_factory=list)
+    limitations: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)

@@ -1,11 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { AlertTriangle, Copy, Download, FileText, Loader2, Pencil, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, Copy, Download, FileText, Loader2, Pencil, Sparkles, Trash2, Upload } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { api, ApiError, type Paper } from "@/lib/api";
-import { useDeletePaper, usePapers, useReferences, useUpdatePaper, useUploadPaper } from "../api/use-papers";
+import {
+  useDeletePaper,
+  usePapers,
+  useReferences,
+  useSummarizePaper,
+  useUpdatePaper,
+  useUploadPaper,
+} from "../api/use-papers";
 
 const STYLES = ["APA", "IEEE", "HARVARD"] as const;
 
@@ -117,10 +124,27 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
   );
 }
 
+function SummaryList({ label, items }: { label: string; items: string[] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-accent/80">{label}</p>
+      <ul className="mt-0.5 list-inside list-disc text-slate-400">
+        {items.map((it, i) => (
+          <li key={i}>{it}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PaperRow({ projectId, paper }: { projectId: string; paper: Paper }) {
   const update = useUpdatePaper(projectId);
   const del = useDeletePaper(projectId);
+  const summarize = useSummarizePaper(projectId);
   const [editing, setEditing] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const summary = paper.summary ?? null;
   const [form, setForm] = useState({
     title: paper.title ?? "",
     authors: paper.authors ?? "",
@@ -174,6 +198,22 @@ function PaperRow({ projectId, paper }: { projectId: string; paper: Paper }) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={async () => {
+              setSummaryError(null);
+              try {
+                await summarize.mutateAsync(paper.id);
+              } catch (e) {
+                setSummaryError(e instanceof ApiError ? e.message : "Could not summarize");
+              }
+            }}
+            disabled={summarize.isPending}
+            className="inline-flex items-center gap-1 rounded-lg border border-accent/40 px-2 py-1.5 text-[11px] text-accent hover:bg-accent/10 disabled:opacity-50"
+            title="AI summary (method, findings, gaps)"
+          >
+            {summarize.isPending ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+            Summarize
+          </button>
           <button onClick={() => setEditing((v) => !v)} className="rounded-lg border border-white/10 p-1.5 text-slate-400 hover:border-white/30 hover:text-white" title="Edit details">
             <Pencil size={13} />
           </button>
@@ -182,6 +222,18 @@ function PaperRow({ projectId, paper }: { projectId: string; paper: Paper }) {
           </button>
         </div>
       </div>
+
+      {summaryError && <p className="mt-1 text-[11px] text-rose-400">{summaryError}</p>}
+
+      {summary && (summary.summary || summary.findings.length > 0) && (
+        <div className="mt-3 space-y-2 rounded-lg border border-accent/15 bg-accent/[0.03] p-3 text-xs">
+          {summary.summary && <p className="text-slate-300">{summary.summary}</p>}
+          <SummaryList label="Methodology" items={summary.methodology ? [summary.methodology] : []} />
+          <SummaryList label="Findings" items={summary.findings} />
+          <SummaryList label="Limitations" items={summary.limitations} />
+          <SummaryList label="Research gaps" items={summary.gaps} />
+        </div>
+      )}
 
       {editing && (
         <div className="mt-3 grid grid-cols-2 gap-2">

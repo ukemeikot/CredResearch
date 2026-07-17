@@ -3,6 +3,8 @@ package africa.credresearch.modules.paper.interfaces.rest;
 import africa.credresearch.common.error.ApiException;
 import africa.credresearch.modules.paper.application.PaperService;
 import africa.credresearch.modules.paper.domain.model.Paper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
@@ -28,17 +30,28 @@ import org.springframework.web.multipart.MultipartFile;
 public class PaperController {
 
     private final PaperService service;
+    private final ObjectMapper mapper;
 
-    public PaperController(PaperService service) {
+    public PaperController(PaperService service, ObjectMapper mapper) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     public record PaperResponse(UUID id, UUID projectId, String filename, String title, String authors,
-                                Integer year, String doi, String journal, String extractionStatus) {
-        static PaperResponse from(Paper p) {
-            return new PaperResponse(p.id(), p.projectId(), p.filename(), p.title(), p.authors(),
-                    p.year(), p.doi(), p.journal(), p.extractionStatus());
+                                Integer year, String doi, String journal, String extractionStatus,
+                                JsonNode summary) {}
+
+    private PaperResponse toResponse(Paper p) {
+        JsonNode summary = null;
+        if (p.summaryJson() != null) {
+            try {
+                summary = mapper.readTree(p.summaryJson());
+            } catch (Exception ignored) {
+                // stored summary unparseable → omit it rather than fail the whole response
+            }
         }
+        return new PaperResponse(p.id(), p.projectId(), p.filename(), p.title(), p.authors(),
+                p.year(), p.doi(), p.journal(), p.extractionStatus(), summary);
     }
 
     public record UpdatePaperRequest(String title, String authors, Integer year, String doi, String journal) {}
@@ -57,20 +70,26 @@ public class PaperController {
         } catch (Exception e) {
             throw ApiException.badRequest("UPLOAD_READ_FAILED", "Could not read the uploaded file");
         }
-        return PaperResponse.from(service.upload(projectId, file.getOriginalFilename(), bytes));
+        return toResponse(service.upload(projectId, file.getOriginalFilename(), bytes));
     }
 
     @GetMapping
     @Operation(summary = "List a project's uploaded papers")
     public List<PaperResponse> list(@RequestParam UUID projectId) {
-        return service.list(projectId).stream().map(PaperResponse::from).toList();
+        return service.list(projectId).stream().map(this::toResponse).toList();
     }
 
     @PatchMapping("/{id}")
     @Operation(summary = "Correct a paper's extracted metadata")
     public PaperResponse update(@PathVariable UUID id, @RequestBody UpdatePaperRequest req) {
-        return PaperResponse.from(
+        return toResponse(
                 service.updateMetadata(id, req.title(), req.authors(), req.year(), req.doi(), req.journal()));
+    }
+
+    @PostMapping("/{id}/summarize")
+    @Operation(summary = "AI-summarize a paper: methodology, findings, limitations, gaps (FR-LIT-4)")
+    public JsonNode summarize(@PathVariable UUID id) {
+        return service.summarize(id);
     }
 
     @DeleteMapping("/{id}")

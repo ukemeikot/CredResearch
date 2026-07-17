@@ -1,14 +1,21 @@
 package africa.credresearch.modules.paper.application;
 
 import africa.credresearch.common.error.ApiException;
+import africa.credresearch.common.tenant.TenantContext;
 import africa.credresearch.common.tenant.TenantContextHolder;
+import africa.credresearch.modules.ai.application.AiUsageService;
+import africa.credresearch.modules.ai.infrastructure.AiWorkerClient;
+import africa.credresearch.modules.identity.application.ProfileService;
 import africa.credresearch.modules.paper.domain.model.Paper;
 import africa.credresearch.modules.paper.domain.port.PaperRepository;
 import africa.credresearch.modules.paper.infrastructure.PaperExtractionClient;
 import africa.credresearch.modules.project.application.ProjectAccessGuard;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +33,56 @@ public class PaperService {
     private final PaperRepository papers;
     private final PaperExtractionClient extraction;
     private final ProjectAccessGuard projectAccess;
+    private final AiUsageService usage;
+    private final ProfileService profiles;
+    private final AiWorkerClient worker;
+    private final ObjectMapper mapper;
+    private final String modelLabel;
 
-    public PaperService(PaperRepository papers, PaperExtractionClient extraction, ProjectAccessGuard projectAccess) {
+    public PaperService(PaperRepository papers, PaperExtractionClient extraction, ProjectAccessGuard projectAccess,
+                        AiUsageService usage, ProfileService profiles, AiWorkerClient worker, ObjectMapper mapper,
+                        @Value("${credresearch.ai.model-label:self-hosted}") String modelLabel) {
         this.papers = papers;
         this.extraction = extraction;
         this.projectAccess = projectAccess;
+        this.usage = usage;
+        this.profiles = profiles;
+        this.worker = worker;
+        this.mapper = mapper;
+        this.modelLabel = modelLabel;
+    }
+
+    /**
+     * AI-summarize a paper (method/findings/limitations/gaps) — FR-LIT-4. Credit-metered and
+     * recorded like other AI features; requires a verified email. Stores the summary on the paper.
+     */
+    @Transactional
+    public JsonNode summarize(UUID id) {
+        Paper paper = require(id);
+        if (!profiles.currentUser().isEmailVerified()) {
+            throw ApiException.forbidden("EMAIL_NOT_VERIFIED",
+                    "Please verify your email before using AI features.");
+        }
+        TenantContext ctx = TenantContextHolder.require();
+        usage.assertWithinCredits(ctx.userId(), ctx.plan());
+        String text = papers.getText(id).orElse("");
+        if (text.isBlank()) {
+            throw ApiException.badRequest("NO_TEXT", "This paper has no extracted text to summarize.");
+        }
+        ObjectNode body = mapper.createObjectNode();
+        body.put("text", text);
+        body.put("projectId", paper.projectId().toString());
+        UUID requestId = usage.recordRequest(ctx.institutionId(), paper.projectId(), null,
+                ctx.userId(), "summarize", modelLabel);
+        try {
+            JsonNode resp = worker.post("summarize", body);
+            usage.recordResponse(requestId, resp == null ? null : resp.toString(), "stop");
+            papers.saveSummary(id, resp == null ? null : resp.toString());
+            return resp;
+        } catch (RuntimeException e) {
+            usage.markError(requestId);
+            throw e;
+        }
     }
 
     @Transactional
@@ -59,7 +111,7 @@ public class PaperService {
                 null, projectId, userId, filename,
                 title, text(ex, "authors"), intOrNull(ex, "year"),
                 doi, text(ex, "journal"),
-                lowConfidence ? "LOW_CONFIDENCE" : "DONE", null);
+                lowConfidence ? "LOW_CONFIDENCE" : "DONE", null, null);
         return papers.create(meta, ex.path("text").asText(""));
     }
 

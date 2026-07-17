@@ -57,12 +57,25 @@ public class PaperRepositoryAdapter implements PaperRepository {
     }
 
     @Override
+    public Optional<String> getText(UUID id) {
+        return jpa.findById(id).map(PaperEntity::getTextContent);
+    }
+
+    @Override
+    public Paper saveSummary(UUID id, String summaryJson) {
+        PaperEntity e = jpa.findById(id).orElseThrow();
+        e.setSummaryJson(summaryJson);
+        return toModel(jpa.save(e));
+    }
+
+    @Override
     public void delete(UUID id) {
         jpa.deleteById(id);
     }
 
     private static Paper toModel(PaperEntity e) {
         return new Paper(e.getId(), e.getProjectId(), e.getUploadedBy(), e.getFilename(), e.getTitle(),
-                e.getAuthors(), e.getYear(), e.getDoi(), e.getJournal(), e.getExtractionStatus(), e.getCreatedAt());
+                e.getAuthors(), e.getYear(), e.getDoi(), e.getJournal(), e.getExtractionStatus(),
+                e.getCreatedAt(), e.getSummaryJson());
     }
 }
