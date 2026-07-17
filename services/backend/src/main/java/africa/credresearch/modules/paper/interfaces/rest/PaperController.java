@@ -79,6 +79,21 @@ public class PaperController {
         service.delete(id);
     }
 
+    @GetMapping("/export")
+    @Operation(summary = "Export the project's references as BibTeX or RIS (FR-LIT-9)")
+    public org.springframework.http.ResponseEntity<byte[]> export(
+            @RequestParam UUID projectId,
+            @RequestParam(defaultValue = "bibtex") String format) {
+        String content = service.export(projectId, format);
+        String ext = "ris".equalsIgnoreCase(format) ? "ris" : "bib";
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename("references." + ext).build().toString())
+                .contentType(org.springframework.http.MediaType.TEXT_PLAIN)
+                .body(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
     @GetMapping("/references")
     @Operation(summary = "Render the project's reference list in a citation style (APA/IEEE/HARVARD)")
     public ReferenceListResponse references(@RequestParam UUID projectId,

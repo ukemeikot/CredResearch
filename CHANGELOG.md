@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in **APA / IEEE / Harvard** with one-click copy (FR-LIT-7). New `paper` module + Flyway `V8`; worker
   `/papers/extract` (pypdf/python-docx). (Chunking + embeddings for RAG, the literature matrix,
   in-text citations, and BibTeX/RIS follow as the next Phase 5 increments.)
+- **Phase 5 — BibTeX/RIS export & de-duplication.** Export a project's reference list as **BibTeX**
+  or **RIS** for import into Zotero/Mendeley/EndNote (`GET /papers/export`, FR-LIT-9), and uploads
+  are **de-duplicated** within a project by DOI (or normalised title) so the same source isn't added
+  twice (FR-LIT-10).
 
 ### Fixed
 - **Paper title extraction skips front-matter boilerplate.** The title heuristic now ignores
