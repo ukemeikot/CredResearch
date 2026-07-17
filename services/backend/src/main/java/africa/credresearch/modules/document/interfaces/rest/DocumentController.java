@@ -1,5 +1,6 @@
 package africa.credresearch.modules.document.interfaces.rest;
 
+import africa.credresearch.modules.document.application.DocumentExportService;
 import africa.credresearch.modules.document.application.DocumentService;
 import africa.credresearch.modules.document.domain.model.Document;
 import africa.credresearch.modules.document.domain.model.DocumentDetail;
@@ -37,10 +38,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class DocumentController {
 
     private final DocumentService service;
+    private final DocumentExportService exportService;
     private final ObjectMapper objectMapper;
 
-    public DocumentController(DocumentService service, ObjectMapper objectMapper) {
+    public DocumentController(DocumentService service, DocumentExportService exportService,
+                              ObjectMapper objectMapper) {
         this.service = service;
+        this.exportService = exportService;
         this.objectMapper = objectMapper;
     }
 
@@ -137,6 +141,21 @@ public class DocumentController {
     public SectionResponse restore(@PathVariable UUID id, @PathVariable UUID sectionId,
                                    @Valid @RequestBody RestoreRequest req) {
         return toSection(service.restore(id, sectionId, req.versionId()));
+    }
+
+    @GetMapping("/{id}/export")
+    @Operation(summary = "Export/download a document (FR-DOC-6/7)",
+            description = "Renders the document to a downloadable file. format=docx (default) or pdf.")
+    public org.springframework.http.ResponseEntity<byte[]> export(
+            @PathVariable UUID id,
+            @RequestParam(name = "format", defaultValue = "docx") String format) {
+        DocumentExportService.ExportResult result = exportService.export(id, format);
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment()
+                                .filename(result.filename()).build().toString())
+                .contentType(org.springframework.http.MediaType.parseMediaType(result.contentType()))
+                .body(result.bytes());
     }
 
     // ── mapping ──────────────────────────────────────────────────────────────

@@ -88,6 +88,35 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
   return body as T;
 }
 
+/** Fetch a binary file with auth (+ one refresh-retry) and trigger a browser download. */
+async function downloadFile(path: string, fallbackName: string, retry = true): Promise<void> {
+  const token = useAuth.getState().accessToken;
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    cache: "no-store",
+  });
+  if (res.status === 401 && retry) {
+    if (await refreshOnce()) return downloadFile(path, fallbackName, false);
+  }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, body.detail || body.message || res.statusText, body.code);
+  }
+  // Prefer the server-provided filename from Content-Disposition.
+  const cd = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename\*?=(?:UTF-8''|")?([^";]+)/i.exec(cd);
+  const name = match ? decodeURIComponent(match[1].replace(/"/g, "")) : fallbackName;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 const json = (method: string, body?: unknown): RequestInit => ({
   method,
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -322,6 +351,8 @@ export const api = {
     request<DocVersion[]>(`/documents/${docId}/sections/${sectionId}/versions`),
   restoreSection: (docId: string, sectionId: string, versionId: string) =>
     request<DocSection>(`/documents/${docId}/sections/${sectionId}/restore`, json("POST", { versionId })),
+  downloadDocument: (docId: string, format: "docx" | "pdf") =>
+    downloadFile(`/documents/${docId}/export?format=${format}`, `document.${format}`),
 
   // Invitations
   listInvitations: (projectId: string) =>

@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Document export / download (DOCX + PDF).** Any project member can download a document from the
+  editor's **Download** menu. The worker renders the document (all sections, in order) to a **.docx**
+  via `python-docx`, applying the template's format rule (font family/size, line spacing); **.pdf**
+  is produced by a **Gotenberg (LibreOffice)** sidecar when wired (staging), and the UI degrades
+  gracefully to "try Word" when PDF isn't available. Backend `GET /documents/{id}/export?format=`
+  streams the file with a sensible filename. (FR-DOC-6/7.)
+- **AI topic assistance when starting a project.** The New-Project dialog now has an *"Get AI topic
+  ideas"* panel: enter a field of study (+ optional interests) and the AI **topic generator** returns
+  candidate titles with a feasibility rating, rationale, and suggested methods — click one to use it
+  as the project title. (FR-AI topic generator.)
 - **Phase 4 completion — credits, usage tracking & AI-Use Disclosure Ledger.** Every AI call is
   recorded (`ai_requests`/`ai_responses`) and metered against a **per-plan monthly credit** limit
   (`plans` seeded FREE/STUDENT/INSTITUTION); the editor shows remaining credits and blocks at zero
