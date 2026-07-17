@@ -369,4 +369,6 @@ export const api = {
     ),
   summarizePaper: (id: string) =>
     request(`/papers/${id}/summarize`, json("POST"), S.PaperSummarySchema),
+  askPapers: (projectId: string, question: string) =>
+    request("/papers/ask", json("POST", { projectId, question }), S.RagAnswerSchema),
 };

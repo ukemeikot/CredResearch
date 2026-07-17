@@ -279,6 +279,13 @@ export const PaperSchema = z.object({
 });
 export type Paper = z.infer<typeof PaperSchema>;
 
+export const RagAnswerSchema = z.object({
+  answer: z.string().default(""),
+  used_sources: z.array(z.string()).default([]),
+  grounded: z.boolean().optional(),
+});
+export type RagAnswer = z.infer<typeof RagAnswerSchema>;
+
 export const ReferenceSchema = z.object({ paperId: z.string(), text: z.string() });
 export const ReferenceListSchema = z.object({
   style: z.string(),

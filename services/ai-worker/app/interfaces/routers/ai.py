@@ -44,3 +44,13 @@ def alignment(req: s.AlignmentRequest) -> s.AlignmentResponse:
 @router.post("/summarize", response_model=s.SummaryResponse, dependencies=[Depends(require_internal)])
 def summarize(req: s.SummaryRequest) -> s.SummaryResponse:
     return ai_features.summarize(req)
+
+
+@router.post("/embed", response_model=s.EmbedResponse, dependencies=[Depends(require_internal)])
+def embed(req: s.EmbedRequest) -> s.EmbedResponse:
+    return ai_features.embed(req)
+
+
+@router.post("/rag-answer", response_model=s.RagAnswerResponse, dependencies=[Depends(require_internal)])
+def rag_answer(req: s.RagAnswerRequest) -> s.RagAnswerResponse:
+    return ai_features.rag_answer(req)

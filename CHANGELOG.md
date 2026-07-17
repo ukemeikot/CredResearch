@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 5 — RAG over your papers + literature matrix (Phase 5 complete).** *Ask your papers*: a
+  question is embedded (Ollama `nomic-embed-text`), matched against the project's chunked+embedded
+  corpus (**pgvector**, Flyway `V10`), and answered by the model **grounded only in the retrieved
+  passages**, with the source papers cited (FR-LIT-8). Papers are chunked and embedded on upload
+  (best-effort; degrades cleanly with no model). A **literature matrix** (FR-LIT-5) compares every
+  summarised paper — reference, methodology, findings, gaps — in one table. This closes the Phase 5
+  MVP (FR-LIT-1/2/3/4/5/6/7/8/9/10).
 - **Phase 5 — AI paper summarization.** A **Summarize** action on each uploaded paper asks the AI
   worker for a structured summary — overall summary, methodology, key findings, limitations, and
   research gaps — shown inline and stored on the paper (`GET /papers` returns it). Credit-metered

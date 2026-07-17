@@ -9,6 +9,7 @@ import africa.credresearch.modules.identity.application.ProfileService;
 import africa.credresearch.modules.paper.domain.model.Paper;
 import africa.credresearch.modules.paper.domain.port.PaperRepository;
 import africa.credresearch.modules.paper.infrastructure.PaperExtractionClient;
+import africa.credresearch.modules.paper.infrastructure.persistence.PaperChunkStore;
 import africa.credresearch.modules.project.application.ProjectAccessGuard;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,11 +37,17 @@ public class PaperService {
     private final AiUsageService usage;
     private final ProfileService profiles;
     private final AiWorkerClient worker;
+    private final PaperChunkStore chunks;
     private final ObjectMapper mapper;
     private final String modelLabel;
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PaperService.class);
+    private static final int CHUNK_SIZE = 900;
+    private static final int MAX_CHUNKS = 20;
+
     public PaperService(PaperRepository papers, PaperExtractionClient extraction, ProjectAccessGuard projectAccess,
-                        AiUsageService usage, ProfileService profiles, AiWorkerClient worker, ObjectMapper mapper,
+                        AiUsageService usage, ProfileService profiles, AiWorkerClient worker,
+                        PaperChunkStore chunks, ObjectMapper mapper,
                         @Value("${credresearch.ai.model-label:self-hosted}") String modelLabel) {
         this.papers = papers;
         this.extraction = extraction;
@@ -48,8 +55,105 @@ public class PaperService {
         this.usage = usage;
         this.profiles = profiles;
         this.worker = worker;
+        this.chunks = chunks;
         this.mapper = mapper;
         this.modelLabel = modelLabel;
+    }
+
+    /**
+     * Best-effort: chunk a paper's text, embed the chunks (worker), and store them in pgvector for
+     * RAG (FR-LIT-8). Runs outside the upload transaction and never throws — indexing failures
+     * (no embedding model, worker down) must not fail the upload.
+     */
+    public void indexPaperQuietly(UUID paperId, UUID projectId) {
+        try {
+            String text = papers.getText(paperId).orElse("");
+            List<String> parts = chunk(text);
+            if (parts.isEmpty()) {
+                return;
+            }
+            ObjectNode body = mapper.createObjectNode();
+            var arr = body.putArray("texts");
+            parts.forEach(arr::add);
+            JsonNode resp = worker.post("embed", body);
+            JsonNode embeddings = resp == null ? null : resp.get("embeddings");
+            if (embeddings == null || !embeddings.isArray() || embeddings.isEmpty()) {
+                return; // no embedding model wired → skip indexing silently
+            }
+            chunks.deleteByPaper(paperId);
+            for (int i = 0; i < parts.size() && i < embeddings.size(); i++) {
+                chunks.insert(paperId, projectId, i, parts.get(i), vectorLiteral(embeddings.get(i)));
+            }
+        } catch (RuntimeException e) {
+            log.warn("Indexing paper {} for RAG failed (non-fatal): {}", paperId, e.toString());
+        }
+    }
+
+    /** Answer a question grounded in the project's uploaded papers (FR-LIT-8). Credit-metered. */
+    @Transactional
+    public JsonNode ask(UUID projectId, String question) {
+        projectAccess.requireMember(projectId);
+        if (question == null || question.isBlank()) {
+            throw ApiException.badRequest("EMPTY_QUESTION", "Ask a question about your papers.");
+        }
+        if (!profiles.currentUser().isEmailVerified()) {
+            throw ApiException.forbidden("EMAIL_NOT_VERIFIED",
+                    "Please verify your email before using AI features.");
+        }
+        TenantContext ctx = TenantContextHolder.require();
+        usage.assertWithinCredits(ctx.userId(), ctx.plan());
+
+        // Embed the question, then retrieve the most relevant chunks from this project's corpus.
+        ObjectNode embBody = mapper.createObjectNode();
+        embBody.putArray("texts").add(question);
+        JsonNode emb = worker.post("embed", embBody);
+        JsonNode vecs = emb == null ? null : emb.get("embeddings");
+        if (vecs == null || !vecs.isArray() || vecs.isEmpty()) {
+            ObjectNode na = mapper.createObjectNode();
+            na.put("answer", "Your papers aren’t indexed for search yet (no embedding model available).");
+            na.putArray("used_sources");
+            return na;
+        }
+        List<PaperChunkStore.RetrievedChunk> hits = chunks.search(projectId, vectorLiteral(vecs.get(0)), 5);
+
+        ObjectNode body = mapper.createObjectNode();
+        body.put("question", question);
+        var contexts = body.putArray("contexts");
+        for (PaperChunkStore.RetrievedChunk h : hits) {
+            ObjectNode c = contexts.addObject();
+            c.put("source", h.sourceTitle());
+            c.put("text", h.content());
+        }
+        UUID requestId = usage.recordRequest(ctx.institutionId(), projectId, null, ctx.userId(), "rag-answer", modelLabel);
+        try {
+            JsonNode resp = worker.post("rag-answer", body);
+            usage.recordResponse(requestId, resp == null ? null : resp.toString(), "stop");
+            return resp;
+        } catch (RuntimeException e) {
+            usage.markError(requestId);
+            throw e;
+        }
+    }
+
+    private static List<String> chunk(String text) {
+        List<String> out = new java.util.ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        String t = text.strip();
+        for (int i = 0; i < t.length() && out.size() < MAX_CHUNKS; i += CHUNK_SIZE) {
+            out.add(t.substring(i, Math.min(t.length(), i + CHUNK_SIZE)));
+        }
+        return out;
+    }
+
+    private static String vectorLiteral(JsonNode arr) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < arr.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(arr.get(i).asDouble());
+        }
+        return sb.append(']').toString();
     }
 
     /**
