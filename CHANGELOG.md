@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Web API client now validates responses with zod.** API response shapes live as zod schemas
+  (`lib/schemas.ts`) — the single source of truth from which the TypeScript types are inferred — and
+  every response-returning call validates its payload at the fetch boundary. On a contract mismatch
+  it logs (dev) and still returns the data, so drift surfaces without hard-breaking a screen.
+
 ### Added
 - **Editor text formatting — font family, size & colour.** The section toolbar now has a typeface
   picker, a font-size selector, and a text-colour control (swatches + full colour picker, with a
