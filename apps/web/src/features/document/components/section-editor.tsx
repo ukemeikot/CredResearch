@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApiError, type DocSection } from "@/lib/api";
-import { useSectionAssist } from "../api/use-ai";
+import { useAiCredits, useDisclosureAppend, useSectionAssist } from "../api/use-ai";
 import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
 
 const AUTOSAVE_DELAY = 1200;
@@ -38,6 +38,8 @@ export function SectionEditor({
 }) {
   const { status, save } = useSectionAutosave(docId, section);
   const assist = useSectionAssist();
+  const disclosure = useDisclosureAppend(docId);
+  const credits = useAiCredits();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<unknown>(null); // most recent editor JSON (may be un-flushed)
   const dirty = useRef(false);
@@ -100,12 +102,21 @@ export function SectionEditor({
         .map((p) => `<p>${p.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`)
         .join("");
       editor.chain().focus().insertContent(html).run();
+      // Record AI use in the document's disclosure ledger (FR-LEDGER).
+      disclosure.mutate({
+        documentSectionId: section.id,
+        featureKey: "section-assist",
+        suggestionSummary: res.suggestion.slice(0, 200),
+        action: "accepted",
+      });
       setAiOpen(false);
       setInstruction("");
     } catch {
       /* surfaced via assist.error */
     }
   }
+
+  const creditsLow = credits.data && credits.data.remaining <= 0;
 
   const aiError = assist.error instanceof ApiError ? assist.error.message : null;
 
@@ -146,12 +157,19 @@ export function SectionEditor({
 
       <div className="mt-2">
         {!aiOpen ? (
-          <button
-            onClick={() => setAiOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-3 py-1.5 text-xs text-accent transition-colors hover:bg-accent/10"
-          >
-            <Sparkles size={13} /> AI assist
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAiOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 px-3 py-1.5 text-xs text-accent transition-colors hover:bg-accent/10"
+            >
+              <Sparkles size={13} /> AI assist
+            </button>
+            {credits.data && (
+              <span className={`text-[11px] ${creditsLow ? "text-rose-400" : "text-slate-500"}`}>
+                {credits.data.remaining}/{credits.data.limit} AI credits left
+              </span>
+            )}
+          </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-2">
             <Sparkles size={14} className="ml-1 shrink-0 text-accent" />
@@ -166,8 +184,8 @@ export function SectionEditor({
               placeholder="Draft this section, make it more concise, add examples…"
               className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white outline-none"
             />
-            <Button size="sm" onClick={runAssist} disabled={assist.isPending}>
-              {assist.isPending ? "Generating…" : "Generate"}
+            <Button size="sm" onClick={runAssist} disabled={assist.isPending || !!creditsLow}>
+              {assist.isPending ? "Generating…" : creditsLow ? "No credits" : "Generate"}
             </Button>
             <button onClick={() => setAiOpen(false)} className="px-1 text-xs text-slate-400 hover:text-white">
               Cancel
