@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `/papers/extract` (pypdf/python-docx). (Chunking + embeddings for RAG, the literature matrix,
   in-text citations, and BibTeX/RIS follow as the next Phase 5 increments.)
 
+### Fixed
+- **Paper title extraction skips front-matter boilerplate.** The title heuristic now ignores
+  licence/attribution notices, arXiv/preprint stamps, and page headers when guessing a paper's
+  title from its first page, so uploads land closer to the real title (still user-correctable).
+
 ### Changed
 - **Web API client now validates responses with zod.** API response shapes live as zod schemas
   (`lib/schemas.ts`) — the single source of truth from which the TypeScript types are inferred — and
