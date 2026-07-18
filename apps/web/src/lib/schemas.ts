@@ -349,6 +349,66 @@ export const ExternalReviewSchema = z.object({
 });
 export type ExternalReview = z.infer<typeof ExternalReviewSchema>;
 
+// ── Questionnaires / survey (Phase 7) ────────────────────────────────────────
+export const QuestionnaireSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  title: z.string(),
+  consentText: z.string().nullable(),
+  status: z.string(),
+  createdAt: z.string(),
+});
+export type Questionnaire = z.infer<typeof QuestionnaireSchema>;
+
+export const QuestionViewSchema = z.object({
+  id: z.string(),
+  orderIndex: z.number().default(0),
+  type: z.string(),
+  prompt: z.string(),
+  options: z.any().nullable().optional(),
+  required: z.boolean(),
+});
+export type QuestionView = z.infer<typeof QuestionViewSchema>;
+
+export const QuestionnaireViewSchema = z.object({
+  questionnaire: QuestionnaireSchema,
+  questions: z.array(QuestionViewSchema),
+});
+export type QuestionnaireView = z.infer<typeof QuestionnaireViewSchema>;
+
+export const PublishTokenSchema = z.object({ token: z.string() });
+
+export const SurveyQuestionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  prompt: z.string(),
+  options: z.any().nullable().optional(),
+  required: z.boolean(),
+});
+export const SurveyViewSchema = z.object({
+  title: z.string(),
+  consentText: z.string().nullable(),
+  questions: z.array(SurveyQuestionSchema),
+});
+export type SurveyView = z.infer<typeof SurveyViewSchema>;
+export type SurveyQuestion = z.infer<typeof SurveyQuestionSchema>;
+
+export const ResponseRowSchema = z.object({
+  response: z.object({
+    id: z.string(),
+    surveyLinkId: z.string(),
+    consentGiven: z.boolean(),
+    submittedAt: z.string(),
+  }),
+  answers: z.array(z.object({
+    id: z.string(),
+    surveyResponseId: z.string(),
+    questionId: z.string(),
+    valueJson: z.string().nullable(),
+  })),
+});
+export type ResponseRow = z.infer<typeof ResponseRowSchema>;
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });
