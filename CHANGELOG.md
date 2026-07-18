@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   account** (FR-SUP-1/2). The token authorises exactly one review and nothing else. Email
   **notifications** fire on invite, decision, and comment (FR-SUP-9). Flyway `V12`; public
   `/review/{token}` surface + `/api/v1/review-access/**` (permitted without a bearer).
+- **Phase 6 — Inline range-anchored comments (Phase 6 complete).** In the editor a reviewer can
+  **select text and comment on it**; the comment stores the range + quoted passage and the anchored
+  span is **highlighted in the document**. Completes FR-SUP-4 and the Phase 6 MVP (FR-SUP-1..9).
 - **Phase 6 — Supervisor inbox.** A **Reviews** page (top-nav) lists a reviewer's pending requests
   across all their students and opens the document in one click (FR-SUP-7).
 - **Phase 6 (first increment) — Supervisor review loop.** Submit a document/section for review by a
