@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   account** (FR-SUP-1/2). The token authorises exactly one review and nothing else. Email
   **notifications** fire on invite, decision, and comment (FR-SUP-9). Flyway `V12`; public
   `/review/{token}` surface + `/api/v1/review-access/**` (permitted without a bearer).
+- **Phase 6 — Supervisor inbox.** A **Reviews** page (top-nav) lists a reviewer's pending requests
+  across all their students and opens the document in one click (FR-SUP-7).
 - **Phase 6 (first increment) — Supervisor review loop.** Submit a document/section for review by a
   project member, who leaves **resolvable inline comments** and records a **decision**
   (APPROVED / NEEDS_REVISION / REJECTED) with a summary; the request moves through its status and
