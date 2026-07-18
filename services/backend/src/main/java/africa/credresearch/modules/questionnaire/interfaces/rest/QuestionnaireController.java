@@ -31,6 +31,7 @@ public class QuestionnaireController {
     }
 
     public record CreateRequest(@NotNull UUID projectId, String title, String consentText) {}
+    public record GenerateRequest(@NotNull UUID projectId, String topic, List<String> objectives) {}
     public record QuestionDto(String type, String prompt, JsonNode options, boolean required) {}
     public record UpdateRequest(String title, String consentText, List<QuestionDto> questions) {}
     public record PublishRequest(Integer expiresDays) {}
@@ -43,6 +44,12 @@ public class QuestionnaireController {
     @Operation(summary = "Create a questionnaire")
     public QuestionnaireView create(@RequestBody CreateRequest req) {
         return view(service.create(req.projectId(), req.title(), req.consentText()));
+    }
+
+    @PostMapping("/generate")
+    @Operation(summary = "AI-draft a questionnaire from a topic + objectives (FR-Q)")
+    public QuestionnaireView generate(@RequestBody GenerateRequest req) {
+        return view(service.generate(req.projectId(), req.topic(), req.objectives()));
     }
 
     @GetMapping

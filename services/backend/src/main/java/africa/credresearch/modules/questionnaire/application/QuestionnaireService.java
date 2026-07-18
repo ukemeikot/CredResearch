@@ -1,7 +1,12 @@
 package africa.credresearch.modules.questionnaire.application;
 
 import africa.credresearch.common.error.ApiException;
+import africa.credresearch.common.tenant.TenantContext;
+import africa.credresearch.common.tenant.TenantContextHolder;
 import africa.credresearch.common.util.TokenHasher;
+import africa.credresearch.modules.ai.application.AiUsageService;
+import africa.credresearch.modules.ai.infrastructure.AiWorkerClient;
+import africa.credresearch.modules.identity.application.ProfileService;
 import africa.credresearch.modules.questionnaire.domain.model.Question;
 import africa.credresearch.modules.questionnaire.domain.model.Questionnaire;
 import africa.credresearch.modules.questionnaire.domain.model.SurveyAnswer;
@@ -9,9 +14,15 @@ import africa.credresearch.modules.questionnaire.domain.model.SurveyLink;
 import africa.credresearch.modules.questionnaire.domain.model.SurveyResponse;
 import africa.credresearch.modules.questionnaire.domain.port.QuestionnaireRepository;
 import africa.credresearch.modules.project.application.ProjectAccessGuard;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,10 +44,77 @@ public class QuestionnaireService {
 
     private final QuestionnaireRepository repo;
     private final ProjectAccessGuard projectAccess;
+    private final AiUsageService usage;
+    private final ProfileService profiles;
+    private final AiWorkerClient worker;
+    private final ObjectMapper mapper;
+    private final String modelLabel;
 
-    public QuestionnaireService(QuestionnaireRepository repo, ProjectAccessGuard projectAccess) {
+    public QuestionnaireService(QuestionnaireRepository repo, ProjectAccessGuard projectAccess,
+                                AiUsageService usage, ProfileService profiles, AiWorkerClient worker,
+                                ObjectMapper mapper,
+                                @Value("${credresearch.ai.model-label:self-hosted}") String modelLabel) {
         this.repo = repo;
         this.projectAccess = projectAccess;
+        this.usage = usage;
+        this.profiles = profiles;
+        this.worker = worker;
+        this.mapper = mapper;
+        this.modelLabel = modelLabel;
+    }
+
+    /** AI-draft a questionnaire from a topic + objectives (FR-Q). Credit-metered; verified-email gated. */
+    @Transactional
+    public QuestionnaireDetail generate(UUID projectId, String topic, List<String> objectives) {
+        projectAccess.requireMember(projectId);
+        if (!profiles.currentUser().isEmailVerified()) {
+            throw ApiException.forbidden("EMAIL_NOT_VERIFIED", "Please verify your email before using AI features.");
+        }
+        TenantContext ctx = TenantContextHolder.require();
+        usage.assertWithinCredits(ctx.userId(), ctx.plan());
+
+        ObjectNode body = mapper.createObjectNode();
+        body.put("topic", topic == null ? "" : topic);
+        ArrayNode objs = body.putArray("objectives");
+        if (objectives != null) {
+            objectives.forEach(objs::add);
+        }
+        UUID requestId = usage.recordRequest(ctx.institutionId(), projectId, null, ctx.userId(), "questionnaire", modelLabel);
+        JsonNode resp;
+        try {
+            resp = worker.post("questionnaire", body);
+            usage.recordResponse(requestId, resp == null ? null : resp.toString(), "stop");
+        } catch (RuntimeException e) {
+            usage.markError(requestId);
+            throw e;
+        }
+
+        String title = resp != null && resp.hasNonNull("title") && !resp.get("title").asText().isBlank()
+                ? resp.get("title").asText()
+                : (topic == null || topic.isBlank() ? "Questionnaire" : topic + " — Questionnaire");
+        Questionnaire q = repo.createQuestionnaire(new Questionnaire(null, projectId, title, null, "DRAFT", null));
+
+        List<Question> questions = new ArrayList<>();
+        JsonNode qs = resp == null ? null : resp.get("questions");
+        if (qs != null && qs.isArray()) {
+            for (JsonNode item : qs) {
+                String type = item.path("type").asText("TEXT");
+                String prompt = item.path("prompt").asText("");
+                if (prompt.isBlank()) {
+                    continue;
+                }
+                String optionsJson = null;
+                JsonNode opts = item.get("options");
+                if (opts != null && opts.isArray() && !opts.isEmpty()) {
+                    ObjectNode wrap = mapper.createObjectNode();
+                    wrap.set("choices", opts);
+                    optionsJson = wrap.toString();
+                }
+                questions.add(new Question(null, q.id(), 0, type, prompt, optionsJson, item.path("required").asBoolean(false)));
+            }
+        }
+        repo.replaceQuestions(q.id(), questions);
+        return new QuestionnaireDetail(q, repo.findQuestions(q.id()));
     }
 
     // ── Authoring (member-gated) ─────────────────────────────────────────────

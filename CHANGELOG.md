@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 7 — AI generate-from-objectives.** Draft a whole questionnaire from a research topic
+  (and objectives) with one click — the worker proposes typed questions (choice/Likert/text/…),
+  saved as an editable draft. Credit-metered like other AI features. (FR-Q generate.)
 - **Phase 7 (first increment) — Questionnaire builder & data collection.** Build a survey in a
   project (short/long text, number, yes-no, single/multi-choice, Likert; required flags; consent
   statement), **publish a tokenized public link**, collect **consented responses** at an
