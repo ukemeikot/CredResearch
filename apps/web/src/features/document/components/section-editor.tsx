@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorContent, useEditor, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
@@ -20,6 +20,7 @@ import {
   ListOrdered,
   BookMarked,
   Loader2,
+  MessageSquarePlus,
   Palette,
   Quote,
   Sparkles,
@@ -30,7 +31,9 @@ import { ApiError, type DocSection, type Paper } from "@/lib/api";
 import { useMe } from "@/features/user/api/use-me";
 import { usePapers } from "@/features/paper/api/use-papers";
 import { citationLabel, inTextCitation } from "@/features/paper/model/cite";
+import { useAddComment, useReviews } from "@/features/review/api/use-reviews";
 import { useAiCredits, useDisclosureAppend, useSectionAssist } from "../api/use-ai";
+import { ReviewHighlights, refreshReviewHighlights } from "../extensions/review-highlights";
 import { readSectionBuffer, useSectionAutosave } from "../hooks/use-autosave";
 import { useCollab, type CollabPeer } from "../hooks/use-collab";
 
@@ -83,8 +86,24 @@ export function SectionEditor({
   const seededRef = useRef(false);
   const [, force] = useState(0);
   const papersQ = usePapers(projectId);
+  const reviewsQ = useReviews(docId);
+  const addReviewComment = useAddComment(docId);
+  const anchorRangesRef = useRef<{ from: number; to: number }[]>([]);
   const [citeOpen, setCiteOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [commentBody, setCommentBody] = useState("");
+  const [pendingAnchor, setPendingAnchor] = useState<{ from: number; to: number; quote: string } | null>(null);
+
+  // Review threads for THIS section, and the review request an inline comment attaches to.
+  const sectionThreads = useMemo(
+    () => (reviewsQ.data ?? []).filter((t) => t.request.documentSectionId === section.id),
+    [reviewsQ.data, section.id],
+  );
+  const activeReview = useMemo(() => {
+    const pending = sectionThreads.filter((t) => t.request.status === "PENDING");
+    const pool = pending.length ? pending : sectionThreads;
+    return pool.length ? pool[0].request : null; // list is newest-first
+  }, [sectionThreads]);
   const [instruction, setInstruction] = useState("");
 
   // Prefer locally-buffered offline edits over the (possibly older) server content.
@@ -108,10 +127,11 @@ export function SectionEditor({
             // Collaboration provides its own (shared) undo history — disable StarterKit's.
             StarterKit.configure({ undoRedo: false }),
             ...STYLE_EXTENSIONS,
+            ReviewHighlights.configure({ getRanges: () => anchorRangesRef.current }),
             Collaboration.configure({ document: collab.ydoc! }),
             CollaborationCaret.configure({ provider: collab.provider!, user: collab.user }),
           ]
-        : [StarterKit, ...STYLE_EXTENSIONS],
+        : [StarterKit, ...STYLE_EXTENSIONS, ReviewHighlights.configure({ getRanges: () => anchorRangesRef.current })],
       // In collab mode content comes from Yjs (seeded once, below) — don't set it here.
       content: collabReady ? undefined : initialContent,
       immediatelyRender: false,
@@ -149,6 +169,15 @@ export function SectionEditor({
   useEffect(() => {
     seededRef.current = false;
   }, [section.id]);
+
+  // Keep the anchored-comment highlights in sync with the section's review comments (FR-SUP-4).
+  useEffect(() => {
+    anchorRangesRef.current = sectionThreads
+      .flatMap((t) => t.comments)
+      .filter((c) => c.anchorStart != null && c.anchorEnd != null)
+      .map((c) => ({ from: c.anchorStart as number, to: c.anchorEnd as number }));
+    refreshReviewHighlights(editor);
+  }, [sectionThreads, editor]);
 
   // Flush a pending debounced save when the section/page unmounts, so the last edits aren't lost.
   useEffect(() => {
@@ -189,6 +218,29 @@ export function SectionEditor({
     }
   }
 
+  function startComment() {
+    if (!editor || !activeReview) return;
+    const { from, to } = editor.state.selection;
+    if (from >= to) return;
+    const quote = editor.state.doc.textBetween(from, to, " ").slice(0, 300);
+    setPendingAnchor({ from, to, quote });
+    setCommentBody("");
+  }
+
+  async function submitComment() {
+    if (!pendingAnchor || !activeReview || !commentBody.trim()) return;
+    await addReviewComment.mutateAsync({
+      reviewId: activeReview.id,
+      body: commentBody.trim(),
+      anchorStart: pendingAnchor.from,
+      anchorEnd: pendingAnchor.to,
+      quote: pendingAnchor.quote,
+    });
+    setPendingAnchor(null);
+    setCommentBody("");
+  }
+
+  const hasSelection = !!editor && !editor.state.selection.empty;
   const creditsLow = credits.data && credits.data.remaining <= 0;
 
   const aiError = assist.error instanceof ApiError ? assist.error.message : null;
@@ -279,6 +331,17 @@ export function SectionEditor({
                 </>
               )}
             </div>
+            {/* Anchor a review comment to the selected text (FR-SUP-4) */}
+            {activeReview && (
+              <button
+                onClick={startComment}
+                disabled={!hasSelection}
+                title={hasSelection ? "Comment on the selected text" : "Select text to comment on it"}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white disabled:opacity-40"
+              >
+                <MessageSquarePlus size={13} /> Comment
+              </button>
+            )}
             {credits.data && (
               <span className={`text-[11px] ${creditsLow ? "text-rose-400" : "text-slate-500"}`}>
                 {credits.data.remaining}/{credits.data.limit} AI credits left
@@ -308,6 +371,34 @@ export function SectionEditor({
           </div>
         )}
         {aiError && <p className="mt-1 text-xs text-rose-400">{aiError}</p>}
+
+        {/* Inline review-comment composer, anchored to the selected text */}
+        {pendingAnchor && (
+          <div className="mt-2 rounded-xl border border-amber-400/30 bg-amber-400/[0.06] p-2.5">
+            <p className="line-clamp-2 border-l-2 border-amber-400/50 pl-2 text-xs italic text-slate-300">
+              “{pendingAnchor.quote}”
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                autoFocus
+                value={commentBody}
+                onChange={(e) => setCommentBody(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitComment();
+                  if (e.key === "Escape") setPendingAnchor(null);
+                }}
+                placeholder="Comment on this passage…"
+                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white outline-none"
+              />
+              <Button size="sm" onClick={submitComment} disabled={!commentBody.trim() || addReviewComment.isPending}>
+                {addReviewComment.isPending ? "Saving…" : "Comment"}
+              </Button>
+              <button onClick={() => setPendingAnchor(null)} className="px-1 text-xs text-slate-400 hover:text-white">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
