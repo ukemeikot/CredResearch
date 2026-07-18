@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 8 (first increment) — Data analysis.** Upload a CSV and get **descriptive statistics**
+  computed with pandas — column **type + missing-value detection**, numeric summaries
+  (mean/median/std/min/max + histogram) and categorical **frequency tables/bar charts**
+  (FR-DATA-1..4). Then a **grounded AI interpretation** and a **Chapter 4 starter draft** that cite
+  **only** the computed numbers — never invented (FR-DATA-5/6, credit-metered). New `analysis`
+  module + worker `/analysis/describe` (pandas) + `/ai/interpret-data` + `/ai/chapter4`; a Data
+  analysis panel in the project workspace. (Async jobs + persisted datasets/charts follow.)
+
+### Added
 - **Phase 7 — AI generate-from-objectives.** Draft a whole questionnaire from a research topic
   (and objectives) with one click — the worker proposes typed questions (choice/Likert/text/…),
   saved as an editable draft. Credit-metered like other AI features. (FR-Q generate.)

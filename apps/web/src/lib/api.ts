@@ -208,6 +208,8 @@ export type {
   SurveyView,
   SurveyQuestion,
   ResponseRow,
+  AnalysisColumn,
+  AnalysisResult,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -434,4 +436,16 @@ export const api = {
   surveyRender: (token: string) => request(`/survey/${token}`, undefined, S.SurveyViewSchema),
   surveySubmit: (token: string, b: { consentGiven: boolean; answers: { questionId: string; value: unknown }[] }) =>
     request<void>(`/survey/${token}/responses`, json("POST", b)),
+
+  // Data analysis (Phase 8)
+  analyzeCsv: (projectId: string, file: File) => {
+    const form = new FormData();
+    form.append("projectId", projectId);
+    form.append("file", file);
+    return upload("/analysis", form, S.AnalysisResultSchema);
+  },
+  interpretData: (projectId: string, topic: string, stats: unknown) =>
+    request("/analysis/interpret", json("POST", { projectId, topic, stats }), S.InterpretSchema),
+  chapter4Draft: (projectId: string, topic: string, stats: unknown) =>
+    request("/analysis/chapter4", json("POST", { projectId, topic, stats }), S.Chapter4Schema),
 };

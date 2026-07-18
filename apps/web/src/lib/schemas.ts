@@ -409,6 +409,25 @@ export const ResponseRowSchema = z.object({
 });
 export type ResponseRow = z.infer<typeof ResponseRowSchema>;
 
+// ── Data analysis (Phase 8) ──────────────────────────────────────────────────
+export const AnalysisColumnSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  missing: z.number().default(0),
+  stats: z.any().optional(),
+  frequencies: z.array(z.object({ value: z.string(), count: z.number(), pct: z.number() })).optional(),
+});
+export const AnalysisResultSchema = z.object({
+  row_count: z.number().default(0),
+  column_count: z.number().default(0),
+  columns: z.array(AnalysisColumnSchema).default([]),
+  error: z.string().optional(),
+});
+export type AnalysisColumn = z.infer<typeof AnalysisColumnSchema>;
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
+export const InterpretSchema = z.object({ interpretation: z.string().default("") });
+export const Chapter4Schema = z.object({ draft: z.string().default("") });
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });

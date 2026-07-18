@@ -246,3 +246,39 @@ def _stub_questionnaire(req: s.QuestionnaireGenRequest) -> s.QuestionnaireGenRes
                           required=False),
         ],
     )
+
+
+# ── Grounded data interpretation + Chapter 4 (Phase 8, FR-DATA-5/6) ──────────
+import json as _json
+
+
+def interpret_data(req: s.InterpretRequest) -> s.InterpretResponse:
+    stats = _json.dumps(req.stats)[:6000]
+    user = (
+        "You are interpreting DESCRIPTIVE statistics for a research write-up. Use ONLY the numbers "
+        "in the STATS JSON — never invent figures, p-values, or findings not present. Write 2-3 "
+        "short paragraphs summarising the key patterns (means, distributions, frequent categories, "
+        "missing data). "
+        'JSON shape: {"interpretation": "..."}\n\n'
+        f"TOPIC: {req.topic}\nSTATS: {stats}"
+    )
+    r = _try_llm(user, s.InterpretResponse)
+    if r is None:
+        return s.InterpretResponse(interpretation="AI interpretation is unavailable; review the statistics table directly.")
+    return r
+
+
+def chapter4(req: s.InterpretRequest) -> s.Chapter4Response:
+    stats = _json.dumps(req.stats)[:6000]
+    user = (
+        "Draft a 'Chapter 4: Results and Analysis' starter for a student dissertation, grounded "
+        "STRICTLY in the STATS JSON (use only those numbers; do not invent any). Include a short "
+        "intro, a paragraph per notable variable referencing its computed statistics, and a brief "
+        "summary of findings. "
+        'JSON shape: {"draft": "..."}\n\n'
+        f"TOPIC: {req.topic}\nSTATS: {stats}"
+    )
+    r = _try_llm(user, s.Chapter4Response)
+    if r is None:
+        return s.Chapter4Response(draft="AI drafting is unavailable; use the statistics table to write your results.")
+    return r
