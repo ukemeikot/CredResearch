@@ -19,6 +19,14 @@ export function useQuestionnaire(id: string) {
   });
 }
 
+export function useGenerateQuestionnaire(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (b: { projectId: string; topic: string; objectives?: string[] }) => api.generateQuestionnaire(b),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["questionnaires", projectId] }),
+  });
+}
+
 export function useCreateQuestionnaire(projectId: string) {
   const qc = useQueryClient();
   return useMutation({

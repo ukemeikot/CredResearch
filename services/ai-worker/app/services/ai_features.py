@@ -218,3 +218,31 @@ def rag_answer(req: s.RagAnswerRequest) -> s.RagAnswerResponse:
             used_sources=[c.source for c in req.contexts[:3]], grounded=True,
         )
     return result
+
+
+# ── Questionnaire generation (Phase 7, FR-Q) ─────────────────────────────────
+def generate_questionnaire(req: s.QuestionnaireGenRequest) -> s.QuestionnaireGenResponse:
+    objectives = "; ".join(req.objectives) if req.objectives else "(none provided)"
+    user = (
+        f"Draft a research questionnaire for the topic '{req.topic}'. Objectives: {objectives}. "
+        "Produce 6-10 questions that gather data to address the objectives. Use a mix of types "
+        "from: TEXT, LONG_TEXT, NUMBER, BOOLEAN, SINGLE_CHOICE, MULTI_CHOICE, LIKERT. For choice "
+        "and LIKERT questions include an 'options' array. Mark key questions required. "
+        'JSON shape: {"title","questions":[{"type","prompt","options":[],"required"}]}'
+    )
+    return _try_llm(user, s.QuestionnaireGenResponse) or _stub_questionnaire(req)
+
+
+def _stub_questionnaire(req: s.QuestionnaireGenRequest) -> s.QuestionnaireGenResponse:
+    return s.QuestionnaireGenResponse(
+        title=(req.topic or "Research") + " — Questionnaire",
+        questions=[
+            s.GenQuestion(type="TEXT", prompt="What is your age range?", required=True),
+            s.GenQuestion(type="SINGLE_CHOICE", prompt="Gender",
+                          options=["Female", "Male", "Prefer not to say"], required=False),
+            s.GenQuestion(type="LIKERT", prompt="How relevant is this topic to you?",
+                          options=["Not at all", "Slightly", "Moderately", "Very", "Extremely"], required=True),
+            s.GenQuestion(type="LONG_TEXT", prompt="What challenges have you experienced related to this topic?",
+                          required=False),
+        ],
+    )

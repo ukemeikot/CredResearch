@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ClipboardList, Loader2, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ClipboardList, Loader2, Plus, Sparkles } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { useCreateQuestionnaire, useQuestionnaires } from "../api/use-questionnaires";
+import { ApiError } from "@/lib/api";
+import { useCreateQuestionnaire, useGenerateQuestionnaire, useQuestionnaires } from "../api/use-questionnaires";
 
 const STATUS_STYLE: Record<string, string> = {
   DRAFT: "border-white/15 text-slate-400",
@@ -16,8 +18,13 @@ const STATUS_STYLE: Record<string, string> = {
 export function QuestionnairesPanel({ projectId }: { projectId: string }) {
   const list = useQuestionnaires(projectId);
   const create = useCreateQuestionnaire(projectId);
+  const generate = useGenerateQuestionnaire(projectId);
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [adding, setAdding] = useState(false);
+  const [genOpen, setGenOpen] = useState(false);
+  const [topic, setTopic] = useState("");
+  const [genError, setGenError] = useState<string | null>(null);
 
   const items = list.data ?? [];
 
@@ -28,16 +35,54 @@ export function QuestionnairesPanel({ projectId }: { projectId: string }) {
     setAdding(false);
   }
 
+  async function aiGenerate() {
+    if (!topic.trim()) return;
+    setGenError(null);
+    try {
+      const res = await generate.mutateAsync({ projectId, topic: topic.trim() });
+      setGenOpen(false);
+      setTopic("");
+      router.push(`/projects/${projectId}/questionnaires/${res.questionnaire.id}`);
+    } catch (e) {
+      setGenError(e instanceof ApiError ? e.message : "Couldn’t generate");
+    }
+  }
+
   return (
     <GlassCard className="p-6">
       <div className="flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
           <ClipboardList size={18} className="text-accent" /> Questionnaires
         </h3>
-        <Button size="sm" variant="outline" onClick={() => setAdding((v) => !v)}>
-          <Plus size={14} /> New
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" onClick={() => setGenOpen((v) => !v)}>
+            <Sparkles size={14} /> AI
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setAdding((v) => !v)}>
+            <Plus size={14} /> New
+          </Button>
+        </div>
       </div>
+
+      {genOpen && (
+        <div className="mt-3 rounded-xl border border-accent/20 bg-accent/[0.04] p-3">
+          <p className="text-xs text-accent">Generate a draft questionnaire with AI</p>
+          <div className="mt-2 flex gap-2">
+            <input
+              autoFocus
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && aiGenerate()}
+              placeholder="Research topic (e.g. rural solar adoption)"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none"
+            />
+            <Button size="sm" onClick={aiGenerate} disabled={!topic.trim() || generate.isPending}>
+              {generate.isPending ? <Loader2 size={14} className="animate-spin" /> : "Generate"}
+            </Button>
+          </div>
+          {genError && <p className="mt-1 text-xs text-rose-400">{genError}</p>}
+        </div>
+      )}
 
       {adding && (
         <div className="mt-3 flex gap-2">

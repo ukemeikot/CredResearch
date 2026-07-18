@@ -153,3 +153,21 @@ class RagAnswerResponse(_Lenient):
     answer: str = ""
     used_sources: list[str] = Field(default_factory=list)
     grounded: bool = True
+
+
+# ── Questionnaire generation (Phase 7, FR-Q) ─────────────────────────────────
+class QuestionnaireGenRequest(BaseModel):
+    topic: str = ""
+    objectives: list[str] = Field(default_factory=list)
+
+
+class GenQuestion(_Lenient):
+    type: str = "TEXT"
+    prompt: str = ""
+    options: list[str] = Field(default_factory=list)
+    required: bool = False
+
+
+class QuestionnaireGenResponse(_Lenient):
+    title: str = ""
+    questions: list[GenQuestion] = Field(default_factory=list)

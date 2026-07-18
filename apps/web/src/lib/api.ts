@@ -415,6 +415,8 @@ export const api = {
     request(`/questionnaires?projectId=${projectId}`, undefined, z.array(S.QuestionnaireSchema)),
   createQuestionnaire: (b: { projectId: string; title: string; consentText?: string }) =>
     request("/questionnaires", json("POST", b), S.QuestionnaireViewSchema),
+  generateQuestionnaire: (b: { projectId: string; topic: string; objectives?: string[] }) =>
+    request("/questionnaires/generate", json("POST", b), S.QuestionnaireViewSchema),
   getQuestionnaire: (id: string) => request(`/questionnaires/${id}`, undefined, S.QuestionnaireViewSchema),
   updateQuestionnaire: (
     id: string,
