@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 7 (first increment) — Questionnaire builder & data collection.** Build a survey in a
+  project (short/long text, number, yes-no, single/multi-choice, Likert; required flags; consent
+  statement), **publish a tokenized public link**, collect **consented responses** at an
+  account-less `/s/{token}` page, and **export responses as CSV** (FR-Q). New `questionnaire`
+  module + Flyway `V13` (`questionnaires`/`questions`/`survey_links`/`survey_responses`/
+  `survey_answers`); public `/api/v1/survey/**`. (AI generate-from-objectives follows next.)
+
+### Added
 - **Phase 6 — Magic-link external review + notifications.** A student can invite an **external
   supervisor by email**; the reviewer opens a **scoped, single-review magic link** (opaque token,
   hashed at rest, 14-day expiry) and can view the shared section, comment, and decide **without an

@@ -202,6 +202,12 @@ export type {
   ReviewDecision,
   ReviewThread,
   ExternalReview,
+  Questionnaire,
+  QuestionView,
+  QuestionnaireView,
+  SurveyView,
+  SurveyQuestion,
+  ResponseRow,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -403,4 +409,27 @@ export const api = {
     request(`/review-access/${token}/comments`, json("POST", { body }), S.ExternalReviewSchema),
   reviewAccessDecide: (token: string, decision: string, summary?: string) =>
     request(`/review-access/${token}/decision`, json("POST", { decision, summary }), S.ExternalReviewSchema),
+
+  // Questionnaires (Phase 7)
+  listQuestionnaires: (projectId: string) =>
+    request(`/questionnaires?projectId=${projectId}`, undefined, z.array(S.QuestionnaireSchema)),
+  createQuestionnaire: (b: { projectId: string; title: string; consentText?: string }) =>
+    request("/questionnaires", json("POST", b), S.QuestionnaireViewSchema),
+  getQuestionnaire: (id: string) => request(`/questionnaires/${id}`, undefined, S.QuestionnaireViewSchema),
+  updateQuestionnaire: (
+    id: string,
+    b: { title?: string; consentText?: string; questions?: { type: string; prompt: string; options?: unknown; required: boolean }[] },
+  ) => request(`/questionnaires/${id}`, json("PATCH", b), S.QuestionnaireViewSchema),
+  publishQuestionnaire: (id: string, expiresDays?: number) =>
+    request(`/questionnaires/${id}/publish`, json("POST", { expiresDays }), S.PublishTokenSchema),
+  closeQuestionnaire: (id: string) => request<void>(`/questionnaires/${id}/close`, json("POST")),
+  questionnaireResponses: (id: string) =>
+    request(`/questionnaires/${id}/responses`, undefined, z.array(S.ResponseRowSchema)),
+  downloadResponsesCsv: (id: string) =>
+    downloadFile(`/questionnaires/${id}/responses.csv`, "responses.csv"),
+
+  // Public survey (Phase 7)
+  surveyRender: (token: string) => request(`/survey/${token}`, undefined, S.SurveyViewSchema),
+  surveySubmit: (token: string, b: { consentGiven: boolean; answers: { questionId: string; value: unknown }[] }) =>
+    request<void>(`/survey/${token}/responses`, json("POST", b)),
 };
