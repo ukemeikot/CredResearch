@@ -350,6 +350,8 @@ export const api = {
     request(`/documents/${docId}/sections/${sectionId}/restore`, json("POST", { versionId }), S.DocSectionSchema),
   downloadDocument: (docId: string, format: "docx" | "pdf") =>
     downloadFile(`/documents/${docId}/export?format=${format}`, `document.${format}`),
+  downloadBundle: (docId: string) =>
+    downloadFile(`/documents/${docId}/bundle`, `submission.zip`),
 
   // Invitations
   listInvitations: (projectId: string) =>
