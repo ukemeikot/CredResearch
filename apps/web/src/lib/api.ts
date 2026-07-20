@@ -213,6 +213,8 @@ export type {
   SimilarityMatch,
   SimilarityReport,
   AdminStats,
+  Plan,
+  Subscription,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -359,6 +361,12 @@ export const api = {
   adminUsers: (limit = 50) =>
     request<Record<string, unknown>[]>(`/admin/users?limit=${limit}`),
   adminInstitutions: () => request<Record<string, unknown>[]>("/admin/institutions"),
+
+  // Billing (Phase 10, non-binding)
+  billingPlans: () => request("/billing/plans", undefined, z.array(S.PlanSchema)),
+  billingSubscription: () => request("/billing/subscription", undefined, S.SubscriptionSchema),
+  billingCheckout: (planCode: string) =>
+    request("/billing/checkout", json("POST", { planCode }), S.CheckoutResultSchema),
 
   // Invitations
   listInvitations: (projectId: string) =>
