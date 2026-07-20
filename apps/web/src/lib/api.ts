@@ -212,6 +212,7 @@ export type {
   AnalysisResult,
   SimilarityMatch,
   SimilarityReport,
+  AdminStats,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -352,6 +353,12 @@ export const api = {
     downloadFile(`/documents/${docId}/export?format=${format}`, `document.${format}`),
   downloadBundle: (docId: string) =>
     downloadFile(`/documents/${docId}/bundle`, `submission.zip`),
+
+  // Admin (Phase 10, PLATFORM_ADMIN only)
+  adminStats: () => request("/admin/stats", undefined, S.AdminStatsSchema),
+  adminUsers: (limit = 50) =>
+    request<Record<string, unknown>[]>(`/admin/users?limit=${limit}`),
+  adminInstitutions: () => request<Record<string, unknown>[]>("/admin/institutions"),
 
   // Invitations
   listInvitations: (projectId: string) =>
