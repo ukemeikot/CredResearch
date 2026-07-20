@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 10 (increment) — submission bundle + AI-disclosure statement.** From the editor's
+  Download menu, get a **submission ZIP** containing the document as **DOCX** (+ **PDF** when the
+  converter is available), the formatted **reference list**, and a generated **AI-Use disclosure
+  statement** built from the document's hash-chained disclosure ledger (FR-DOC-8, FR-LEDGER-3).
+  Backend `GET /documents/{id}/bundle`.
+
+### Added
 - **Phase 9 (first increment) — Internal similarity check.** From the document editor, run an
   **internal similarity pre-check** against your **other project documents**: deterministic
   shingle/Jaccard paragraph matching surfaces **repeated passages** and flags **citation risk**

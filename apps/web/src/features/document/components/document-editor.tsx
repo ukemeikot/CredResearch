@@ -153,7 +153,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
 /** Download the document as .docx or .pdf. PDF may be unavailable if no conversion service is wired. */
 function DownloadMenu({ docId }: { docId: string }) {
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState<null | "docx" | "pdf">(null);
+  const [busy, setBusy] = useState<null | "docx" | "pdf" | "bundle">(null);
   const [error, setError] = useState<string | null>(null);
 
   async function download(format: "docx" | "pdf") {
@@ -168,6 +168,19 @@ function DownloadMenu({ docId }: { docId: string }) {
           ? "PDF export isn’t available yet — try Word (.docx)."
           : "Download failed. Please try again.",
       );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function downloadBundle() {
+    setBusy("bundle");
+    setError(null);
+    try {
+      await api.downloadBundle(docId);
+      setOpen(false);
+    } catch {
+      setError("Download failed. Please try again.");
     } finally {
       setBusy(null);
     }
@@ -198,6 +211,15 @@ function DownloadMenu({ docId }: { docId: string }) {
               className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
             >
               PDF (.pdf)
+            </button>
+            <div className="border-t border-white/5" />
+            <button
+              onClick={downloadBundle}
+              disabled={!!busy}
+              className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
+            >
+              Submission bundle (.zip)
+              <span className="block text-[10px] text-slate-500">DOCX + PDF + references + AI disclosure</span>
             </button>
             {error && <p className="px-4 py-2 text-[11px] text-rose-400">{error}</p>}
           </div>
