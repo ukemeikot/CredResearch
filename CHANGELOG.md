@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 9 (first increment) — Internal similarity check.** From the document editor, run an
+  **internal similarity pre-check** against your **other project documents**: deterministic
+  shingle/Jaccard paragraph matching surfaces **repeated passages** and flags **citation risk**
+  (matched text with no nearby citation), with an overall score and per-match sources
+  (FR-SIM-1/3/4/5). The report is **explicitly framed as an internal check, not a Turnitin
+  equivalent**. New `similarity` module + worker `/similarity/check` (no LLM). (Institution-repo
+  opt-in corpus + persisted check history follow.)
+
+### Added
 - **Phase 8 (first increment) — Data analysis.** Upload a CSV and get **descriptive statistics**
   computed with pandas — column **type + missing-value detection**, numeric summaries
   (mean/median/std/min/max + histogram) and categorical **frequency tables/bar charts**

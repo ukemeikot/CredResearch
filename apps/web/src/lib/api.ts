@@ -210,6 +210,8 @@ export type {
   ResponseRow,
   AnalysisColumn,
   AnalysisResult,
+  SimilarityMatch,
+  SimilarityReport,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -448,4 +450,8 @@ export const api = {
     request("/analysis/interpret", json("POST", { projectId, topic, stats }), S.InterpretSchema),
   chapter4Draft: (projectId: string, topic: string, stats: unknown) =>
     request("/analysis/chapter4", json("POST", { projectId, topic, stats }), S.Chapter4Schema),
+
+  // Similarity (Phase 9)
+  similarityCheck: (documentId: string) =>
+    request(`/similarity/documents/${documentId}`, json("POST"), S.SimilarityReportSchema),
 };
