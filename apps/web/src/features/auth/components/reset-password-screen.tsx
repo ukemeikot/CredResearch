@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Field } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
 import { ApiError } from "@/lib/api";
 import { useResetPassword } from "../api/use-password-reset";
 
@@ -82,8 +83,8 @@ export function ResetPasswordScreen() {
               <h1 className="mt-2 font-display text-2xl font-bold text-slate-900">Choose a new password</h1>
 
               <form onSubmit={onSubmit} className="mt-7 space-y-4">
-                <Field label="New password" type="password" value={password} onChange={setPassword} placeholder="At least 8 characters" />
-                <Field label="Confirm password" type="password" value={confirm} onChange={setConfirm} placeholder="Re-enter password" />
+                <PasswordField label="New password" value={password} onChange={setPassword} placeholder="At least 8 characters" autoComplete="new-password" />
+                <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} placeholder="Re-enter password" autoComplete="new-password" />
                 {error && <p className="text-sm text-rose-600">{error}</p>}
                 <Button type="submit" size="lg" className="w-full" disabled={reset.isPending || password.length < 8}>
                   {reset.isPending ? "Updating…" : <>Update password <ArrowRight size={18} /></>}

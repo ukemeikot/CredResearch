@@ -27,7 +27,7 @@ export function Field({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition-all focus:border-accent/60 focus:bg-white/[0.06] focus:shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-accent/60 focus:bg-white focus:shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
       />
     </label>
   );
