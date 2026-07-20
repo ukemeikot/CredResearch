@@ -2,77 +2,101 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Globe } from "@/components/globe";
+import { AppMockup } from "@/components/app-mockup";
+
+const CHIPS = [
+  { icon: ShieldCheck, label: "AI-use disclosure" },
+  { icon: Users, label: "Supervisor-reviewed" },
+  { icon: BookOpen, label: "APA · IEEE · Harvard" },
+];
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden px-6 pt-28 pb-16">
-      {/* Floating planet */}
+    <section className="relative overflow-hidden px-6 pb-20 pt-32">
+      {/* Soft animated globe, behind the mockup */}
       <motion.div
         aria-hidden
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.4, ease: "easeOut" }}
-        className="animate-float pointer-events-none absolute top-1/2 left-1/2 -z-[1] w-[min(78vw,540px)] -translate-x-1/2 -translate-y-1/2"
+        className="animate-float pointer-events-none absolute -right-24 top-24 -z-[1] w-[min(70vw,460px)] opacity-70 lg:opacity-100"
       >
         <Globe />
       </motion.div>
 
-      <div className="relative mx-auto max-w-3xl text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="eyebrow"
-        >
-          AI-Powered Research Platform
-        </motion.p>
+      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_1fr]">
+        {/* Copy */}
+        <div>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="eyebrow"
+          >
+            For African universities &amp; researchers
+          </motion.p>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.32, duration: 0.7 }}
-          className="mt-5 font-display text-5xl leading-[0.95] sm:text-7xl md:text-8xl"
-        >
-          <span className="font-bold text-slate-900 text-glow">RESEARCH!</span>
-          <br />
-          <span className="display-thin text-slate-900/90">REVOLUTION</span>
-        </motion.h1>
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.7 }}
+            className="mt-4 font-display text-4xl font-bold leading-[1.05] text-slate-900 sm:text-5xl md:text-6xl"
+          >
+            Research with integrity,
+            <br />
+            <span className="text-accent">from idea to submission.</span>
+          </motion.h1>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-9 flex items-center justify-center gap-4"
-        >
-          <Link href="/register">
-            <Button size="lg">
-              Get started <ArrowRight size={18} />
-            </Button>
-          </Link>
-          <Link href="#workflow">
-            <Button variant="outline" size="lg">
-              See the workflow
-            </Button>
-          </Link>
-        </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.42 }}
+            className="mt-6 max-w-xl text-base leading-relaxed text-slate-600"
+          >
+            CredResearch guides students from a first idea to a structured, supervisor-reviewed,
+            citation-supported thesis — with an AI assistant that helps you write, never ghostwrites.
+            Every AI interaction is recorded in a tamper-evident disclosure ledger.
+          </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mx-auto mt-12 max-w-sm text-left"
-        >
-          <h3 className="font-display text-lg font-semibold uppercase tracking-wider text-slate-900">
-            Guided Writing
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-500">
-            From idea to a structured, supervisor-reviewed, citation-supported document — with a
-            transparent record of how AI was used. Built for low-bandwidth, real-world research.
-          </p>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="mt-8 flex flex-wrap items-center gap-4"
+          >
+            <Link href="/register">
+              <Button size="lg">
+                Start free <ArrowRight size={18} />
+              </Button>
+            </Link>
+            <Link href="#platform">
+              <Button variant="outline" size="lg">
+                See how it works
+              </Button>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.75 }}
+            className="mt-8 flex flex-wrap gap-x-5 gap-y-2"
+          >
+            {CHIPS.map((c) => (
+              <span key={c.label} className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                <c.icon size={14} className="text-accent" /> {c.label}
+              </span>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Product preview */}
+        <div className="relative">
+          <AppMockup />
+        </div>
       </div>
     </section>
   );

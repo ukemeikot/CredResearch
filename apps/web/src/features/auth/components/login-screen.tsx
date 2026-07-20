@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Field } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
 import { ApiError } from "@/lib/api";
 import { useLogin } from "../api/use-login";
 
@@ -48,7 +49,7 @@ export function LoginScreen() {
 
           <form onSubmit={onSubmit} className="mt-7 space-y-4">
             <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="ada@example.com" />
-            <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
+            <PasswordField label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
 
             <div className="flex justify-end">
               <Link href="/forgot-password" className="text-xs text-slate-500 hover:text-accent">

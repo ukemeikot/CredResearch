@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Field } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
 import { ApiError } from "@/lib/api";
 import { useRegister } from "../api/use-register";
 
@@ -54,7 +55,7 @@ export function RegisterScreen() {
           <form onSubmit={onSubmit} className="mt-7 space-y-4">
             <Field label="Full name" type="text" value={fullName} onChange={setFullName} placeholder="Ada Lovelace" />
             <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="ada@example.com" />
-            <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="At least 8 characters" />
+            <PasswordField label="Password" value={password} onChange={setPassword} placeholder="At least 8 characters" autoComplete="new-password" />
 
             {error && (
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-rose-600">
