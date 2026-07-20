@@ -5,16 +5,16 @@ import { GsapReveal } from "@/components/gsap-reveal";
 
 const COLUMNS = [
   {
-    title: "Write",
-    body: "Structured proposal and Chapters 1–3 in a rich editor with offline-buffered autosave and version history.",
+    title: "Write & structure",
+    body: "Draft your proposal and chapters in a rich editor with autosave, version history, and live co-editing — plus an AI assistant that drafts and refines sections on request.",
   },
   {
-    title: "Align",
-    body: "The Research Alignment Engine checks coherence across topic, objectives, methodology — and flags drift.",
+    title: "Cite & review",
+    body: "Upload papers, ask questions grounded in your own sources, build a literature matrix, and export APA / IEEE / Harvard references. Invite a supervisor — even by magic link — to comment and approve.",
   },
   {
-    title: "Cite",
-    body: "Upload papers, generate a literature matrix, and render APA / IEEE / Harvard reference lists via CSL.",
+    title: "Analyze & submit",
+    body: "Field a questionnaire, run descriptive analysis with grounded interpretation, check similarity, then export a submission bundle with an AI-use disclosure statement.",
   },
 ];
 

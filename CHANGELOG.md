@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Landing refresh + real animated globe.** Rewrote the hero with sharper, product-accurate copy,
+  trust chips, and a self-contained product-preview mockup; the decorative sphere is now an actual
+  **animated globe** (lat/long wireframe + rotating continents, reduced-motion aware).
+- **Password reveal.** Login, register, and reset-password inputs now have a show/hide (eye) toggle.
+- **Refreshed logo** — an indigo tile with a graduation-cap mark and a cleaner wordmark.
+
 ### Changed
 - **New light, academic theme.** Replaced the dark "cosmic" look with a clean, modern,
   student-friendly light UI: white/paper backgrounds, near-black text, and an **indigo** accent.
