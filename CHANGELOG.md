@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **New light, academic theme.** Replaced the dark "cosmic" look with a clean, modern,
+  student-friendly light UI: white/paper backgrounds, near-black text, and an **indigo** accent.
+  Cards are white with hairline borders + soft elevation (no glassmorphism); the animated starfield
+  is gone and the hero orb is re-toned to a soft indigo. Editor, tables, drawers, modals and status
+  colours were all migrated for readable contrast on light. Animations use **Framer Motion**
+  (micro-interactions, page/scroll reveals) plus **GSAP** ScrollTrigger for the landing's staggered
+  reveals; both respect reduced-motion.
+
 ### Added
 - **Phase 10 (increment) — plans, pricing & subscription (NON-BINDING).** A **Pricing** page shows
   the plans (Free / Student / Institution) with Naira pricing, features, and AI-credit allowances,

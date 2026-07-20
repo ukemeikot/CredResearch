@@ -47,11 +47,11 @@ export default function PricingPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="font-display text-2xl font-bold text-white">Plans &amp; pricing</h1>
-      <p className="mt-1 text-sm text-slate-400">
+      <h1 className="font-display text-2xl font-bold text-slate-900">Plans &amp; pricing</h1>
+      <p className="mt-1 text-sm text-slate-500">
         Choose the plan that fits your research. {sub.data && <>You’re on <span className="text-accent">{current}</span>.</>}
       </p>
-      {notice && <p className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-slate-300">{notice}</p>}
+      {notice && <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">{notice}</p>}
 
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         {plans.isLoading ? (
@@ -61,12 +61,12 @@ export default function PricingPage() {
             const isCurrent = p.code === current;
             return (
               <GlassCard key={p.code} className={`flex flex-col p-6 ${isCurrent ? "border-accent/50" : ""}`}>
-                <p className="text-sm uppercase tracking-wider text-slate-400">{p.name}</p>
-                <p className="mt-2 font-display text-3xl font-bold text-white">{price(p)}</p>
+                <p className="text-sm uppercase tracking-wider text-slate-500">{p.name}</p>
+                <p className="mt-2 font-display text-3xl font-bold text-slate-900">{price(p)}</p>
                 <p className="mt-1 text-xs text-slate-500">{p.ai_monthly_credits} AI credits / month</p>
                 <ul className="mt-4 flex-1 space-y-2">
                   {features(p.metadata).map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
+                    <li key={f} className="flex items-start gap-2 text-sm text-slate-600">
                       <Check size={15} className="mt-0.5 shrink-0 text-accent" /> {f}
                     </li>
                   ))}

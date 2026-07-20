@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { GsapReveal } from "@/components/gsap-reveal";
 
 const COLUMNS = [
   {
@@ -57,7 +58,7 @@ const reveal = {
 export function FeatureSection() {
   return (
     <section id="platform" className="relative mx-auto max-w-5xl px-6 py-28">
-      <div className="grid gap-10 md:grid-cols-3 md:divide-x md:divide-white/10">
+      <div className="grid gap-10 md:grid-cols-3 md:divide-x md:divide-slate-200">
         {COLUMNS.map((c, i) => (
           <motion.div
             key={c.title}
@@ -71,37 +72,30 @@ export function FeatureSection() {
             <h3 className="font-display text-xl font-semibold uppercase tracking-[0.2em] text-accent">
               {c.title}
             </h3>
-            <p className="mt-4 text-sm leading-relaxed text-slate-400">{c.body}</p>
+            <p className="mt-4 text-sm leading-relaxed text-slate-500">{c.body}</p>
           </motion.div>
         ))}
       </div>
 
-      <div className="mt-20 grid gap-10 md:grid-cols-3">
-        {FIGURES.map((f, i) => (
-          <motion.div
-            key={f.label}
-            custom={i}
-            variants={reveal}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-60px" }}
-            className="group flex flex-col items-center gap-5"
-          >
+      {/* GSAP-driven staggered scroll reveal for the figure row */}
+      <GsapReveal className="mt-20 grid gap-10 md:grid-cols-3" stagger={0.12}>
+        {FIGURES.map((f) => (
+          <div key={f.label} className="group flex flex-col items-center gap-5">
             <svg
               viewBox="0 0 64 64"
-              className="h-20 w-20 text-white/70 transition-all duration-500 group-hover:text-accent group-hover:drop-shadow-[0_0_14px_rgba(45,226,255,0.6)] group-hover:[transform:rotate(8deg)]"
+              className="h-20 w-20 text-slate-400 transition-all duration-500 group-hover:text-accent group-hover:drop-shadow-[0_0_14px_rgba(99,102,241,0.55)] group-hover:[transform:rotate(8deg)]"
             >
               {f.svg}
             </svg>
             <div className="flex flex-col items-center gap-2">
               <span className="h-px w-8 bg-accent" />
-              <span className="text-xs font-semibold uppercase tracking-[0.28em] text-white">
+              <span className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-900">
                 {f.label}
               </span>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </div>
+      </GsapReveal>
     </section>
   );
 }

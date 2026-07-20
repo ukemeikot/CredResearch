@@ -36,9 +36,9 @@ export function Hero() {
           transition={{ delay: 0.32, duration: 0.7 }}
           className="mt-5 font-display text-5xl leading-[0.95] sm:text-7xl md:text-8xl"
         >
-          <span className="font-bold text-white text-glow">RESEARCH!</span>
+          <span className="font-bold text-slate-900 text-glow">RESEARCH!</span>
           <br />
-          <span className="display-thin text-white/90">REVOLUTION</span>
+          <span className="display-thin text-slate-900/90">REVOLUTION</span>
         </motion.h1>
 
         <motion.div
@@ -65,10 +65,10 @@ export function Hero() {
           transition={{ delay: 0.8 }}
           className="mx-auto mt-12 max-w-sm text-left"
         >
-          <h3 className="font-display text-lg font-semibold uppercase tracking-wider text-white">
+          <h3 className="font-display text-lg font-semibold uppercase tracking-wider text-slate-900">
             Guided Writing
           </h3>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          <p className="mt-2 text-sm leading-relaxed text-slate-500">
             From idea to a structured, supervisor-reviewed, citation-supported document — with a
             transparent record of how AI was used. Built for low-bandwidth, real-world research.
           </p>

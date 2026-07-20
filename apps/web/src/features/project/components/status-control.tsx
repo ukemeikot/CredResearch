@@ -22,8 +22,8 @@ export function StatusControl({
 
   return (
     <GlassCard className="p-6">
-      <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Lifecycle</p>
-      <p className="mt-2 font-display text-lg text-white">{formatStatus(status)}</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Lifecycle</p>
+      <p className="mt-2 font-display text-lg text-slate-900">{formatStatus(status)}</p>
 
       {!canManage ? (
         <p className="mt-3 text-xs text-slate-500">
@@ -47,7 +47,7 @@ export function StatusControl({
         </div>
       )}
 
-      {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
+      {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
     </GlassCard>
   );
 }

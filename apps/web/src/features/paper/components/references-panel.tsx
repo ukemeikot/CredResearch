@@ -45,8 +45,8 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
     <GlassCard className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-display text-lg font-semibold text-white">Papers &amp; references</h3>
-          <p className="text-xs text-slate-400">
+          <h3 className="font-display text-lg font-semibold text-slate-900">Papers &amp; references</h3>
+          <p className="text-xs text-slate-500">
             Upload papers (PDF/DOCX) — we extract the details and build your reference list.
           </p>
         </div>
@@ -56,14 +56,14 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
           {upload.isPending ? "Extracting…" : "Upload paper"}
         </Button>
       </div>
-      {uploadError && <p className="mt-2 text-xs text-rose-400">{uploadError}</p>}
+      {uploadError && <p className="mt-2 text-xs text-rose-600">{uploadError}</p>}
 
       {/* Uploaded papers */}
       <div className="mt-5 space-y-2">
         {papers.isLoading ? (
           <p className="text-sm text-slate-500">Loading…</p>
         ) : list.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
             No papers yet. Upload your first source to get started.
           </p>
         ) : (
@@ -75,15 +75,15 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
       {list.length > 0 && (
         <div className="mt-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h4 className="text-sm font-semibold text-white">Reference list</h4>
+            <h4 className="text-sm font-semibold text-slate-900">Reference list</h4>
             <div className="flex items-center gap-2">
-              <div className="flex rounded-lg border border-white/10 p-0.5">
+              <div className="flex rounded-lg border border-slate-200 p-0.5">
                 {STYLES.map((s) => (
                   <button
                     key={s}
                     onClick={() => setStyle(s)}
                     className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                      style === s ? "bg-accent/20 text-white" : "text-slate-400 hover:text-white"
+                      style === s ? "bg-accent/20 text-slate-900" : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
                     {s}
@@ -92,21 +92,21 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
               </div>
               <button
                 onClick={() => navigator.clipboard?.writeText(references.map((r) => r.text).join("\n"))}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:border-white/30 hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600 hover:border-slate-300 hover:text-slate-900"
                 title="Copy all"
               >
                 <Copy size={13} /> Copy
               </button>
               <button
                 onClick={() => api.exportReferences(projectId, "bibtex")}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:border-white/30 hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600 hover:border-slate-300 hover:text-slate-900"
                 title="Download BibTeX"
               >
                 <Download size={13} /> BibTeX
               </button>
               <button
                 onClick={() => api.exportReferences(projectId, "ris")}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-slate-300 hover:border-white/30 hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600 hover:border-slate-300 hover:text-slate-900"
                 title="Download RIS"
               >
                 <Download size={13} /> RIS
@@ -115,7 +115,7 @@ export function ReferencesPanel({ projectId }: { projectId: string }) {
           </div>
           <ol className="mt-3 space-y-2">
             {references.map((r) => (
-              <li key={r.paperId} className="rounded-lg border border-white/5 bg-white/[0.02] px-4 py-2.5 text-sm text-slate-300">
+              <li key={r.paperId} className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
                 {r.text}
               </li>
             ))}
@@ -147,7 +147,7 @@ function AskPapers({ projectId }: { projectId: string }) {
 
   return (
     <div className="mt-8">
-      <h4 className="flex items-center gap-2 text-sm font-semibold text-white">
+      <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
         <Search size={15} className="text-accent" /> Ask your papers
       </h4>
       <p className="mt-0.5 text-xs text-slate-500">Answers are grounded only in the papers you’ve uploaded.</p>
@@ -157,20 +157,20 @@ function AskPapers({ projectId }: { projectId: string }) {
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="e.g. What methods are used to measure rural energy access?"
-          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none focus:border-accent/50"
+          className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent/50"
         />
         <Button size="sm" onClick={submit} disabled={ask.isPending || !q.trim()}>
           {ask.isPending ? <Loader2 size={14} className="animate-spin" /> : "Ask"}
         </Button>
       </div>
-      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mt-2 text-xs text-rose-600">{error}</p>}
       {ask.data && (
         <div className="mt-3 rounded-xl border border-accent/15 bg-accent/[0.03] p-4">
-          <p className="whitespace-pre-wrap text-sm text-slate-200">{ask.data.answer}</p>
+          <p className="whitespace-pre-wrap text-sm text-slate-700">{ask.data.answer}</p>
           {ask.data.used_sources.length > 0 && (
             <p className="mt-2 flex flex-wrap gap-1.5">
               {ask.data.used_sources.map((sname, i) => (
-                <span key={i} className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-slate-400">
+                <span key={i} className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] text-slate-500">
                   {sname}
                 </span>
               ))}
@@ -187,7 +187,7 @@ function SummaryList({ label, items }: { label: string; items: string[] }) {
   return (
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-accent/80">{label}</p>
-      <ul className="mt-0.5 list-inside list-disc text-slate-400">
+      <ul className="mt-0.5 list-inside list-disc text-slate-500">
         {items.map((it, i) => (
           <li key={i}>{it}</li>
         ))}
@@ -233,24 +233,24 @@ function PaperRow({ projectId, paper }: { projectId: string; paper: Paper }) {
         value={form[key]}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
         placeholder={placeholder}
-        className="mt-0.5 w-full rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-1.5 text-sm text-white outline-none focus:border-accent/50"
+        className="mt-0.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:border-accent/50"
       />
     </label>
   );
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
+    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-sm font-medium text-white">
+          <p className="flex items-center gap-2 text-sm font-medium text-slate-900">
             <FileText size={14} className="shrink-0 text-slate-500" />
             <span className="truncate">{paper.title || paper.filename || "Untitled"}</span>
           </p>
-          <p className="mt-0.5 truncate text-xs text-slate-400">
+          <p className="mt-0.5 truncate text-xs text-slate-500">
             {[paper.authors, paper.year, paper.journal].filter(Boolean).join(" · ") || "No metadata extracted"}
           </p>
           {lowConfidence && !editing && (
-            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-amber-300">
+            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-amber-600">
               <AlertTriangle size={11} /> Low-confidence extraction — please review
             </p>
           )}
@@ -272,20 +272,20 @@ function PaperRow({ projectId, paper }: { projectId: string; paper: Paper }) {
             {summarize.isPending ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
             Summarize
           </button>
-          <button onClick={() => setEditing((v) => !v)} className="rounded-lg border border-white/10 p-1.5 text-slate-400 hover:border-white/30 hover:text-white" title="Edit details">
+          <button onClick={() => setEditing((v) => !v)} className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-slate-300 hover:text-slate-900" title="Edit details">
             <Pencil size={13} />
           </button>
-          <button onClick={() => del.mutate(paper.id)} className="rounded-lg border border-white/10 p-1.5 text-slate-400 hover:border-rose-400/40 hover:text-rose-300" title="Delete">
+          <button onClick={() => del.mutate(paper.id)} className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-rose-400/40 hover:text-rose-600" title="Delete">
             <Trash2 size={13} />
           </button>
         </div>
       </div>
 
-      {summaryError && <p className="mt-1 text-[11px] text-rose-400">{summaryError}</p>}
+      {summaryError && <p className="mt-1 text-[11px] text-rose-600">{summaryError}</p>}
 
       {summary && (summary.summary || summary.findings.length > 0) && (
         <div className="mt-3 space-y-2 rounded-lg border border-accent/15 bg-accent/[0.03] p-3 text-xs">
-          {summary.summary && <p className="text-slate-300">{summary.summary}</p>}
+          {summary.summary && <p className="text-slate-600">{summary.summary}</p>}
           <SummaryList label="Methodology" items={summary.methodology ? [summary.methodology] : []} />
           <SummaryList label="Findings" items={summary.findings} />
           <SummaryList label="Limitations" items={summary.limitations} />
@@ -301,7 +301,7 @@ function PaperRow({ projectId, paper }: { projectId: string; paper: Paper }) {
           {field("Journal / source", "journal")}
           {field("DOI", "doi")}
           <div className="col-span-2 mt-1 flex justify-end gap-2">
-            <button onClick={() => setEditing(false)} className="px-2 text-xs text-slate-400 hover:text-white">Cancel</button>
+            <button onClick={() => setEditing(false)} className="px-2 text-xs text-slate-500 hover:text-slate-900">Cancel</button>
             <Button size="sm" onClick={save} disabled={update.isPending}>
               {update.isPending ? "Saving…" : "Save"}
             </Button>

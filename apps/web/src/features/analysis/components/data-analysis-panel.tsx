@@ -53,7 +53,7 @@ export function DataAnalysisPanel({ projectId, projectTitle }: { projectId: stri
   return (
     <GlassCard className="p-6">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
+        <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-slate-900">
           <BarChart3 size={18} className="text-accent" /> Data analysis
         </h3>
         <input ref={fileRef} type="file" accept=".csv" hidden onChange={onFile} />
@@ -61,12 +61,12 @@ export function DataAnalysisPanel({ projectId, projectTitle }: { projectId: stri
           {busy ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Upload CSV
         </Button>
       </div>
-      <p className="mt-1 text-xs text-slate-400">Upload survey/response data (CSV) for descriptive statistics.</p>
-      {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+      <p className="mt-1 text-xs text-slate-500">Upload survey/response data (CSV) for descriptive statistics.</p>
+      {error && <p className="mt-2 text-xs text-rose-600">{error}</p>}
 
       {result && !result.error && (
         <>
-          <p className="mt-4 text-xs text-slate-400">
+          <p className="mt-4 text-xs text-slate-500">
             <FileSpreadsheet size={12} className="mr-1 inline" />
             {result.row_count} rows · {result.column_count} columns
           </p>
@@ -84,14 +84,14 @@ export function DataAnalysisPanel({ projectId, projectTitle }: { projectId: stri
           </div>
 
           {interpretation && (
-            <div className="mt-3 whitespace-pre-wrap rounded-xl border border-accent/15 bg-accent/[0.03] p-4 text-sm text-slate-200">
+            <div className="mt-3 whitespace-pre-wrap rounded-xl border border-accent/15 bg-accent/[0.03] p-4 text-sm text-slate-700">
               {interpretation}
             </div>
           )}
           {chapter4 && (
-            <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs uppercase tracking-wider text-slate-500">Chapter 4 — draft</p>
-              <div className="mt-1 whitespace-pre-wrap text-sm text-slate-300">{chapter4}</div>
+              <div className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{chapter4}</div>
             </div>
           )}
         </>
@@ -102,15 +102,15 @@ export function DataAnalysisPanel({ projectId, projectTitle }: { projectId: stri
 
 function ColumnCard({ col }: { col: AnalysisColumn }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
+    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-white">{col.name}</span>
-        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+        <span className="text-sm font-medium text-slate-900">{col.name}</span>
+        <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-500">
           {col.type}{col.missing > 0 ? ` · ${col.missing} missing` : ""}
         </span>
       </div>
       {col.type === "numeric" && col.stats && (
-        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-400">
+        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
           <span>mean {col.stats.mean}</span>
           <span>median {col.stats.median}</span>
           <span>std {col.stats.std}</span>
@@ -122,8 +122,8 @@ function ColumnCard({ col }: { col: AnalysisColumn }) {
         <div className="mt-2 space-y-1">
           {col.frequencies.slice(0, 6).map((f) => (
             <div key={f.value} className="flex items-center gap-2 text-xs">
-              <span className="w-28 truncate text-slate-300">{f.value}</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+              <span className="w-28 truncate text-slate-600">{f.value}</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-50">
                 <div className="h-full rounded-full bg-accent/60" style={{ width: `${f.pct}%` }} />
               </div>
               <span className="w-14 text-right text-slate-500">{f.count} ({f.pct}%)</span>

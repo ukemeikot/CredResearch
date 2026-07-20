@@ -45,7 +45,7 @@ export function CreateDocumentModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-cosmos-950/70 px-6 py-10 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40 px-6 py-10 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -60,19 +60,19 @@ export function CreateDocumentModal({
             className="glass w-full max-w-lg rounded-2xl p-7 shadow-card"
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold text-white">New document</h2>
-              <button onClick={onClose} className="text-slate-400 hover:text-white" aria-label="Close">
+              <h2 className="font-display text-xl font-bold text-slate-900">New document</h2>
+              <button onClick={onClose} className="text-slate-500 hover:text-slate-900" aria-label="Close">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={submit} className="mt-6 space-y-5">
               <div>
-                <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-400">
+                <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">
                   Choose a template
                 </span>
                 {templates.isLoading ? (
-                  <p className="text-sm text-slate-400">Loading templates…</p>
+                  <p className="text-sm text-slate-500">Loading templates…</p>
                 ) : (
                   <div className="grid gap-2 sm:grid-cols-2">
                     {list.map((t) => (
@@ -83,10 +83,10 @@ export function CreateDocumentModal({
                         className={`rounded-xl border px-4 py-3 text-left transition-all ${
                           templateId === t.id
                             ? "border-accent/60 bg-accent/10 shadow-glow"
-                            : "border-white/10 hover:border-white/30"
+                            : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
-                        <span className="block text-sm font-medium text-white">{t.name}</span>
+                        <span className="block text-sm font-medium text-slate-900">{t.name}</span>
                         <span className="mt-0.5 block text-[11px] uppercase tracking-wider text-slate-500">
                           {t.level} · {t.citationStyle}
                         </span>
@@ -105,7 +105,7 @@ export function CreateDocumentModal({
                 required={false}
               />
 
-              {error && <p className="text-sm text-rose-400">{error}</p>}
+              {error && <p className="text-sm text-rose-600">{error}</p>}
 
               <Button type="submit" size="lg" className="w-full" disabled={create.isPending || !templateId}>
                 {create.isPending ? "Creating…" : "Create document"}

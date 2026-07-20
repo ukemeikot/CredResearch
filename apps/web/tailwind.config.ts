@@ -5,17 +5,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Light "paper" surface scale. The app was authored against a dark `cosmos-*` scale;
+        // these values re-tone those class names to a clean academic light theme.
         cosmos: {
-          950: "#060916",
-          900: "#0a0e27",
-          800: "#11173a",
-          700: "#1a2150",
-          600: "#27306e",
+          950: "#ffffff", // page background
+          900: "#ffffff", // cards / menus / popovers
+          800: "#f1f5f9",
+          700: "#e2e8f0",
+          600: "#cbd5e1",
         },
+        // Academic, modern, student-friendly: indigo.
         accent: {
-          DEFAULT: "#2de2ff",
-          soft: "#7debff",
-          deep: "#0fb5d9",
+          DEFAULT: "#4f46e5",
+          soft: "#6366f1",
+          deep: "#4338ca",
         },
         haze: "#7c3aed",
       },
@@ -24,9 +27,10 @@ const config: Config = {
         display: ["var(--font-display)", "var(--font-inter)", "sans-serif"],
       },
       boxShadow: {
-        glow: "0 0 24px -2px rgba(45,226,255,0.45)",
-        "glow-lg": "0 0 60px -4px rgba(45,226,255,0.55)",
-        card: "0 20px 60px -20px rgba(0,0,0,0.6)",
+        // Soft elevation shadows for a light UI.
+        glow: "0 6px 20px -6px rgba(79,70,229,0.35)",
+        "glow-lg": "0 12px 34px -8px rgba(79,70,229,0.4)",
+        card: "0 1px 2px rgba(15,23,42,0.06), 0 12px 32px -16px rgba(15,23,42,0.18)",
       },
       keyframes: {
         float: {
@@ -38,8 +42,8 @@ const config: Config = {
           "50%": { opacity: "1" },
         },
         "pulse-glow": {
-          "0%,100%": { boxShadow: "0 0 24px -4px rgba(45,226,255,0.35)" },
-          "50%": { boxShadow: "0 0 48px 2px rgba(45,226,255,0.65)" },
+          "0%,100%": { boxShadow: "0 0 24px -4px rgba(79,70,229,0.18)" },
+          "50%": { boxShadow: "0 0 44px 2px rgba(79,70,229,0.3)" },
         },
         "gradient-pan": {
           "0%,100%": { backgroundPosition: "0% 50%" },

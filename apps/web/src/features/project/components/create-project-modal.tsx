@@ -13,9 +13,9 @@ import { useCreateProject } from "../api/use-projects";
 const LEVELS = ["UG", "MSc", "PhD"];
 
 const FEASIBILITY_STYLE: Record<AiTopic["feasibility"], string> = {
-  HIGH: "border-emerald-400/40 text-emerald-300",
-  MEDIUM: "border-amber-400/40 text-amber-300",
-  LOW: "border-rose-400/40 text-rose-300",
+  HIGH: "border-emerald-400/40 text-emerald-600",
+  MEDIUM: "border-amber-400/40 text-amber-600",
+  LOW: "border-rose-400/40 text-rose-600",
 };
 
 export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -66,7 +66,7 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-cosmos-950/70 px-6 py-10 backdrop-blur-sm"
+            className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-900/40 px-6 py-10 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -84,13 +84,13 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
               className="glass my-auto w-full max-w-md rounded-2xl p-7 shadow-card"
             >
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl font-bold text-white">New project</h2>
+                <h2 className="font-display text-xl font-bold text-slate-900">New project</h2>
                 <button
                   onClick={() => {
                     reset();
                     onClose();
                   }}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-500 hover:text-slate-900"
                   aria-label="Close"
                 >
                   <X size={18} />
@@ -106,7 +106,7 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
                   placeholder="Working title (you can change this later)"
                 />
                 <label className="block">
-                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">
+                  <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-500">
                     Academic level
                   </span>
                   <div className="flex gap-2">
@@ -117,8 +117,8 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
                         onClick={() => setLevel(l)}
                         className={`flex-1 rounded-xl border px-4 py-2.5 text-sm transition-all ${
                           level === l
-                            ? "border-accent/60 bg-accent/10 text-white shadow-glow"
-                            : "border-white/10 text-slate-400 hover:border-white/30"
+                            ? "border-accent/60 bg-accent/10 text-slate-900 shadow-glow"
+                            : "border-slate-200 text-slate-500 hover:border-slate-300"
                         }`}
                       >
                         {l}
@@ -162,16 +162,16 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
                       >
                         {topics.isPending ? "Thinking…" : "Suggest topics"}
                       </Button>
-                      {aiError && <p className="text-xs text-rose-400">{aiError}</p>}
+                      {aiError && <p className="text-xs text-rose-600">{aiError}</p>}
                       {suggestions.length > 0 && (
                         <ul className="space-y-2">
                           {suggestions.map((t, i) => (
                             <li
                               key={i}
-                              className="rounded-lg border border-white/10 bg-white/[0.02] p-3"
+                              className="rounded-lg border border-slate-200 bg-slate-50 p-3"
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm font-medium text-white">{t.title}</p>
+                                <p className="text-sm font-medium text-slate-900">{t.title}</p>
                                 <span
                                   className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${FEASIBILITY_STYLE[t.feasibility]}`}
                                 >
@@ -179,7 +179,7 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
                                 </span>
                               </div>
                               {t.rationale && (
-                                <p className="mt-1 line-clamp-2 text-xs text-slate-400">{t.rationale}</p>
+                                <p className="mt-1 line-clamp-2 text-xs text-slate-500">{t.rationale}</p>
                               )}
                               <button
                                 type="button"
@@ -199,7 +199,7 @@ export function CreateProjectModal({ open, onClose }: { open: boolean; onClose: 
                   )}
                 </div>
 
-                {error && <p className="text-sm text-rose-400">{error}</p>}
+                {error && <p className="text-sm text-rose-600">{error}</p>}
 
                 <Button type="submit" size="lg" className="w-full" disabled={create.isPending || !title}>
                   {create.isPending ? "Creating…" : "Create project"}

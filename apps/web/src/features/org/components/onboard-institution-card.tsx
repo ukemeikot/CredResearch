@@ -47,12 +47,12 @@ export function OnboardInstitutionCard() {
   return (
     <GlassCard className="p-7">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-accent">
+        <span className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-accent">
           <Building2 size={18} />
         </span>
         <div>
-          <h2 className="font-display text-lg font-semibold text-white">Set up your institution</h2>
-          <p className="text-sm text-slate-400">
+          <h2 className="font-display text-lg font-semibold text-slate-900">Set up your institution</h2>
+          <p className="text-sm text-slate-500">
             Create an institution to manage departments and invite colleagues. You’ll become its admin.
           </p>
         </div>
@@ -69,11 +69,11 @@ export function OnboardInstitutionCard() {
             <Field label="Country" type="text" value={country} onChange={setCountry} placeholder="Nigeria" required={false} />
             <Field label="Type" type="text" value={type} onChange={setType} placeholder="university" required={false} />
           </div>
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p className="text-sm text-rose-600">{error}</p>}
           {refreshFailed && (
-            <p className="text-sm text-amber-300">
+            <p className="text-sm text-amber-600">
               Institution created, but your session needs a refresh —{" "}
-              <a href="/login" className="underline hover:text-amber-200">sign in again</a> to continue.
+              <a href="/login" className="underline hover:text-amber-700">sign in again</a> to continue.
             </p>
           )}
           <Button type="submit" size="md" disabled={onboard.isPending || !name}>

@@ -31,20 +31,20 @@ export function DepartmentsSection({ canCreate }: { canCreate: boolean }) {
 
   return (
     <GlassCard className="p-7">
-      <h2 className="font-display text-lg font-semibold text-white">Departments</h2>
-      <p className="mt-1 text-sm text-slate-400">Departments within your institution.</p>
+      <h2 className="font-display text-lg font-semibold text-slate-900">Departments</h2>
+      <p className="mt-1 text-sm text-slate-500">Departments within your institution.</p>
 
       {departments.isLoading ? (
         <p className="mt-4 text-sm text-slate-500">Loading…</p>
       ) : list.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">No departments yet.</p>
       ) : (
-        <ul className="mt-4 divide-y divide-white/5">
+        <ul className="mt-4 divide-y divide-slate-100">
           {list.map((d) => (
             <li key={d.id} className="flex items-center justify-between py-2.5">
-              <span className="text-sm text-white">{d.name}</span>
+              <span className="text-sm text-slate-900">{d.name}</span>
               {d.code && (
-                <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] uppercase tracking-wider text-slate-400">
+                <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] uppercase tracking-wider text-slate-500">
                   {d.code}
                 </span>
               )}
@@ -54,7 +54,7 @@ export function DepartmentsSection({ canCreate }: { canCreate: boolean }) {
       )}
 
       {canCreate && (
-        <form onSubmit={submit} className="mt-5 flex flex-wrap items-end gap-3 border-t border-white/10 pt-5">
+        <form onSubmit={submit} className="mt-5 flex flex-wrap items-end gap-3 border-t border-slate-200 pt-5">
           <div className="min-w-[180px] flex-1">
             <Field label="New department" type="text" value={name} onChange={setName} placeholder="e.g. Computer Science" />
           </div>
@@ -64,7 +64,7 @@ export function DepartmentsSection({ canCreate }: { canCreate: boolean }) {
           <Button type="submit" size="md" disabled={create.isPending || !name}>
             <Plus size={16} /> {create.isPending ? "Adding…" : "Add"}
           </Button>
-          {error && <p className="w-full text-sm text-rose-400">{error}</p>}
+          {error && <p className="w-full text-sm text-rose-600">{error}</p>}
         </form>
       )}
     </GlassCard>

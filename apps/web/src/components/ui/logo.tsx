@@ -8,15 +8,15 @@ export function Logo({ className }: { className?: string }) {
           <path
             d="M20 3 L36 33 L4 33 Z"
             fill="none"
-            stroke="#2de2ff"
+            stroke="#4f46e5"
             strokeWidth="2"
             strokeLinejoin="round"
           />
-          <path d="M20 12 L28 28 L12 28 Z" fill="rgba(45,226,255,0.18)" />
+          <path d="M20 12 L28 28 L12 28 Z" fill="rgba(79,70,229,0.15)" />
         </svg>
         <span className="absolute text-sm font-bold text-accent">C</span>
       </span>
-      <span className="text-lg font-bold tracking-wide text-white">
+      <span className="text-lg font-bold tracking-wide text-slate-900">
         CRED<span className="font-light text-accent">RESEARCH</span>
       </span>
     </span>
