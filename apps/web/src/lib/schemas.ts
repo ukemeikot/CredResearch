@@ -447,6 +447,19 @@ export const SimilarityReportSchema = z.object({
 export type SimilarityMatch = z.infer<typeof SimilarityMatchSchema>;
 export type SimilarityReport = z.infer<typeof SimilarityReportSchema>;
 
+// ── Admin (Phase 10) ─────────────────────────────────────────────────────────
+export const AdminStatsSchema = z.object({
+  users: z.number().default(0),
+  institutions: z.number().default(0),
+  projects: z.number().default(0),
+  documents: z.number().default(0),
+  papers: z.number().default(0),
+  questionnaires: z.number().default(0),
+  aiRequestsThisMonth: z.number().default(0),
+  usersByPlan: z.array(z.record(z.string(), z.unknown())).default([]),
+});
+export type AdminStats = z.infer<typeof AdminStatsSchema>;
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });
