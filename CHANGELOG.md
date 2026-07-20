@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 10 (increment) — platform admin dashboard.** A PLATFORM_ADMIN-only **Admin** page with
+  headline statistics (users, institutions, projects, documents, papers, questionnaires, AI requests
+  this month) via `/api/v1/admin/*` (FR-ADM). Read-only aggregates; role-gated.
 - **Phase 10 (increment) — submission bundle + AI-disclosure statement.** From the editor's
   Download menu, get a **submission ZIP** containing the document as **DOCX** (+ **PDF** when the
   converter is available), the formatted **reference list**, and a generated **AI-Use disclosure

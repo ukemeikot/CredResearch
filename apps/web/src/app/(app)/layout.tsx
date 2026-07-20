@@ -59,6 +59,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               Settings
             </Link>
+            {user?.roles?.includes("PLATFORM_ADMIN") && (
+              <Link href="/admin" className={pathname === "/admin" ? "text-white" : "hover:text-white"}>
+                Admin
+              </Link>
+            )}
             <span className="cursor-not-allowed text-slate-600">Library</span>
           </nav>
           <div className="flex items-center gap-4">
