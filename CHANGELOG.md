@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 10 (increment) — plans, pricing & subscription (NON-BINDING).** A **Pricing** page shows
+  the plans (Free / Student / Institution) with Naira pricing, features, and AI-credit allowances,
+  highlighting the caller's current plan; a Settings usage view shows AI-credit consumption. The
+  **paywall is intentionally not enforced** — `credresearch.billing.enforce` defaults to false and
+  online checkout is a safe no-op until a Paystack secret is set, so testing is never blocked.
+  Flyway `V14` (plan prices + `subscriptions` + `webhook_events` idempotency); `/api/v1/billing/*`.
+  (FR-BILL-1/2; Paystack checkout + webhooks activate when keys are added and the paywall is bound.)
+
+### Added
 - **Phase 10 (increment) — platform admin dashboard.** A PLATFORM_ADMIN-only **Admin** page with
   headline statistics (users, institutions, projects, documents, papers, questionnaires, AI requests
   this month) via `/api/v1/admin/*` (FR-ADM). Read-only aggregates; role-gated.

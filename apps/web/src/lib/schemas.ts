@@ -460,6 +460,36 @@ export const AdminStatsSchema = z.object({
 });
 export type AdminStats = z.infer<typeof AdminStatsSchema>;
 
+// ── Billing (Phase 10) ───────────────────────────────────────────────────────
+export const PlanSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  ai_monthly_credits: z.number().default(0),
+  price_minor: z.number().default(0),
+  currency: z.string().default("NGN"),
+  metadata: z.string().nullable().optional(),
+});
+export type Plan = z.infer<typeof PlanSchema>;
+
+export const SubscriptionSchema = z.object({
+  plan: z.string(),
+  status: z.string(),
+  enforced: z.boolean().default(false),
+  aiCredits: z.object({
+    plan: z.string(),
+    used: z.number(),
+    limit: z.number(),
+    remaining: z.number(),
+  }),
+});
+export type Subscription = z.infer<typeof SubscriptionSchema>;
+
+export const CheckoutResultSchema = z.object({
+  status: z.string(),
+  message: z.string().nullable().optional(),
+  authorizationUrl: z.string().nullable().optional(),
+});
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });
