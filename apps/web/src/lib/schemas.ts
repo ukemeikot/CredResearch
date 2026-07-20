@@ -428,6 +428,25 @@ export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 export const InterpretSchema = z.object({ interpretation: z.string().default("") });
 export const Chapter4Schema = z.object({ draft: z.string().default("") });
 
+// ── Similarity (Phase 9) ─────────────────────────────────────────────────────
+export const SimilarityMatchSchema = z.object({
+  score: z.number(),
+  source_id: z.string().default(""),
+  source_title: z.string().default("Untitled"),
+  target_snippet: z.string().default(""),
+  source_snippet: z.string().default(""),
+  citation_risk: z.boolean().default(false),
+});
+export const SimilarityReportSchema = z.object({
+  overall_score: z.number().default(0),
+  checked_paragraphs: z.number().default(0),
+  matched_paragraphs: z.number().default(0),
+  matches: z.array(SimilarityMatchSchema).default([]),
+  disclaimer: z.string().default(""),
+});
+export type SimilarityMatch = z.infer<typeof SimilarityMatchSchema>;
+export type SimilarityReport = z.infer<typeof SimilarityReportSchema>;
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });
