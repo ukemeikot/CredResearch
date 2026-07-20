@@ -1,5 +1,6 @@
 package africa.credresearch.modules.document.interfaces.rest;
 
+import africa.credresearch.modules.document.application.BundleService;
 import africa.credresearch.modules.document.application.DocumentExportService;
 import africa.credresearch.modules.document.application.DocumentService;
 import africa.credresearch.modules.document.domain.model.Document;
@@ -39,12 +40,14 @@ public class DocumentController {
 
     private final DocumentService service;
     private final DocumentExportService exportService;
+    private final BundleService bundleService;
     private final ObjectMapper objectMapper;
 
     public DocumentController(DocumentService service, DocumentExportService exportService,
-                              ObjectMapper objectMapper) {
+                              BundleService bundleService, ObjectMapper objectMapper) {
         this.service = service;
         this.exportService = exportService;
+        this.bundleService = bundleService;
         this.objectMapper = objectMapper;
     }
 
@@ -156,6 +159,18 @@ public class DocumentController {
                                 .filename(result.filename()).build().toString())
                 .contentType(org.springframework.http.MediaType.parseMediaType(result.contentType()))
                 .body(result.bytes());
+    }
+
+    @GetMapping("/{id}/bundle")
+    @Operation(summary = "Download a submission bundle (ZIP: DOCX + PDF + references + AI-disclosure statement)",
+            description = "FR-DOC-8 + FR-LEDGER-3.")
+    public org.springframework.http.ResponseEntity<byte[]> bundle(@PathVariable UUID id) {
+        BundleService.BundleResult r = bundleService.bundle(id);
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment().filename(r.filename()).build().toString())
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/zip"))
+                .body(r.bytes());
     }
 
     // ── mapping ──────────────────────────────────────────────────────────────
