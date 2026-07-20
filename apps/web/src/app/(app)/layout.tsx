@@ -54,6 +54,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               Reviews
             </Link>
             <Link
+              href="/pricing"
+              className={pathname === "/pricing" ? "text-white" : "hover:text-white"}
+            >
+              Pricing
+            </Link>
+            <Link
               href="/settings"
               className={pathname === "/settings" ? "text-white" : "hover:text-white"}
             >
