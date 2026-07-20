@@ -16,9 +16,9 @@ export function ProjectCard({ project, index = 0 }: { project: ProjectSummary; i
       <Link href={`/projects/${project.id}`} className="block h-full">
         <GlassCard interactive className="flex h-full flex-col gap-4 p-5">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-display text-base font-semibold text-white">{project.title}</h3>
+            <h3 className="font-display text-base font-semibold text-slate-900">{project.title}</h3>
             {project.level && (
-              <span className="shrink-0 rounded-full border border-white/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-400">
+              <span className="shrink-0 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] uppercase tracking-wider text-slate-500">
                 {project.level}
               </span>
             )}
@@ -26,7 +26,7 @@ export function ProjectCard({ project, index = 0 }: { project: ProjectSummary; i
           <div className="mt-auto">
             <span
               className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${
-                STATUS_COLOR[project.status] ?? "text-slate-300 border-white/15"
+                STATUS_COLOR[project.status] ?? "text-slate-600 border-slate-200"
               }`}
             >
               {formatStatus(project.status)}

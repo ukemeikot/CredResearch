@@ -4,37 +4,41 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
   html {
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-cosmos-950 text-slate-200 antialiased;
-    /* Static gradient (no background-attachment: fixed — that kills scroll perf). */
+    @apply bg-white text-slate-700 antialiased;
+    /* Soft academic "paper" wash — subtle, low-contrast, print-friendly. */
     background-image:
-      radial-gradient(1100px 700px at 78% -8%, rgba(124, 58, 237, 0.26), transparent 60%),
-      radial-gradient(900px 600px at 8% 6%, rgba(45, 226, 255, 0.12), transparent 55%),
-      linear-gradient(180deg, #0a0e27 0%, #070a1a 55%, #060916 100%);
+      radial-gradient(900px 560px at 88% -6%, rgba(79, 70, 229, 0.06), transparent 60%),
+      radial-gradient(760px 520px at 4% 2%, rgba(124, 58, 237, 0.05), transparent 55%),
+      linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     background-repeat: no-repeat;
+    background-attachment: fixed;
     overflow-x: hidden;
     min-height: 100vh;
   }
   ::selection {
-    @apply bg-accent/30 text-white;
+    @apply bg-accent/20 text-accent-deep;
+  }
+  h1, h2, h3, h4 {
+    @apply text-slate-900;
   }
 }
 
 @layer components {
-  /* Lighter blur (md, not xl) — backdrop-blur is the most expensive paint on the page. */
+  /* Cards: clean white surfaces with a hairline border + soft elevation (was dark glass). */
   .glass {
-    @apply border border-white/10 bg-white/[0.05] backdrop-blur-md;
+    @apply border border-slate-200 bg-white shadow-card;
   }
   .glass-hover {
-    @apply transition-all duration-300 hover:border-accent/40 hover:bg-white/[0.08] hover:shadow-glow;
+    @apply transition-all duration-300 hover:border-accent/40 hover:shadow-glow;
   }
   .text-glow {
-    text-shadow: 0 0 18px rgba(45, 226, 255, 0.55);
+    text-shadow: none;
   }
   .display-thin {
     @apply font-display font-light tracking-[0.04em];
@@ -43,14 +47,14 @@
     @apply text-xs font-semibold uppercase tracking-[0.32em] text-accent;
   }
 
-  /* Rotating planet surface — GPU-friendly translateX of a tiled texture. */
+  /* Decorative academic accent orb (replaces the cosmic globe) — soft indigo gradient. */
   .globe-surface {
     width: 200%;
     height: 100%;
     background-image:
-      radial-gradient(circle at 30% 35%, rgba(125, 205, 255, 0.22), transparent 45%),
-      radial-gradient(circle at 65% 62%, rgba(70, 110, 210, 0.32), transparent 48%),
-      radial-gradient(circle at 50% 82%, rgba(124, 58, 237, 0.2), transparent 46%);
+      radial-gradient(circle at 30% 35%, rgba(99, 102, 241, 0.5), transparent 46%),
+      radial-gradient(circle at 65% 62%, rgba(79, 70, 229, 0.4), transparent 48%),
+      radial-gradient(circle at 50% 82%, rgba(124, 58, 237, 0.35), transparent 46%);
     background-size: 25% 55%, 25% 62%, 25% 50%;
     background-repeat: repeat-x;
     background-position: 0 30%, 0 56%, 0 80%;
@@ -80,22 +84,22 @@
   }
 }
 
-/* Slim, on-theme scrollbar */
+/* Slim, on-theme scrollbar (light) */
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #070a1a;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(#1a2150, #27306e);
+  background: #cbd5e1;
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2de2ff66;
+  background: #94a3b8;
 }
 
-/* Tiptap editor content (document builder) */
+/* Tiptap editor content (document builder) — dark text on white paper */
 .tiptap:focus {
   outline: none;
 }
@@ -104,35 +108,35 @@
 }
 .tiptap h1,
 .tiptap h2 {
-  @apply font-display text-xl font-bold text-white;
+  @apply font-display text-xl font-bold text-slate-900;
   margin-top: 1.2em;
 }
 .tiptap h3 {
-  @apply font-display text-lg font-semibold text-white;
+  @apply font-display text-lg font-semibold text-slate-900;
   margin-top: 1em;
 }
 .tiptap p {
-  @apply text-[15px] leading-relaxed text-slate-200;
+  @apply text-[15px] leading-relaxed text-slate-700;
 }
 .tiptap ul {
-  @apply list-disc pl-6 text-slate-200;
+  @apply list-disc pl-6 text-slate-700;
 }
 .tiptap ol {
-  @apply list-decimal pl-6 text-slate-200;
+  @apply list-decimal pl-6 text-slate-700;
 }
 .tiptap li > p {
   margin: 0;
 }
 .tiptap blockquote {
-  @apply border-l-2 border-accent/50 pl-4 italic text-slate-300;
+  @apply border-l-2 border-accent/50 pl-4 italic text-slate-600;
 }
 .tiptap strong {
-  @apply font-semibold text-white;
+  @apply font-semibold text-slate-900;
 }
 
 /* Phase 6: highlight review-comment anchor ranges in the editor */
 .tiptap .review-anchor {
-  background: rgba(251, 191, 36, 0.18);
-  border-bottom: 2px solid rgba(251, 191, 36, 0.55);
+  background: rgba(245, 158, 11, 0.22);
+  border-bottom: 2px solid rgba(217, 119, 6, 0.6);
   border-radius: 2px;
 }

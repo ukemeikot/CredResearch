@@ -35,7 +35,7 @@ export function VersionHistory({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex justify-end bg-cosmos-950/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -50,14 +50,14 @@ export function VersionHistory({
             className="glass h-full w-full max-w-sm overflow-y-auto p-6"
           >
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg font-semibold text-white">Version history</h3>
-              <button onClick={onClose} className="text-slate-400 hover:text-white" aria-label="Close">
+              <h3 className="font-display text-lg font-semibold text-slate-900">Version history</h3>
+              <button onClick={onClose} className="text-slate-500 hover:text-slate-900" aria-label="Close">
                 <X size={18} />
               </button>
             </div>
 
             {versions.isLoading ? (
-              <p className="mt-6 text-sm text-slate-400">Loading…</p>
+              <p className="mt-6 text-sm text-slate-500">Loading…</p>
             ) : items.length === 0 ? (
               <p className="mt-6 text-sm text-slate-500">No saved versions yet. Edits appear here as you write.</p>
             ) : (
@@ -65,10 +65,10 @@ export function VersionHistory({
                 {items.map((v) => (
                   <li
                     key={v.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
                   >
                     <div>
-                      <p className="text-sm text-white">Version {v.version}</p>
+                      <p className="text-sm text-slate-900">Version {v.version}</p>
                       <p className="text-[11px] text-slate-500">{new Date(v.createdAt).toLocaleString()}</p>
                     </div>
                     <Button

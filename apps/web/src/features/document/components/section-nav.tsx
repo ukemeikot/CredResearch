@@ -74,15 +74,15 @@ export function SectionNav({
                       if (e.key === "Enter") saveRename(s);
                       if (e.key === "Escape") setEditingId(null);
                     }}
-                    className="min-w-0 flex-1 rounded-lg border border-accent/50 bg-white/[0.06] px-2 py-1 text-sm text-white outline-none"
+                    className="min-w-0 flex-1 rounded-lg border border-accent/50 bg-white/[0.06] px-2 py-1 text-sm text-slate-900 outline-none"
                   />
-                  <button onClick={() => saveRename(s)} className="text-emerald-400 hover:text-emerald-300" aria-label="Save"><Check size={15} /></button>
-                  <button onClick={() => setEditingId(null)} className="text-slate-400 hover:text-white" aria-label="Cancel"><X size={15} /></button>
+                  <button onClick={() => saveRename(s)} className="text-emerald-600 hover:text-emerald-600" aria-label="Save"><Check size={15} /></button>
+                  <button onClick={() => setEditingId(null)} className="text-slate-500 hover:text-slate-900" aria-label="Cancel"><X size={15} /></button>
                 </div>
               ) : (
                 <div
                   className={`flex items-start gap-2 rounded-xl px-3 py-2 text-sm transition-colors ${
-                    isActive ? "bg-accent/10 text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"
+                    isActive ? "bg-accent/10 text-slate-900" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <button onClick={() => onSelect(s.id)} className="flex min-w-0 flex-1 items-start gap-2 text-left">
@@ -96,10 +96,10 @@ export function SectionNav({
                   </button>
                   {canManage && (
                     <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button disabled={busy || i === 0} onClick={() => swap(s, sections[i - 1])} className="text-slate-500 hover:text-white disabled:opacity-20" aria-label="Move up"><ChevronUp size={14} /></button>
-                      <button disabled={busy || i === sections.length - 1} onClick={() => swap(s, sections[i + 1])} className="text-slate-500 hover:text-white disabled:opacity-20" aria-label="Move down"><ChevronDown size={14} /></button>
-                      <button disabled={busy} onClick={() => startRename(s)} className="text-slate-500 hover:text-white" aria-label="Rename"><Pencil size={13} /></button>
-                      <button disabled={busy} onClick={() => { if (confirm(`Delete section "${s.heading}"? This removes its content and history.`)) del.mutate(s.id); }} className="text-slate-500 hover:text-rose-400" aria-label="Delete"><Trash2 size={13} /></button>
+                      <button disabled={busy || i === 0} onClick={() => swap(s, sections[i - 1])} className="text-slate-500 hover:text-slate-900 disabled:opacity-20" aria-label="Move up"><ChevronUp size={14} /></button>
+                      <button disabled={busy || i === sections.length - 1} onClick={() => swap(s, sections[i + 1])} className="text-slate-500 hover:text-slate-900 disabled:opacity-20" aria-label="Move down"><ChevronDown size={14} /></button>
+                      <button disabled={busy} onClick={() => startRename(s)} className="text-slate-500 hover:text-slate-900" aria-label="Rename"><Pencil size={13} /></button>
+                      <button disabled={busy} onClick={() => { if (confirm(`Delete section "${s.heading}"? This removes its content and history.`)) del.mutate(s.id); }} className="text-slate-500 hover:text-rose-600" aria-label="Delete"><Trash2 size={13} /></button>
                     </span>
                   )}
                 </div>
@@ -110,7 +110,7 @@ export function SectionNav({
       </ul>
 
       {canManage && (
-        <div className="mt-1 border-t border-white/5 pt-2">
+        <div className="mt-1 border-t border-slate-100 pt-2">
           {adding ? (
             <form onSubmit={addSection} className="flex items-center gap-1 px-2">
               <input
@@ -119,13 +119,13 @@ export function SectionNav({
                 onChange={(e) => setNewHeading(e.target.value)}
                 onKeyDown={(e) => e.key === "Escape" && setAdding(false)}
                 placeholder="New section heading"
-                className="min-w-0 flex-1 rounded-lg border border-accent/50 bg-white/[0.06] px-2 py-1 text-sm text-white outline-none"
+                className="min-w-0 flex-1 rounded-lg border border-accent/50 bg-white/[0.06] px-2 py-1 text-sm text-slate-900 outline-none"
               />
-              <button type="submit" disabled={busy || !newHeading.trim()} className="text-emerald-400 hover:text-emerald-300 disabled:opacity-30" aria-label="Add"><Check size={15} /></button>
-              <button type="button" onClick={() => setAdding(false)} className="text-slate-400 hover:text-white" aria-label="Cancel"><X size={15} /></button>
+              <button type="submit" disabled={busy || !newHeading.trim()} className="text-emerald-600 hover:text-emerald-600 disabled:opacity-30" aria-label="Add"><Check size={15} /></button>
+              <button type="button" onClick={() => setAdding(false)} className="text-slate-500 hover:text-slate-900" aria-label="Cancel"><X size={15} /></button>
             </form>
           ) : (
-            <button onClick={() => setAdding(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-accent hover:bg-white/5">
+            <button onClick={() => setAdding(true)} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-accent hover:bg-slate-100">
               <Plus size={14} /> Add section
             </button>
           )}

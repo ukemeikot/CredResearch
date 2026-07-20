@@ -15,14 +15,14 @@ export function LiteratureMatrix({ papers }: { papers: Paper[] }) {
 
   return (
     <div className="mt-8">
-      <h4 className="flex items-center gap-2 text-sm font-semibold text-white">
+      <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
         <Grid3x3 size={15} className="text-accent" /> Literature matrix
         <span className="text-xs font-normal text-slate-500">({rows.length} summarised)</span>
       </h4>
-      <div className="mt-3 overflow-x-auto rounded-xl border border-white/10">
+      <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
         <table className="w-full min-w-[720px] border-collapse text-xs">
           <thead>
-            <tr className="bg-white/[0.04] text-left text-slate-300">
+            <tr className="bg-white/[0.04] text-left text-slate-600">
               <th className="px-3 py-2 font-semibold">Reference</th>
               <th className="px-3 py-2 font-semibold">Methodology</th>
               <th className="px-3 py-2 font-semibold">Key findings</th>
@@ -31,7 +31,7 @@ export function LiteratureMatrix({ papers }: { papers: Paper[] }) {
           </thead>
           <tbody>
             {rows.map((p) => (
-              <tr key={p.id} className="border-t border-white/5 align-top text-slate-400">
+              <tr key={p.id} className="border-t border-slate-100 align-top text-slate-500">
                 <td className="px-3 py-2">
                   <span className="text-accent">{inTextCitation(p)}</span>
                   <div className="mt-0.5 line-clamp-2 text-slate-500">{p.title || p.filename}</div>

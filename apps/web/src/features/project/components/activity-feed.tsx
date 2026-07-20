@@ -31,7 +31,7 @@ export function ActivityFeed({ id }: { id: string }) {
 
   return (
     <GlassCard className="p-6">
-      <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Activity</p>
+      <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Activity</p>
 
       {query.isLoading ? (
         <p className="mt-3 text-sm text-slate-500">Loading…</p>
@@ -41,11 +41,11 @@ export function ActivityFeed({ id }: { id: string }) {
         <ul className="mt-4 space-y-3">
           {items.map((a) => (
             <li key={a.id} className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-white/10 text-accent">
+              <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-slate-200 text-accent">
                 <ActivityIcon size={12} />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm text-slate-300">{describe(a)}</p>
+                <p className="truncate text-sm text-slate-600">{describe(a)}</p>
                 <p className="text-[11px] text-slate-500">{timeAgo(a.createdAt)}</p>
               </div>
             </li>

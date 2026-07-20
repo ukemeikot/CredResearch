@@ -20,13 +20,13 @@ export function ProfileSettings() {
   if (me.isLoading) {
     return (
       <div className="grid place-items-center py-32">
-        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-white/10 border-t-accent" />
+        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-slate-200 border-t-accent" />
       </div>
     );
   }
   if (me.isError || !me.data) {
     return (
-      <GlassCard className="p-8 text-center text-sm text-rose-300">Couldn’t load your profile.</GlassCard>
+      <GlassCard className="p-8 text-center text-sm text-rose-600">Couldn’t load your profile.</GlassCard>
     );
   }
 
@@ -39,7 +39,7 @@ export function ProfileSettings() {
     <div className="space-y-8">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         <p className="eyebrow">Account</p>
-        <h1 className="mt-1 font-display text-3xl font-bold text-white">Settings</h1>
+        <h1 className="mt-1 font-display text-3xl font-bold text-slate-900">Settings</h1>
       </motion.div>
 
       <ProfileForm profile={profile} />
@@ -77,8 +77,8 @@ function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <GlassCard className="p-7">
-      <h2 className="font-display text-lg font-semibold text-white">Profile</h2>
-      <p className="mt-1 text-sm text-slate-400">{profile.email}</p>
+      <h2 className="font-display text-lg font-semibold text-slate-900">Profile</h2>
+      <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
 
       <form onSubmit={submit} className="mt-5 space-y-4">
         <Field label="Full name" type="text" value={fullName} onChange={setFullName} />
@@ -88,7 +88,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
         </div>
         <Field label="ORCID" type="text" value={orcid} onChange={setOrcid} placeholder="0000-0000-0000-0000" required={false} />
 
-        {error && <p className="text-sm text-rose-400">{error}</p>}
+        {error && <p className="text-sm text-rose-600">{error}</p>}
 
         <Button type="submit" size="md" disabled={update.isPending || !fullName}>
           {update.isPending ? "Saving…" : update.isSuccess ? "Saved" : "Save changes"}

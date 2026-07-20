@@ -34,7 +34,7 @@ export function Navbar() {
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled || open
-          ? "border-b border-white/10 bg-cosmos-950/80 backdrop-blur-md"
+          ? "border-b border-slate-200 bg-white/80 backdrop-blur-md"
           : "bg-transparent",
       )}
     >
@@ -48,7 +48,7 @@ export function Navbar() {
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="group relative text-sm font-medium uppercase tracking-wider text-slate-300 transition-colors hover:text-white"
+                className="group relative text-sm font-medium uppercase tracking-wider text-slate-600 transition-colors hover:text-slate-900"
               >
                 {l.label}
                 <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-accent transition-all duration-300 group-hover:w-full" />
@@ -65,7 +65,7 @@ export function Navbar() {
           </Link>
           <button
             onClick={() => setOpen((o) => !o)}
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-slate-200 md:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-700 md:hidden"
             aria-label="Toggle menu"
             aria-expanded={open}
           >
@@ -82,7 +82,7 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="overflow-hidden border-t border-white/10 bg-cosmos-950/95 backdrop-blur-md md:hidden"
+            className="overflow-hidden border-t border-slate-200 bg-white/95 backdrop-blur-md md:hidden"
           >
             <ul className="flex flex-col gap-1 px-4 py-4">
               {LINKS.map((l) => (
@@ -90,7 +90,7 @@ export function Navbar() {
                   <Link
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className="block rounded-lg px-3 py-3 text-sm font-medium uppercase tracking-wider text-slate-300 hover:bg-white/5 hover:text-white"
+                    className="block rounded-lg px-3 py-3 text-sm font-medium uppercase tracking-wider text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   >
                     {l.label}
                   </Link>

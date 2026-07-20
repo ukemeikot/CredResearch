@@ -10,9 +10,9 @@ import { ApiError } from "@/lib/api";
 import { useCreateQuestionnaire, useGenerateQuestionnaire, useQuestionnaires } from "../api/use-questionnaires";
 
 const STATUS_STYLE: Record<string, string> = {
-  DRAFT: "border-white/15 text-slate-400",
-  PUBLISHED: "border-emerald-400/40 text-emerald-300",
-  CLOSED: "border-rose-400/40 text-rose-300",
+  DRAFT: "border-slate-200 text-slate-500",
+  PUBLISHED: "border-emerald-400/40 text-emerald-600",
+  CLOSED: "border-rose-400/40 text-rose-600",
 };
 
 export function QuestionnairesPanel({ projectId }: { projectId: string }) {
@@ -51,7 +51,7 @@ export function QuestionnairesPanel({ projectId }: { projectId: string }) {
   return (
     <GlassCard className="p-6">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
+        <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-slate-900">
           <ClipboardList size={18} className="text-accent" /> Questionnaires
         </h3>
         <div className="flex items-center gap-2">
@@ -74,13 +74,13 @@ export function QuestionnairesPanel({ projectId }: { projectId: string }) {
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && aiGenerate()}
               placeholder="Research topic (e.g. rural solar adoption)"
-              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none"
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none"
             />
             <Button size="sm" onClick={aiGenerate} disabled={!topic.trim() || generate.isPending}>
               {generate.isPending ? <Loader2 size={14} className="animate-spin" /> : "Generate"}
             </Button>
           </div>
-          {genError && <p className="mt-1 text-xs text-rose-400">{genError}</p>}
+          {genError && <p className="mt-1 text-xs text-rose-600">{genError}</p>}
         </div>
       )}
 
@@ -92,7 +92,7 @@ export function QuestionnairesPanel({ projectId }: { projectId: string }) {
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
             placeholder="Questionnaire title"
-            className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none"
+            className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none"
           />
           <Button size="sm" onClick={add} disabled={!title.trim() || create.isPending}>
             {create.isPending ? <Loader2 size={14} className="animate-spin" /> : "Create"}
@@ -104,7 +104,7 @@ export function QuestionnairesPanel({ projectId }: { projectId: string }) {
         {list.isLoading ? (
           <p className="text-sm text-slate-500">Loading…</p>
         ) : items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
             No questionnaires yet. Create one to collect survey data.
           </p>
         ) : (
@@ -112,10 +112,10 @@ export function QuestionnairesPanel({ projectId }: { projectId: string }) {
             <Link
               key={q.id}
               href={`/projects/${projectId}/questionnaires/${q.id}`}
-              className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 transition-colors hover:border-white/30"
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition-colors hover:border-slate-300"
             >
-              <span className="truncate text-sm text-white">{q.title}</span>
-              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${STATUS_STYLE[q.status] ?? "border-white/10 text-slate-400"}`}>
+              <span className="truncate text-sm text-slate-900">{q.title}</span>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider ${STATUS_STYLE[q.status] ?? "border-slate-200 text-slate-500"}`}>
                 {q.status}
               </span>
             </Link>

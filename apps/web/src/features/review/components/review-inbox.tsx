@@ -26,19 +26,19 @@ export function ReviewInbox() {
 
   return (
     <GlassCard className="p-6">
-      <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-white">
+      <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-slate-900">
         <Inbox size={18} className="text-accent" /> Review inbox
         {items.length > 0 && (
           <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">{items.length}</span>
         )}
       </h2>
-      <p className="mt-1 text-xs text-slate-400">Documents shared with you that are waiting for your review.</p>
+      <p className="mt-1 text-xs text-slate-500">Documents shared with you that are waiting for your review.</p>
 
       <div className="mt-4 space-y-2">
         {inbox.isLoading ? (
           <p className="text-sm text-slate-500">Loading…</p>
         ) : items.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/10 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
             Nothing to review right now.
           </p>
         ) : (
@@ -47,10 +47,10 @@ export function ReviewInbox() {
               key={r.id}
               onClick={() => open(r.documentId)}
               disabled={opening === r.documentId}
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-left transition-colors hover:border-white/30"
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-slate-300"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm text-white">{r.note || "Review request"}</p>
+                <p className="truncate text-sm text-slate-900">{r.note || "Review request"}</p>
                 <p className="text-xs text-slate-500">{new Date(r.createdAt).toLocaleString()}</p>
               </div>
               {opening === r.documentId ? (

@@ -45,7 +45,7 @@ export function formatStatus(status: string): string {
 
 /** Tailwind classes per project status (badge styling). */
 export const STATUS_COLOR: Record<string, string> = {
-  DRAFT: "text-slate-300 border-white/15",
+  DRAFT: "text-slate-300 border-slate-200",
   PROPOSAL: "text-accent border-accent/40",
   IN_PROGRESS: "text-emerald-300 border-emerald-400/40",
   UNDER_REVIEW: "text-amber-300 border-amber-400/40",
