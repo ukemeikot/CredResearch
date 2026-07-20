@@ -101,7 +101,7 @@ export function QuestionnaireBuilder({ projectId, id }: { projectId: string; id:
     return <div className="grid place-items-center py-32"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
   }
   if (!q.data) {
-    return <GlassCard className="p-8 text-center text-sm text-rose-300">Couldn’t load this questionnaire.</GlassCard>;
+    return <GlassCard className="p-8 text-center text-sm text-rose-600">Couldn’t load this questionnaire.</GlassCard>;
   }
 
   const status = q.data.questionnaire.status;
@@ -109,12 +109,12 @@ export function QuestionnaireBuilder({ projectId, id }: { projectId: string; id:
 
   return (
     <div>
-      <Link href={`/projects/${projectId}`} className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white">
+      <Link href={`/projects/${projectId}`} className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900">
         <ArrowLeft size={16} /> Back to project
       </Link>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold text-white">Questionnaire</h1>
+        <h1 className="font-display text-2xl font-bold text-slate-900">Questionnaire</h1>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={save} disabled={update.isPending}>
             {update.isPending ? "Saving…" : "Save"}
@@ -130,7 +130,7 @@ export function QuestionnaireBuilder({ projectId, id }: { projectId: string; id:
       {link && (
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.06] px-4 py-3 text-sm">
           <span className="truncate text-emerald-200">{link}</span>
-          <button onClick={() => navigator.clipboard?.writeText(link)} className="ml-auto shrink-0 text-emerald-300 hover:text-white" title="Copy link">
+          <button onClick={() => navigator.clipboard?.writeText(link)} className="ml-auto shrink-0 text-emerald-600 hover:text-slate-900" title="Copy link">
             <Copy size={15} />
           </button>
         </div>
@@ -140,33 +140,33 @@ export function QuestionnaireBuilder({ projectId, id }: { projectId: string; id:
         {/* Builder */}
         <div className="space-y-4">
           <GlassCard className="p-5">
-            <label className="block text-xs uppercase tracking-wider text-slate-400">Title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none" />
-            <label className="mt-4 block text-xs uppercase tracking-wider text-slate-400">Consent statement (optional)</label>
-            <textarea value={consent} onChange={(e) => setConsent(e.target.value)} rows={2} placeholder="Respondents must agree before submitting…" className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none" />
+            <label className="block text-xs uppercase tracking-wider text-slate-500">Title</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none" />
+            <label className="mt-4 block text-xs uppercase tracking-wider text-slate-500">Consent statement (optional)</label>
+            <textarea value={consent} onChange={(e) => setConsent(e.target.value)} rows={2} placeholder="Respondents must agree before submitting…" className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none" />
           </GlassCard>
 
           {questions.map((x, i) => (
             <GlassCard key={i} className="p-4">
               <div className="flex items-start gap-2">
                 <div className="flex-1 space-y-2">
-                  <input value={x.prompt} onChange={(e) => setQ(i, { prompt: e.target.value })} placeholder={`Question ${i + 1}`} className="w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none" />
+                  <input value={x.prompt} onChange={(e) => setQ(i, { prompt: e.target.value })} placeholder={`Question ${i + 1}`} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none" />
                   <div className="flex flex-wrap items-center gap-2">
-                    <select value={x.type} onChange={(e) => setQ(i, { type: e.target.value })} className="rounded-lg border border-white/10 bg-cosmos-900 px-2 py-1.5 text-xs text-slate-200 outline-none">
+                    <select value={x.type} onChange={(e) => setQ(i, { type: e.target.value })} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 outline-none">
                       {TYPES.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}
                     </select>
-                    <label className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <label className="flex items-center gap-1.5 text-xs text-slate-500">
                       <input type="checkbox" checked={x.required} onChange={(e) => setQ(i, { required: e.target.checked })} /> Required
                     </label>
                   </div>
                   {HAS_OPTIONS.has(x.type) && (
-                    <input value={x.choices} onChange={(e) => setQ(i, { choices: e.target.value })} placeholder="Options, comma-separated (e.g. Strongly agree, Agree, Neutral)" className="w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-white outline-none" />
+                    <input value={x.choices} onChange={(e) => setQ(i, { choices: e.target.value })} placeholder="Options, comma-separated (e.g. Strongly agree, Agree, Neutral)" className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 outline-none" />
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <button onClick={() => move(i, -1)} className="rounded border border-white/10 p-1 text-slate-400 hover:text-white"><ChevronUp size={13} /></button>
-                  <button onClick={() => move(i, 1)} className="rounded border border-white/10 p-1 text-slate-400 hover:text-white"><ChevronDown size={13} /></button>
-                  <button onClick={() => setQuestions((qs) => qs.filter((_, idx) => idx !== i))} className="rounded border border-white/10 p-1 text-slate-400 hover:text-rose-300"><Trash2 size={13} /></button>
+                  <button onClick={() => move(i, -1)} className="rounded border border-slate-200 p-1 text-slate-500 hover:text-slate-900"><ChevronUp size={13} /></button>
+                  <button onClick={() => move(i, 1)} className="rounded border border-slate-200 p-1 text-slate-500 hover:text-slate-900"><ChevronDown size={13} /></button>
+                  <button onClick={() => setQuestions((qs) => qs.filter((_, idx) => idx !== i))} className="rounded border border-slate-200 p-1 text-slate-500 hover:text-rose-600"><Trash2 size={13} /></button>
                 </div>
               </div>
             </GlassCard>
@@ -180,9 +180,9 @@ export function QuestionnaireBuilder({ projectId, id }: { projectId: string; id:
         {/* Sidebar: status + responses */}
         <div className="space-y-4">
           <GlassCard className="p-5">
-            <p className="text-xs uppercase tracking-wider text-slate-400">Status</p>
-            <p className="mt-1 text-lg font-semibold text-white">{status}</p>
-            <p className="mt-3 text-xs uppercase tracking-wider text-slate-400">Responses</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Status</p>
+            <p className="mt-1 text-lg font-semibold text-slate-900">{status}</p>
+            <p className="mt-3 text-xs uppercase tracking-wider text-slate-500">Responses</p>
             <p className="mt-1 text-2xl font-bold text-accent">{respCount}</p>
             <div className="mt-4 flex flex-col gap-2">
               <Button size="sm" variant="outline" onClick={() => api.downloadResponsesCsv(id)} disabled={respCount === 0}>

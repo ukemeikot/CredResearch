@@ -37,7 +37,7 @@ export function ProjectWorkspace({ id }: { id: string }) {
   if (query.isLoading) {
     return (
       <div className="grid place-items-center py-32">
-        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-white/10 border-t-accent" />
+        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-slate-200 border-t-accent" />
       </div>
     );
   }
@@ -49,10 +49,10 @@ export function ProjectWorkspace({ id }: { id: string }) {
       <div className="py-16">
         <BackLink />
         <GlassCard className="mt-6 p-8 text-center">
-          <p className="font-display text-lg text-white">
+          <p className="font-display text-lg text-slate-900">
             {notFound ? "Project not found" : forbidden ? "You don’t have access to this project" : "Couldn’t load project"}
           </p>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-500">
             {notFound
               ? "It may have been removed, or it belongs to another workspace."
               : forbidden
@@ -79,16 +79,16 @@ export function ProjectWorkspace({ id }: { id: string }) {
       >
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-display text-3xl font-bold text-white">{project.title}</h1>
+            <h1 className="font-display text-3xl font-bold text-slate-900">{project.title}</h1>
             {project.level && (
-              <span className="rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] uppercase tracking-wider text-slate-400">
+              <span className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[11px] uppercase tracking-wider text-slate-500">
                 {project.level}
               </span>
             )}
           </div>
           <span
             className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${
-              STATUS_COLOR[project.status] ?? "text-slate-300 border-white/15"
+              STATUS_COLOR[project.status] ?? "text-slate-600 border-slate-200"
             }`}
           >
             {formatStatus(project.status)}
@@ -102,7 +102,7 @@ export function ProjectWorkspace({ id }: { id: string }) {
       </motion.div>
 
       {project.abstractText && (
-        <p className="mt-5 max-w-3xl text-sm leading-relaxed text-slate-300">{project.abstractText}</p>
+        <p className="mt-5 max-w-3xl text-sm leading-relaxed text-slate-600">{project.abstractText}</p>
       )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -110,8 +110,8 @@ export function ProjectWorkspace({ id }: { id: string }) {
         <StatCard label="Completed" value={dashboard.completedMilestones} />
         <StatCard label="Members" value={dashboard.memberCount} />
         <GlassCard className="p-6">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-400">Next milestone</p>
-          <p className="mt-2 truncate font-display text-lg font-semibold text-white">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Next milestone</p>
+          <p className="mt-2 truncate font-display text-lg font-semibold text-slate-900">
             {dashboard.nextMilestone?.title ?? "—"}
           </p>
           {dashboard.nextMilestone?.dueDate && (
@@ -144,7 +144,7 @@ function BackLink() {
   return (
     <Link
       href="/dashboard"
-      className="inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-white"
+      className="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900"
     >
       <ArrowLeft size={16} /> Back to workspace
     </Link>

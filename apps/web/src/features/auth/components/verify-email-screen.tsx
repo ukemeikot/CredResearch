@@ -50,15 +50,15 @@ export function VerifyEmailScreen() {
           {state === "loading" && (
             <>
               <Loader2 className="animate-spin text-accent" size={40} />
-              <p className="text-slate-300">Verifying your email…</p>
+              <p className="text-slate-600">Verifying your email…</p>
             </>
           )}
           {state === "success" && (
             <>
-              <CheckCircle2 className="text-emerald-400" size={48} />
+              <CheckCircle2 className="text-emerald-600" size={48} />
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">Email verified</h1>
-                <p className="mt-2 text-sm text-slate-400">
+                <h1 className="font-display text-2xl font-bold text-slate-900">Email verified</h1>
+                <p className="mt-2 text-sm text-slate-500">
                   Your email is confirmed — you now have full access.
                 </p>
               </div>
@@ -71,10 +71,10 @@ export function VerifyEmailScreen() {
           )}
           {state === "error" && (
             <>
-              <XCircle className="text-rose-400" size={48} />
+              <XCircle className="text-rose-600" size={48} />
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">Verification failed</h1>
-                <p className="mt-2 text-sm text-slate-400">{message}</p>
+                <h1 className="font-display text-2xl font-bold text-slate-900">Verification failed</h1>
+                <p className="mt-2 text-sm text-slate-500">{message}</p>
               </div>
               <Link href="/login" className="w-full">
                 <Button variant="outline" size="lg" className="w-full">

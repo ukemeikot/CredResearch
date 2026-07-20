@@ -22,13 +22,13 @@ export default function LandingPage() {
           transition={{ duration: 0.7 }}
         >
           <p className="eyebrow">Academic Integrity</p>
-          <p className="mt-5 font-display text-3xl leading-snug text-white sm:text-4xl">
+          <p className="mt-5 font-display text-3xl leading-snug text-slate-900 sm:text-4xl">
             <span className="text-accent">“</span>
             AI assists — it never ghostwrites. Every interaction is recorded in a tamper-evident
             disclosure ledger.
             <span className="text-accent">”</span>
           </p>
-          <p className="mt-4 text-sm text-slate-400">
+          <p className="mt-4 text-sm text-slate-500">
             Turning the biggest risk of generative AI into an institutional advantage.
           </p>
         </motion.div>
@@ -44,10 +44,10 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative h-56 overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_30%_20%,#27306e,#0a0e27)]"
+            className="relative h-56 overflow-hidden rounded-2xl border border-indigo-200 bg-[radial-gradient(circle_at_30%_20%,#818cf8,#4338ca)]"
           >
-            <div className="absolute inset-0 animate-gradient-pan bg-[linear-gradient(120deg,transparent,rgba(45,226,255,0.18),transparent)] bg-[length:200%_100%]" />
-            <div className="absolute bottom-5 left-6 font-display text-sm uppercase tracking-[0.3em] text-white/70">
+            <div className="absolute inset-0 animate-gradient-pan bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.28),transparent)] bg-[length:200%_100%]" />
+            <div className="absolute bottom-5 left-6 font-display text-sm uppercase tracking-[0.3em] text-white/85">
               Idea → Document
             </div>
           </motion.div>
@@ -58,12 +58,12 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="font-display text-4xl font-bold leading-tight text-white">
+            <h2 className="font-display text-4xl font-bold leading-tight text-slate-900">
               RESEARCH WITH INTEGRITY,
               <br />
               NOT SHORTCUTS.
             </h2>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-400">
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-500">
               Projects, supervision, literature, citations, alignment and export — one workflow,
               built for African universities and researchers, payable in Naira.
             </p>
@@ -79,7 +79,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/10 py-8 text-center text-xs uppercase tracking-[0.25em] text-slate-500">
+      <footer className="border-t border-slate-200 py-8 text-center text-xs uppercase tracking-[0.25em] text-slate-500">
         © {new Date().getFullYear()} CredResearch — All rights reserved
       </footer>
     </main>

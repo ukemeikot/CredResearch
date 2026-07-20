@@ -44,20 +44,20 @@ export function LoginScreen() {
         </Link>
         <GlassCard className="p-8">
           <p className="eyebrow">Welcome back</p>
-          <h1 className="mt-2 font-display text-2xl font-bold text-white">Sign in</h1>
+          <h1 className="mt-2 font-display text-2xl font-bold text-slate-900">Sign in</h1>
 
           <form onSubmit={onSubmit} className="mt-7 space-y-4">
             <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="ada@example.com" />
             <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
 
             <div className="flex justify-end">
-              <Link href="/forgot-password" className="text-xs text-slate-400 hover:text-accent">
+              <Link href="/forgot-password" className="text-xs text-slate-500 hover:text-accent">
                 Forgot password?
               </Link>
             </div>
 
             {error && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-rose-400">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-rose-600">
                 {error}
               </motion.p>
             )}
@@ -67,7 +67,7 @@ export function LoginScreen() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-400">
+          <p className="mt-6 text-center text-sm text-slate-500">
             New here?{" "}
             <Link href="/register" className="text-accent hover:text-accent-soft">
               Create an account

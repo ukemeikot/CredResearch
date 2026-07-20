@@ -63,7 +63,7 @@ export function AcceptInviteScreen() {
           {(state === "loading" || state === "accepting") && (
             <>
               <Loader2 className="animate-spin text-accent" size={40} />
-              <p className="text-slate-300">
+              <p className="text-slate-600">
                 {state === "accepting" ? "Joining the project…" : "Checking your invitation…"}
               </p>
             </>
@@ -71,8 +71,8 @@ export function AcceptInviteScreen() {
 
           {state === "needs-auth" && (
             <>
-              <h1 className="font-display text-2xl font-bold text-white">You’re invited</h1>
-              <p className="text-sm text-slate-400">
+              <h1 className="font-display text-2xl font-bold text-slate-900">You’re invited</h1>
+              <p className="text-sm text-slate-500">
                 Sign in (or create an account with the invited email), then reopen this link to join the project.
               </p>
               <div className="flex w-full gap-3">
@@ -88,20 +88,20 @@ export function AcceptInviteScreen() {
 
           {state === "success" && (
             <>
-              <CheckCircle2 className="text-emerald-400" size={48} />
+              <CheckCircle2 className="text-emerald-600" size={48} />
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">You’re in</h1>
-                <p className="mt-2 text-sm text-slate-400">Taking you to the project…</p>
+                <h1 className="font-display text-2xl font-bold text-slate-900">You’re in</h1>
+                <p className="mt-2 text-sm text-slate-500">Taking you to the project…</p>
               </div>
             </>
           )}
 
           {state === "error" && (
             <>
-              <XCircle className="text-rose-400" size={48} />
+              <XCircle className="text-rose-600" size={48} />
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">Invitation problem</h1>
-                <p className="mt-2 text-sm text-slate-400">{message}</p>
+                <h1 className="font-display text-2xl font-bold text-slate-900">Invitation problem</h1>
+                <p className="mt-2 text-sm text-slate-500">{message}</p>
               </div>
               <Link href="/dashboard" className="w-full">
                 <Button variant="outline" size="lg" className="w-full">Go to dashboard</Button>

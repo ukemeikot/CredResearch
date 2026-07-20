@@ -53,13 +53,13 @@ export function DocumentEditor({ docId }: { docId: string }) {
   if (query.isLoading) {
     return (
       <div className="grid place-items-center py-32">
-        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-white/10 border-t-accent" />
+        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-slate-200 border-t-accent" />
       </div>
     );
   }
   if (query.isError || !query.data) {
     return (
-      <GlassCard className="p-8 text-center text-sm text-rose-300">
+      <GlassCard className="p-8 text-center text-sm text-rose-600">
         Couldn’t load this document. You may not have access, or it no longer exists.
       </GlassCard>
     );
@@ -69,7 +69,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
     <div>
       <Link
         href={projectId ? `/projects/${projectId}` : "/dashboard"}
-        className="inline-flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-white"
+        className="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900"
       >
         <ArrowLeft size={16} /> Back to project
       </Link>
@@ -78,7 +78,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
         <motion.h1
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="font-display text-2xl font-bold text-white"
+          className="font-display text-2xl font-bold text-slate-900"
         >
           {query.data.document.title}
         </motion.h1>
@@ -86,19 +86,19 @@ export function DocumentEditor({ docId }: { docId: string }) {
           <DownloadMenu docId={docId} />
           <button
             onClick={() => setReviewOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
           >
             <MessageSquare size={14} /> Reviews
           </button>
           <button
             onClick={() => setSimilarityOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
           >
             <ScanSearch size={14} /> Similarity
           </button>
           <button
             onClick={() => setDisclosureOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
           >
             <ShieldCheck size={14} /> AI disclosure
           </button>
@@ -129,7 +129,7 @@ export function DocumentEditor({ docId }: { docId: string }) {
               onOpenHistory={() => setHistoryOpen(true)}
             />
           ) : (
-            <GlassCard className="p-8 text-center text-sm text-slate-400">This document has no sections.</GlassCard>
+            <GlassCard className="p-8 text-center text-sm text-slate-500">This document has no sections.</GlassCard>
           )}
         </div>
       </div>
@@ -190,38 +190,38 @@ function DownloadMenu({ docId }: { docId: string }) {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
       >
         {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Download
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-white/10 bg-cosmos-900 shadow-xl">
+          <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
             <button
               onClick={() => download("docx")}
               disabled={!!busy}
-              className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
+              className="block w-full px-4 py-2.5 text-left text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50"
             >
               Word (.docx)
             </button>
             <button
               onClick={() => download("pdf")}
               disabled={!!busy}
-              className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
+              className="block w-full px-4 py-2.5 text-left text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50"
             >
               PDF (.pdf)
             </button>
-            <div className="border-t border-white/5" />
+            <div className="border-t border-slate-100" />
             <button
               onClick={downloadBundle}
               disabled={!!busy}
-              className="block w-full px-4 py-2.5 text-left text-xs text-slate-200 hover:bg-white/5 disabled:opacity-50"
+              className="block w-full px-4 py-2.5 text-left text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50"
             >
               Submission bundle (.zip)
               <span className="block text-[10px] text-slate-500">DOCX + PDF + references + AI disclosure</span>
             </button>
-            {error && <p className="px-4 py-2 text-[11px] text-rose-400">{error}</p>}
+            {error && <p className="px-4 py-2 text-[11px] text-rose-600">{error}</p>}
           </div>
         </>
       )}

@@ -137,7 +137,7 @@ export function SectionEditor({
       immediatelyRender: false,
       editorProps: {
         attributes: {
-          class: "tiptap min-h-[52vh] w-full max-w-none px-1 py-2 text-slate-200 outline-none",
+          class: "tiptap min-h-[52vh] w-full max-w-none px-1 py-2 text-slate-700 outline-none",
         },
       },
       onUpdate: ({ editor }) => scheduleSave(editor.getJSON()),
@@ -254,14 +254,14 @@ export function SectionEditor({
               {section.chapter}
             </p>
           )}
-          <h2 className="font-display text-xl font-bold text-white">{section.heading}</h2>
+          <h2 className="font-display text-xl font-bold text-slate-900">{section.heading}</h2>
         </div>
         <div className="flex items-center gap-3">
           {collabActive && <Presence peers={collab.peers} connecting={!collabReady} />}
           <SaveIndicator status={status} />
           <button
             onClick={onOpenHistory}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
           >
             <History size={14} /> History
           </button>
@@ -269,13 +269,13 @@ export function SectionEditor({
       </div>
 
       {collabActive && !collabReady && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-slate-400">
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
           <Loader2 size={16} className="animate-spin" /> Connecting to the live editing session…
         </div>
       )}
 
       {status === "conflict" && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-700">
           <span className="flex items-center gap-2">
             <AlertTriangle size={16} /> This section changed elsewhere. Reload to get the latest, then re-apply your edits.
           </span>
@@ -300,14 +300,14 @@ export function SectionEditor({
             <div className="relative">
               <button
                 onClick={() => setCiteOpen((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
               >
                 <BookMarked size={13} /> Cite
               </button>
               {citeOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setCiteOpen(false)} />
-                  <div className="absolute left-0 z-20 mt-1 max-h-64 w-72 overflow-y-auto rounded-xl border border-white/10 bg-cosmos-900 p-1 shadow-xl">
+                  <div className="absolute left-0 z-20 mt-1 max-h-64 w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
                     {(papersQ.data ?? []).length === 0 ? (
                       <p className="px-3 py-2 text-xs text-slate-500">
                         No papers yet — upload sources in the project’s Papers &amp; references panel.
@@ -320,7 +320,7 @@ export function SectionEditor({
                             editor?.chain().focus().insertContent(`${inTextCitation(p)} `).run();
                             setCiteOpen(false);
                           }}
-                          className="block w-full truncate rounded-lg px-3 py-2 text-left text-xs text-slate-200 hover:bg-white/5"
+                          className="block w-full truncate rounded-lg px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-100"
                           title={citationLabel(p)}
                         >
                           <span className="text-accent">{inTextCitation(p)}</span> {citationLabel(p)}
@@ -337,13 +337,13 @@ export function SectionEditor({
                 onClick={startComment}
                 disabled={!hasSelection}
                 title={hasSelection ? "Comment on the selected text" : "Select text to comment on it"}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:border-white/30 hover:text-white disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:opacity-40"
               >
                 <MessageSquarePlus size={13} /> Comment
               </button>
             )}
             {credits.data && (
-              <span className={`text-[11px] ${creditsLow ? "text-rose-400" : "text-slate-500"}`}>
+              <span className={`text-[11px] ${creditsLow ? "text-rose-600" : "text-slate-500"}`}>
                 {credits.data.remaining}/{credits.data.limit} AI credits left
               </span>
             )}
@@ -360,22 +360,22 @@ export function SectionEditor({
                 if (e.key === "Escape") setAiOpen(false);
               }}
               placeholder="Draft this section, make it more concise, add examples…"
-              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white outline-none"
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-900 outline-none"
             />
             <Button size="sm" onClick={runAssist} disabled={assist.isPending || !!creditsLow}>
               {assist.isPending ? "Generating…" : creditsLow ? "No credits" : "Generate"}
             </Button>
-            <button onClick={() => setAiOpen(false)} className="px-1 text-xs text-slate-400 hover:text-white">
+            <button onClick={() => setAiOpen(false)} className="px-1 text-xs text-slate-500 hover:text-slate-900">
               Cancel
             </button>
           </div>
         )}
-        {aiError && <p className="mt-1 text-xs text-rose-400">{aiError}</p>}
+        {aiError && <p className="mt-1 text-xs text-rose-600">{aiError}</p>}
 
         {/* Inline review-comment composer, anchored to the selected text */}
         {pendingAnchor && (
           <div className="mt-2 rounded-xl border border-amber-400/30 bg-amber-400/[0.06] p-2.5">
-            <p className="line-clamp-2 border-l-2 border-amber-400/50 pl-2 text-xs italic text-slate-300">
+            <p className="line-clamp-2 border-l-2 border-amber-400/50 pl-2 text-xs italic text-slate-600">
               “{pendingAnchor.quote}”
             </p>
             <div className="mt-2 flex items-center gap-2">
@@ -388,12 +388,12 @@ export function SectionEditor({
                   if (e.key === "Escape") setPendingAnchor(null);
                 }}
                 placeholder="Comment on this passage…"
-                className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white outline-none"
+                className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-900 outline-none"
               />
               <Button size="sm" onClick={submitComment} disabled={!commentBody.trim() || addReviewComment.isPending}>
                 {addReviewComment.isPending ? "Saving…" : "Comment"}
               </Button>
-              <button onClick={() => setPendingAnchor(null)} className="px-1 text-xs text-slate-400 hover:text-white">
+              <button onClick={() => setPendingAnchor(null)} className="px-1 text-xs text-slate-500 hover:text-slate-900">
                 Cancel
               </button>
             </div>
@@ -401,7 +401,7 @@ export function SectionEditor({
         )}
       </div>
 
-      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+      <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <EditorContent editor={editor} />
       </div>
     </div>
@@ -411,7 +411,7 @@ export function SectionEditor({
 function Presence({ peers, connecting }: { peers: CollabPeer[]; connecting: boolean }) {
   if (connecting) return null;
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-slate-400" title="People editing now">
+    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500" title="People editing now">
       <Users size={13} />
       {peers.length === 0 ? (
         "Only you"
@@ -420,7 +420,7 @@ function Presence({ peers, connecting }: { peers: CollabPeer[]; connecting: bool
           {peers.slice(0, 4).map((p) => (
             <span
               key={p.clientId}
-              className="grid h-5 w-5 place-items-center rounded-full border border-cosmos-900 text-[9px] font-semibold text-white"
+              className="grid h-5 w-5 place-items-center rounded-full border border-cosmos-900 text-[9px] font-semibold text-slate-900"
               style={{ backgroundColor: p.color }}
               title={p.name}
             >
@@ -436,11 +436,11 @@ function Presence({ peers, connecting }: { peers: CollabPeer[]; connecting: bool
 
 function SaveIndicator({ status }: { status: string }) {
   const map: Record<string, { icon: React.ReactNode; text: string; cls: string }> = {
-    saving: { icon: <Loader2 size={13} className="animate-spin" />, text: "Saving…", cls: "text-slate-400" },
-    saved: { icon: <Check size={13} />, text: "Saved", cls: "text-emerald-400" },
-    offline: { icon: <CloudOff size={13} />, text: "Offline — will sync", cls: "text-amber-300" },
-    error: { icon: <CloudOff size={13} />, text: "Save failed — buffered", cls: "text-rose-300" },
-    conflict: { icon: <AlertTriangle size={13} />, text: "Conflict", cls: "text-amber-300" },
+    saving: { icon: <Loader2 size={13} className="animate-spin" />, text: "Saving…", cls: "text-slate-500" },
+    saved: { icon: <Check size={13} />, text: "Saved", cls: "text-emerald-600" },
+    offline: { icon: <CloudOff size={13} />, text: "Offline — will sync", cls: "text-amber-600" },
+    error: { icon: <CloudOff size={13} />, text: "Save failed — buffered", cls: "text-rose-600" },
+    conflict: { icon: <AlertTriangle size={13} />, text: "Conflict", cls: "text-amber-600" },
   };
   const s = map[status];
   if (!s) return null;
@@ -449,8 +449,8 @@ function SaveIndicator({ status }: { status: string }) {
 
 function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>> }) {
   const btn = (active: boolean) =>
-    `grid h-8 w-8 place-items-center rounded-lg border text-slate-300 transition-colors ${
-      active ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 hover:border-white/30"
+    `grid h-8 w-8 place-items-center rounded-lg border text-slate-600 transition-colors ${
+      active ? "border-accent/60 bg-accent/10 text-slate-900" : "border-slate-200 hover:border-slate-300"
     }`;
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -462,12 +462,12 @@ function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>>
       <button type="button" className={btn(editor.isActive("orderedList"))} onClick={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Ordered list"><ListOrdered size={15} /></button>
       <button type="button" className={btn(editor.isActive("blockquote"))} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Quote"><Quote size={15} /></button>
 
-      <span className="mx-0.5 w-px self-stretch bg-white/10" />
+      <span className="mx-0.5 w-px self-stretch bg-slate-100" />
 
       {/* Typeface */}
       <select
         aria-label="Font"
-        className="h-8 rounded-lg border border-white/10 bg-cosmos-900 px-2 text-xs text-slate-300 outline-none hover:border-white/30"
+        className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-600 outline-none hover:border-slate-300"
         value={editor.getAttributes("textStyle").fontFamily ?? ""}
         onChange={(e) => {
           const v = e.target.value;
@@ -483,7 +483,7 @@ function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>>
       {/* Font size */}
       <select
         aria-label="Font size"
-        className="h-8 rounded-lg border border-white/10 bg-cosmos-900 px-2 text-xs text-slate-300 outline-none hover:border-white/30"
+        className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-600 outline-none hover:border-slate-300"
         value={editor.getAttributes("textStyle").fontSize ?? ""}
         onChange={(e) => {
           const v = e.target.value;
@@ -515,14 +515,14 @@ function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>>
             aria-label={`Colour ${c}`}
             title={c}
             onClick={() => editor.chain().focus().setColor(c).run()}
-            className="h-5 w-5 rounded-full border border-white/20 transition-transform hover:scale-110"
+            className="h-5 w-5 rounded-full border border-slate-300 transition-transform hover:scale-110"
             style={{ backgroundColor: c }}
           />
         ))}
         <button
           type="button"
           onClick={() => editor.chain().focus().unsetColor().run()}
-          className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-400 transition-colors hover:border-white/30"
+          className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:border-slate-300"
           aria-label="Clear colour"
           title="Clear colour"
         >

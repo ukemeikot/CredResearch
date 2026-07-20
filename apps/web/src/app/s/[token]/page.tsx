@@ -57,21 +57,21 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
     }
   }
 
-  if (loading) return <div className="grid min-h-screen place-items-center bg-cosmos-950"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
+  if (loading) return <div className="grid min-h-screen place-items-center bg-white"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>;
   if (error && !survey) {
     return (
-      <div className="grid min-h-screen place-items-center bg-cosmos-950 px-6 text-center">
-        <div><p className="text-lg font-semibold text-white">Survey unavailable</p><p className="mt-2 text-sm text-slate-400">{error}</p></div>
+      <div className="grid min-h-screen place-items-center bg-white px-6 text-center">
+        <div><p className="text-lg font-semibold text-slate-900">Survey unavailable</p><p className="mt-2 text-sm text-slate-500">{error}</p></div>
       </div>
     );
   }
   if (done) {
     return (
-      <div className="grid min-h-screen place-items-center bg-cosmos-950 px-6 text-center">
+      <div className="grid min-h-screen place-items-center bg-white px-6 text-center">
         <div>
-          <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-400" />
-          <p className="mt-3 text-lg font-semibold text-white">Thank you!</p>
-          <p className="mt-1 text-sm text-slate-400">Your response has been recorded.</p>
+          <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
+          <p className="mt-3 text-lg font-semibold text-slate-900">Thank you!</p>
+          <p className="mt-1 text-sm text-slate-500">Your response has been recorded.</p>
         </div>
       </div>
     );
@@ -79,11 +79,11 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
   if (!survey) return null;
 
   return (
-    <div className="min-h-screen bg-cosmos-950 px-4 py-10 text-slate-200">
+    <div className="min-h-screen bg-white px-4 py-10 text-slate-700">
       <div className="mx-auto max-w-2xl">
-        <h1 className="font-display text-2xl font-bold text-white">{survey.title}</h1>
+        <h1 className="font-display text-2xl font-bold text-slate-900">{survey.title}</h1>
         {survey.consentText && (
-          <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-slate-300">
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
             <p>{survey.consentText}</p>
             <label className="mt-3 flex items-center gap-2 text-sm">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> I consent to participate
@@ -93,9 +93,9 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
 
         <div className="mt-6 space-y-5">
           {survey.questions.map((q, i) => (
-            <div key={q.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <p className="text-sm font-medium text-white">
-                {i + 1}. {q.prompt} {q.required && <span className="text-rose-400">*</span>}
+            <div key={q.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-medium text-slate-900">
+                {i + 1}. {q.prompt} {q.required && <span className="text-rose-600">*</span>}
               </p>
               <div className="mt-2">
                 <Field q={q} value={answers[q.id]} onChange={(v) => set(q.id, v)} />
@@ -104,7 +104,7 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
           ))}
         </div>
 
-        {error && <p className="mt-4 text-sm text-rose-400">{error}</p>}
+        {error && <p className="mt-4 text-sm text-rose-600">{error}</p>}
         <Button size="lg" className="mt-6 w-full" onClick={submit} disabled={submitting}>
           {submitting ? "Submitting…" : "Submit response"}
         </Button>
@@ -115,7 +115,7 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
 
 function Field({ q, value, onChange }: { q: SurveyQuestion; value: unknown; onChange: (v: unknown) => void }) {
   const choices: string[] = Array.isArray(q.options?.choices) ? q.options.choices : [];
-  const input = "w-full rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none";
+  const input = "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none";
   switch (q.type) {
     case "LONG_TEXT":
       return <textarea rows={3} className={input} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />;
@@ -125,7 +125,7 @@ function Field({ q, value, onChange }: { q: SurveyQuestion; value: unknown; onCh
       return (
         <div className="flex gap-2">
           {["Yes", "No"].map((o) => (
-            <button key={o} onClick={() => onChange(o)} className={`rounded-lg border px-4 py-1.5 text-sm ${value === o ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 text-slate-400"}`}>{o}</button>
+            <button key={o} onClick={() => onChange(o)} className={`rounded-lg border px-4 py-1.5 text-sm ${value === o ? "border-accent/60 bg-accent/10 text-slate-900" : "border-slate-200 text-slate-500"}`}>{o}</button>
           ))}
         </div>
       );
@@ -134,7 +134,7 @@ function Field({ q, value, onChange }: { q: SurveyQuestion; value: unknown; onCh
       return (
         <div className="flex flex-wrap gap-2">
           {choices.map((o) => (
-            <button key={o} onClick={() => onChange(o)} className={`rounded-lg border px-3 py-1.5 text-sm ${value === o ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 text-slate-400 hover:border-white/30"}`}>{o}</button>
+            <button key={o} onClick={() => onChange(o)} className={`rounded-lg border px-3 py-1.5 text-sm ${value === o ? "border-accent/60 bg-accent/10 text-slate-900" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}>{o}</button>
           ))}
         </div>
       );
@@ -148,7 +148,7 @@ function Field({ q, value, onChange }: { q: SurveyQuestion; value: unknown; onCh
               <button
                 key={o}
                 onClick={() => onChange(on ? arr.filter((x) => x !== o) : [...arr, o])}
-                className={`rounded-lg border px-3 py-1.5 text-sm ${on ? "border-accent/60 bg-accent/10 text-white" : "border-white/10 text-slate-400 hover:border-white/30"}`}
+                className={`rounded-lg border px-3 py-1.5 text-sm ${on ? "border-accent/60 bg-accent/10 text-slate-900" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}
               >
                 {o}
               </button>

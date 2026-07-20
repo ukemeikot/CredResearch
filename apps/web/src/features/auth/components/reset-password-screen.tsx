@@ -62,16 +62,16 @@ export function ResetPasswordScreen() {
         <GlassCard className="p-8">
           {reset.isSuccess ? (
             <div className="flex flex-col items-center gap-4 text-center">
-              <CheckCircle2 className="text-emerald-400" size={48} />
+              <CheckCircle2 className="text-emerald-600" size={48} />
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">Password updated</h1>
-                <p className="mt-2 text-sm text-slate-400">Redirecting you to sign in…</p>
+                <h1 className="font-display text-2xl font-bold text-slate-900">Password updated</h1>
+                <p className="mt-2 text-sm text-slate-500">Redirecting you to sign in…</p>
               </div>
             </div>
           ) : !token ? (
             <div className="text-center">
-              <h1 className="font-display text-2xl font-bold text-white">Invalid reset link</h1>
-              <p className="mt-2 text-sm text-slate-400">This link is missing its token.</p>
+              <h1 className="font-display text-2xl font-bold text-slate-900">Invalid reset link</h1>
+              <p className="mt-2 text-sm text-slate-500">This link is missing its token.</p>
               <Link href="/forgot-password" className="mt-4 inline-block text-sm text-accent hover:text-accent-soft">
                 Request a new link
               </Link>
@@ -79,12 +79,12 @@ export function ResetPasswordScreen() {
           ) : (
             <>
               <p className="eyebrow">Password reset</p>
-              <h1 className="mt-2 font-display text-2xl font-bold text-white">Choose a new password</h1>
+              <h1 className="mt-2 font-display text-2xl font-bold text-slate-900">Choose a new password</h1>
 
               <form onSubmit={onSubmit} className="mt-7 space-y-4">
                 <Field label="New password" type="password" value={password} onChange={setPassword} placeholder="At least 8 characters" />
                 <Field label="Confirm password" type="password" value={confirm} onChange={setConfirm} placeholder="Re-enter password" />
-                {error && <p className="text-sm text-rose-400">{error}</p>}
+                {error && <p className="text-sm text-rose-600">{error}</p>}
                 <Button type="submit" size="lg" className="w-full" disabled={reset.isPending || password.length < 8}>
                   {reset.isPending ? "Updating…" : <>Update password <ArrowRight size={18} /></>}
                 </Button>

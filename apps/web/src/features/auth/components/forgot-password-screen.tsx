@@ -42,9 +42,9 @@ export function ForgotPasswordScreen() {
             <div className="flex flex-col items-center gap-4 text-center">
               <MailCheck className="text-accent" size={44} />
               <div>
-                <h1 className="font-display text-2xl font-bold text-white">Check your inbox</h1>
-                <p className="mt-2 text-sm text-slate-400">
-                  If an account exists for <span className="text-slate-200">{email}</span>, a reset link is on its way.
+                <h1 className="font-display text-2xl font-bold text-slate-900">Check your inbox</h1>
+                <p className="mt-2 text-sm text-slate-500">
+                  If an account exists for <span className="text-slate-700">{email}</span>, a reset link is on its way.
                 </p>
               </div>
               <Link href="/login" className="text-sm text-accent hover:text-accent-soft">
@@ -54,8 +54,8 @@ export function ForgotPasswordScreen() {
           ) : (
             <>
               <p className="eyebrow">Password reset</p>
-              <h1 className="mt-2 font-display text-2xl font-bold text-white">Forgot password</h1>
-              <p className="mt-2 text-sm text-slate-400">
+              <h1 className="mt-2 font-display text-2xl font-bold text-slate-900">Forgot password</h1>
+              <p className="mt-2 text-sm text-slate-500">
                 Enter your email and we’ll send you a link to reset it.
               </p>
 
@@ -66,7 +66,7 @@ export function ForgotPasswordScreen() {
                 </Button>
               </form>
 
-              <p className="mt-6 text-center text-sm text-slate-400">
+              <p className="mt-6 text-center text-sm text-slate-500">
                 Remembered it?{" "}
                 <Link href="/login" className="text-accent hover:text-accent-soft">
                   Sign in

@@ -49,7 +49,7 @@ export function RegisterScreen() {
         </Link>
         <GlassCard className="p-8">
           <p className="eyebrow">Join the revolution</p>
-          <h1 className="mt-2 font-display text-2xl font-bold text-white">Create your account</h1>
+          <h1 className="mt-2 font-display text-2xl font-bold text-slate-900">Create your account</h1>
 
           <form onSubmit={onSubmit} className="mt-7 space-y-4">
             <Field label="Full name" type="text" value={fullName} onChange={setFullName} placeholder="Ada Lovelace" />
@@ -57,7 +57,7 @@ export function RegisterScreen() {
             <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="At least 8 characters" />
 
             {error && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-rose-400">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-rose-600">
                 {error}
               </motion.p>
             )}
@@ -67,7 +67,7 @@ export function RegisterScreen() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-400">
+          <p className="mt-6 text-center text-sm text-slate-500">
             Already have an account?{" "}
             <Link href="/login" className="text-accent hover:text-accent-soft">
               Sign in

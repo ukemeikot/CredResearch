@@ -43,14 +43,14 @@ export function InstitutionSection({
 
   return (
     <GlassCard className="p-7">
-      <h2 className="font-display text-lg font-semibold text-white">Institution</h2>
+      <h2 className="font-display text-lg font-semibold text-slate-900">Institution</h2>
 
       {institution.isLoading ? (
         <p className="mt-4 text-sm text-slate-500">Loading…</p>
       ) : institution.isError || !institution.data ? (
-        <p className="mt-4 text-sm text-rose-300">Couldn’t load institution.</p>
+        <p className="mt-4 text-sm text-rose-600">Couldn’t load institution.</p>
       ) : institution.data.personalTenant ? (
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-500">
           You’re in a personal workspace — join or get invited to an institution to collaborate.
         </p>
       ) : (
@@ -60,7 +60,7 @@ export function InstitutionSection({
             <Field label="Country" type="text" value={country} onChange={setCountry} required={false} disabled={!canEdit} />
             <Field label="Type" type="text" value={type} onChange={setType} placeholder="university" required={false} disabled={!canEdit} />
           </div>
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p className="text-sm text-rose-600">{error}</p>}
           {canEdit && (
             <Button type="submit" size="md" disabled={update.isPending || !name}>
               {update.isPending ? "Saving…" : update.isSuccess ? "Saved" : "Save institution"}
