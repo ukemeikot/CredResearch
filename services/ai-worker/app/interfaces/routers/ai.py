@@ -54,3 +54,18 @@ def embed(req: s.EmbedRequest) -> s.EmbedResponse:
 @router.post("/rag-answer", response_model=s.RagAnswerResponse, dependencies=[Depends(require_internal)])
 def rag_answer(req: s.RagAnswerRequest) -> s.RagAnswerResponse:
     return ai_features.rag_answer(req)
+
+
+@router.post("/questionnaire", response_model=s.QuestionnaireGenResponse, dependencies=[Depends(require_internal)])
+def questionnaire(req: s.QuestionnaireGenRequest) -> s.QuestionnaireGenResponse:
+    return ai_features.generate_questionnaire(req)
+
+
+@router.post("/interpret-data", response_model=s.InterpretResponse, dependencies=[Depends(require_internal)])
+def interpret_data(req: s.InterpretRequest) -> s.InterpretResponse:
+    return ai_features.interpret_data(req)
+
+
+@router.post("/chapter4", response_model=s.Chapter4Response, dependencies=[Depends(require_internal)])
+def chapter4(req: s.InterpretRequest) -> s.Chapter4Response:
+    return ai_features.chapter4(req)

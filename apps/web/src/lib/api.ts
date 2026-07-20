@@ -197,6 +197,19 @@ export type {
   PaperSummary,
   Reference,
   ReferenceList,
+  ReviewRequest,
+  ReviewComment,
+  ReviewDecision,
+  ReviewThread,
+  ExternalReview,
+  Questionnaire,
+  QuestionView,
+  QuestionnaireView,
+  SurveyView,
+  SurveyQuestion,
+  ResponseRow,
+  AnalysisColumn,
+  AnalysisResult,
 } from "./schemas";
 
 // ── API surface ───────────────────────────────────────────────────────────
@@ -371,4 +384,68 @@ export const api = {
     request(`/papers/${id}/summarize`, json("POST"), S.PaperSummarySchema),
   askPapers: (projectId: string, question: string) =>
     request("/papers/ask", json("POST", { projectId, question }), S.RagAnswerSchema),
+
+  // Reviews (Phase 6)
+  listReviews: (documentId: string) =>
+    request(`/reviews?documentId=${documentId}`, undefined, z.array(S.ReviewThreadSchema)),
+  reviewInbox: () => request("/reviews/inbox", undefined, z.array(S.ReviewRequestSchema)),
+  submitReview: (b: { documentId: string; documentSectionId?: string; reviewerUserId: string; note?: string }) =>
+    request("/reviews", json("POST", b), S.ReviewRequestSchema),
+  addReviewComment: (
+    reviewId: string,
+    b: { body: string; anchorStart?: number; anchorEnd?: number; quote?: string },
+  ) => request(`/reviews/${reviewId}/comments`, json("POST", b), S.ReviewCommentSchema),
+  resolveReviewComment: (commentId: string, resolved: boolean) =>
+    request(`/reviews/comments/${commentId}`, json("PATCH", { resolved }), S.ReviewCommentSchema),
+  decideReview: (reviewId: string, b: { decision: string; summary?: string }) =>
+    request(`/reviews/${reviewId}/decision`, json("POST", b), S.ReviewThreadSchema),
+  resubmitReview: (reviewId: string, note?: string) =>
+    request(`/reviews/${reviewId}/resubmit`, json("POST", { note }), S.ReviewRequestSchema),
+  submitReviewExternal: (b: { documentId: string; documentSectionId?: string; email: string; note?: string }) =>
+    request("/reviews/external", json("POST", b), S.ReviewRequestSchema),
+
+  // Magic-link external review surface (public; token in the path)
+  reviewAccessView: (token: string) =>
+    request(`/review-access/${token}`, undefined, S.ExternalReviewSchema),
+  reviewAccessComment: (token: string, body: string) =>
+    request(`/review-access/${token}/comments`, json("POST", { body }), S.ExternalReviewSchema),
+  reviewAccessDecide: (token: string, decision: string, summary?: string) =>
+    request(`/review-access/${token}/decision`, json("POST", { decision, summary }), S.ExternalReviewSchema),
+
+  // Questionnaires (Phase 7)
+  listQuestionnaires: (projectId: string) =>
+    request(`/questionnaires?projectId=${projectId}`, undefined, z.array(S.QuestionnaireSchema)),
+  createQuestionnaire: (b: { projectId: string; title: string; consentText?: string }) =>
+    request("/questionnaires", json("POST", b), S.QuestionnaireViewSchema),
+  generateQuestionnaire: (b: { projectId: string; topic: string; objectives?: string[] }) =>
+    request("/questionnaires/generate", json("POST", b), S.QuestionnaireViewSchema),
+  getQuestionnaire: (id: string) => request(`/questionnaires/${id}`, undefined, S.QuestionnaireViewSchema),
+  updateQuestionnaire: (
+    id: string,
+    b: { title?: string; consentText?: string; questions?: { type: string; prompt: string; options?: unknown; required: boolean }[] },
+  ) => request(`/questionnaires/${id}`, json("PATCH", b), S.QuestionnaireViewSchema),
+  publishQuestionnaire: (id: string, expiresDays?: number) =>
+    request(`/questionnaires/${id}/publish`, json("POST", { expiresDays }), S.PublishTokenSchema),
+  closeQuestionnaire: (id: string) => request<void>(`/questionnaires/${id}/close`, json("POST")),
+  questionnaireResponses: (id: string) =>
+    request(`/questionnaires/${id}/responses`, undefined, z.array(S.ResponseRowSchema)),
+  downloadResponsesCsv: (id: string) =>
+    downloadFile(`/questionnaires/${id}/responses.csv`, "responses.csv"),
+
+  // Public survey (Phase 7)
+  surveyRender: (token: string) => request(`/survey/${token}`, undefined, S.SurveyViewSchema),
+  surveySubmit: (token: string, b: { consentGiven: boolean; answers: { questionId: string; value: unknown }[] }) =>
+    request<void>(`/survey/${token}/responses`, json("POST", b)),
+
+  // Data analysis (Phase 8)
+  analyzeCsv: (projectId: string, file: File) => {
+    const form = new FormData();
+    form.append("projectId", projectId);
+    form.append("file", file);
+    return upload("/analysis", form, S.AnalysisResultSchema);
+  },
+  interpretData: (projectId: string, topic: string, stats: unknown) =>
+    request("/analysis/interpret", json("POST", { projectId, topic, stats }), S.InterpretSchema),
+  chapter4Draft: (projectId: string, topic: string, stats: unknown) =>
+    request("/analysis/chapter4", json("POST", { projectId, topic, stats }), S.Chapter4Schema),
 };

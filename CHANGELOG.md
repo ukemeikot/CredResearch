@@ -8,6 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 8 (first increment) — Data analysis.** Upload a CSV and get **descriptive statistics**
+  computed with pandas — column **type + missing-value detection**, numeric summaries
+  (mean/median/std/min/max + histogram) and categorical **frequency tables/bar charts**
+  (FR-DATA-1..4). Then a **grounded AI interpretation** and a **Chapter 4 starter draft** that cite
+  **only** the computed numbers — never invented (FR-DATA-5/6, credit-metered). New `analysis`
+  module + worker `/analysis/describe` (pandas) + `/ai/interpret-data` + `/ai/chapter4`; a Data
+  analysis panel in the project workspace. (Async jobs + persisted datasets/charts follow.)
+
+### Added
+- **Phase 7 — AI generate-from-objectives.** Draft a whole questionnaire from a research topic
+  (and objectives) with one click — the worker proposes typed questions (choice/Likert/text/…),
+  saved as an editable draft. Credit-metered like other AI features. (FR-Q generate.)
+- **Phase 7 (first increment) — Questionnaire builder & data collection.** Build a survey in a
+  project (short/long text, number, yes-no, single/multi-choice, Likert; required flags; consent
+  statement), **publish a tokenized public link**, collect **consented responses** at an
+  account-less `/s/{token}` page, and **export responses as CSV** (FR-Q). New `questionnaire`
+  module + Flyway `V13` (`questionnaires`/`questions`/`survey_links`/`survey_responses`/
+  `survey_answers`); public `/api/v1/survey/**`. (AI generate-from-objectives follows next.)
+
+### Added
+- **Phase 6 — Magic-link external review + notifications.** A student can invite an **external
+  supervisor by email**; the reviewer opens a **scoped, single-review magic link** (opaque token,
+  hashed at rest, 14-day expiry) and can view the shared section, comment, and decide **without an
+  account** (FR-SUP-1/2). The token authorises exactly one review and nothing else. Email
+  **notifications** fire on invite, decision, and comment (FR-SUP-9). Flyway `V12`; public
+  `/review/{token}` surface + `/api/v1/review-access/**` (permitted without a bearer).
+- **Phase 6 — Inline range-anchored comments (Phase 6 complete).** In the editor a reviewer can
+  **select text and comment on it**; the comment stores the range + quoted passage and the anchored
+  span is **highlighted in the document**. Completes FR-SUP-4 and the Phase 6 MVP (FR-SUP-1..9).
+- **Phase 6 — Supervisor inbox.** A **Reviews** page (top-nav) lists a reviewer's pending requests
+  across all their students and opens the document in one click (FR-SUP-7).
+- **Phase 6 (first increment) — Supervisor review loop.** Submit a document/section for review by a
+  project member, who leaves **resolvable inline comments** and records a **decision**
+  (APPROVED / NEEDS_REVISION / REJECTED) with a summary; the request moves through its status and
+  **decision history is preserved** across revision rounds, with a **resubmit** path. A reviewer
+  **inbox** lists their pending requests. New `review` module (Clean Architecture) + Flyway `V11`
+  (`review_requests`/`review_comments`/`review_decisions`); a **Reviews** drawer in the document
+  editor. (FR-SUP-3/4/5/6/7/8. Magic-link external reviewers + notifications follow next.)
+
+### Added
 - **Phase 5 — RAG over your papers + literature matrix (Phase 5 complete).** *Ask your papers*: a
   question is embedded (Ollama `nomic-embed-text`), matched against the project's chunked+embedded
   corpus (**pgvector**, Flyway `V10`), and answered by the model **grounded only in the retrieved

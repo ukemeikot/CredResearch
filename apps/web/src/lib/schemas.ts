@@ -294,6 +294,140 @@ export const ReferenceListSchema = z.object({
 export type Reference = z.infer<typeof ReferenceSchema>;
 export type ReferenceList = z.infer<typeof ReferenceListSchema>;
 
+// ── Reviews (Phase 6) ────────────────────────────────────────────────────────
+export const ReviewRequestSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  documentSectionId: z.string().nullable(),
+  requestedBy: z.string(),
+  reviewerUserId: z.string().nullable(),
+  reviewerEmail: z.string().nullable(),
+  status: z.string(),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+  decidedAt: z.string().nullable(),
+});
+export type ReviewRequest = z.infer<typeof ReviewRequestSchema>;
+
+export const ReviewCommentSchema = z.object({
+  id: z.string(),
+  reviewRequestId: z.string(),
+  authorUserId: z.string().nullable(),
+  authorLabel: z.string().nullable(),
+  anchorStart: z.number().nullable(),
+  anchorEnd: z.number().nullable(),
+  quote: z.string().nullable(),
+  body: z.string(),
+  resolved: z.boolean(),
+  createdAt: z.string(),
+});
+export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
+
+export const ReviewDecisionSchema = z.object({
+  id: z.string(),
+  reviewRequestId: z.string(),
+  decision: z.string(),
+  summary: z.string().nullable(),
+  decidedBy: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type ReviewDecision = z.infer<typeof ReviewDecisionSchema>;
+
+export const ReviewThreadSchema = z.object({
+  request: ReviewRequestSchema,
+  comments: z.array(ReviewCommentSchema),
+  decisions: z.array(ReviewDecisionSchema),
+});
+export type ReviewThread = z.infer<typeof ReviewThreadSchema>;
+
+export const ExternalReviewSchema = z.object({
+  request: ReviewRequestSchema,
+  sectionHeading: z.string().nullable(),
+  sectionContent: z.string().nullable(),
+  comments: z.array(ReviewCommentSchema),
+  decisions: z.array(ReviewDecisionSchema),
+});
+export type ExternalReview = z.infer<typeof ExternalReviewSchema>;
+
+// ── Questionnaires / survey (Phase 7) ────────────────────────────────────────
+export const QuestionnaireSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  title: z.string(),
+  consentText: z.string().nullable(),
+  status: z.string(),
+  createdAt: z.string(),
+});
+export type Questionnaire = z.infer<typeof QuestionnaireSchema>;
+
+export const QuestionViewSchema = z.object({
+  id: z.string(),
+  orderIndex: z.number().default(0),
+  type: z.string(),
+  prompt: z.string(),
+  options: z.any().nullable().optional(),
+  required: z.boolean(),
+});
+export type QuestionView = z.infer<typeof QuestionViewSchema>;
+
+export const QuestionnaireViewSchema = z.object({
+  questionnaire: QuestionnaireSchema,
+  questions: z.array(QuestionViewSchema),
+});
+export type QuestionnaireView = z.infer<typeof QuestionnaireViewSchema>;
+
+export const PublishTokenSchema = z.object({ token: z.string() });
+
+export const SurveyQuestionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  prompt: z.string(),
+  options: z.any().nullable().optional(),
+  required: z.boolean(),
+});
+export const SurveyViewSchema = z.object({
+  title: z.string(),
+  consentText: z.string().nullable(),
+  questions: z.array(SurveyQuestionSchema),
+});
+export type SurveyView = z.infer<typeof SurveyViewSchema>;
+export type SurveyQuestion = z.infer<typeof SurveyQuestionSchema>;
+
+export const ResponseRowSchema = z.object({
+  response: z.object({
+    id: z.string(),
+    surveyLinkId: z.string(),
+    consentGiven: z.boolean(),
+    submittedAt: z.string(),
+  }),
+  answers: z.array(z.object({
+    id: z.string(),
+    surveyResponseId: z.string(),
+    questionId: z.string(),
+    valueJson: z.string().nullable(),
+  })),
+});
+export type ResponseRow = z.infer<typeof ResponseRowSchema>;
+
+// ── Data analysis (Phase 8) ──────────────────────────────────────────────────
+export const AnalysisColumnSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  missing: z.number().default(0),
+  stats: z.any().optional(),
+  frequencies: z.array(z.object({ value: z.string(), count: z.number(), pct: z.number() })).optional(),
+});
+export const AnalysisResultSchema = z.object({
+  row_count: z.number().default(0),
+  column_count: z.number().default(0),
+  columns: z.array(AnalysisColumnSchema).default([]),
+  error: z.string().optional(),
+});
+export type AnalysisColumn = z.infer<typeof AnalysisColumnSchema>;
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
+export const InterpretSchema = z.object({ interpretation: z.string().default("") });
+export const Chapter4Schema = z.object({ draft: z.string().default("") });
+
 // ── Small ad-hoc response shapes ─────────────────────────────────────────────
 export const MessageSchema = z.object({ message: z.string() });
 export const RegisterResponseSchema = z.object({ userId: z.string(), message: z.string() });

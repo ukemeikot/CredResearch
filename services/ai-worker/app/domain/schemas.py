@@ -153,3 +153,35 @@ class RagAnswerResponse(_Lenient):
     answer: str = ""
     used_sources: list[str] = Field(default_factory=list)
     grounded: bool = True
+
+
+# ── Questionnaire generation (Phase 7, FR-Q) ─────────────────────────────────
+class QuestionnaireGenRequest(BaseModel):
+    topic: str = ""
+    objectives: list[str] = Field(default_factory=list)
+
+
+class GenQuestion(_Lenient):
+    type: str = "TEXT"
+    prompt: str = ""
+    options: list[str] = Field(default_factory=list)
+    required: bool = False
+
+
+class QuestionnaireGenResponse(_Lenient):
+    title: str = ""
+    questions: list[GenQuestion] = Field(default_factory=list)
+
+
+# ── Grounded data interpretation (Phase 8, FR-DATA-5/6) ──────────────────────
+class InterpretRequest(BaseModel):
+    topic: str = ""
+    stats: dict = Field(default_factory=dict)   # the pandas-computed analysis (source of truth)
+
+
+class InterpretResponse(_Lenient):
+    interpretation: str = ""
+
+
+class Chapter4Response(_Lenient):
+    draft: str = ""

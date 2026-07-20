@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { DocumentsPanel } from "@/features/document/components/documents-panel";
 import { ReferencesPanel } from "@/features/paper/components/references-panel";
+import { QuestionnairesPanel } from "@/features/questionnaire/components/questionnaires-panel";
+import { DataAnalysisPanel } from "@/features/analysis/components/data-analysis-panel";
 import { useMe } from "@/features/user/api/use-me";
 import type { ProjectMemberRole } from "@/lib/api";
 import { useProject } from "../api/use-projects";
@@ -123,6 +125,8 @@ export function ProjectWorkspace({ id }: { id: string }) {
           <StatusControl id={id} status={project.status} canManage={canManage} />
           <DocumentsPanel projectId={id} canCreate={isOwner} />
           <ReferencesPanel projectId={id} />
+          <QuestionnairesPanel projectId={id} />
+          <DataAnalysisPanel projectId={id} projectTitle={project.title} />
           <MilestonesPanel id={id} milestones={milestones} canManage={canManage} />
         </div>
         <div className="space-y-6">
