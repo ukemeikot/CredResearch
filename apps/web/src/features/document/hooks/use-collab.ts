@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-store";
 
 /**
@@ -58,7 +59,9 @@ const CONNECT_TIMEOUT_MS = 8000;
 export function useCollab(docId: string, sectionId: string, userName: string, userId: string): CollabState {
   const endpoint = useMemo(() => collabEndpoint(), []);
   const enabled = !!endpoint;
-  const token = useAuth((s) => s.accessToken);
+  // We can't read the HttpOnly access-token cookie from JS, so we mint a short-lived token for the
+  // WS handshake (below). Gate on the presence of an authenticated user instead.
+  const authed = useAuth((s) => !!s.user);
   const user = useMemo(() => ({ name: userName || "Anonymous", color: colorFor(userId || sectionId) }), [
     userName,
     userId,
@@ -75,76 +78,88 @@ export function useCollab(docId: string, sectionId: string, userName: string, us
   const clientIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!enabled || !endpoint || !token) return;
+    if (!enabled || !endpoint || !authed) return;
     setConnected(false);
     setUnavailable(false);
     setSynced(false);
-    const doc = new Y.Doc();
-    clientIdRef.current = doc.clientID;
-    const p = new HocuspocusProvider({
-      url: endpoint,
-      name: `${docId}:${sectionId}`,
-      document: doc,
-      token,
-    });
-    setYdoc(doc);
-    setProvider(p);
 
-    // Give up (fall back to plain autosave) if we never connect — e.g. no collab server here.
+    let cancelled = false;
+    let p: HocuspocusProvider | null = null;
+    let doc: Y.Doc | null = null;
+    let onChange: (() => void) | null = null;
     const timeout = setTimeout(() => setUnavailable(true), CONNECT_TIMEOUT_MS);
-    p.on("synced", () => setSynced(true));
-    p.on("status", ({ status }: { status: string }) => {
-      if (status === "connected") {
-        clearTimeout(timeout); // connected in time → never fall back
-        setConnected(true);
-        setUnavailable(false);
-      } else {
-        setConnected(false);
-      }
-    });
 
-    const awareness = p.awareness;
-    if (awareness) {
-      awareness.setLocalStateField("user", user);
-      const onChange = () => {
-        const states = awareness.getStates();
-        const ids = [...states.keys()];
-        const min = ids.length ? Math.min(...ids) : doc.clientID;
-        setIsLeader(doc.clientID === min);
-        setPeers(
-          ids
-            .filter((id) => id !== doc.clientID)
-            .map((id) => {
-              const u = (states.get(id)?.user ?? {}) as { name?: string; color?: string };
-              return { clientId: id, name: u.name ?? "Anonymous", color: u.color ?? "#94a3b8" };
-            }),
-        );
-      };
-      awareness.on("change", onChange);
-      onChange();
-      return () => {
-        clearTimeout(timeout);
-        awareness.off("change", onChange);
-        p.destroy();
-        doc.destroy();
-        setProvider(null);
-        setYdoc(null);
-        setSynced(false);
-        setIsLeader(false);
-        setConnected(false);
-        setPeers([]);
-      };
-    }
+    // Mint a short-lived access token (cookie-authenticated) for the WS handshake, then connect.
+    (async () => {
+      let token: string;
+      try {
+        token = (await api.sessionToken()).token;
+      } catch {
+        if (!cancelled) setUnavailable(true);
+        return;
+      }
+      if (cancelled) return;
+
+      doc = new Y.Doc();
+      clientIdRef.current = doc.clientID;
+      p = new HocuspocusProvider({
+        url: endpoint,
+        name: `${docId}:${sectionId}`,
+        document: doc,
+        token,
+      });
+      setYdoc(doc);
+      setProvider(p);
+
+      p.on("synced", () => setSynced(true));
+      p.on("status", ({ status }: { status: string }) => {
+        if (status === "connected") {
+          clearTimeout(timeout); // connected in time → never fall back
+          setConnected(true);
+          setUnavailable(false);
+        } else {
+          setConnected(false);
+        }
+      });
+
+      const awareness = p.awareness;
+      if (awareness) {
+        awareness.setLocalStateField("user", user);
+        const localDoc = doc;
+        onChange = () => {
+          const states = awareness.getStates();
+          const ids = [...states.keys()];
+          const min = ids.length ? Math.min(...ids) : localDoc.clientID;
+          setIsLeader(localDoc.clientID === min);
+          setPeers(
+            ids
+              .filter((id) => id !== localDoc.clientID)
+              .map((id) => {
+                const u = (states.get(id)?.user ?? {}) as { name?: string; color?: string };
+                return { clientId: id, name: u.name ?? "Anonymous", color: u.color ?? "#94a3b8" };
+              }),
+          );
+        };
+        awareness.on("change", onChange);
+        onChange();
+      }
+    })();
 
     return () => {
+      cancelled = true;
       clearTimeout(timeout);
-      p.destroy();
-      doc.destroy();
+      if (p?.awareness && onChange) p.awareness.off("change", onChange);
+      p?.destroy();
+      doc?.destroy();
       setProvider(null);
       setYdoc(null);
+      setSynced(false);
+      setIsLeader(false);
+      setConnected(false);
+      setPeers([]);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, endpoint, token, docId, sectionId]);
+  }, [enabled, endpoint, authed, docId, sectionId]);
 
   return { enabled, unavailable, ydoc, provider, isLeader, peers, synced, connected, user };
 }

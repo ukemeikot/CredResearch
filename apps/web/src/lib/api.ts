@@ -16,15 +16,16 @@ export class ApiError extends Error {
   }
 }
 
-/** Exchange the refresh token for a fresh session. Returns true on success. */
+/**
+ * Exchange the (HttpOnly cookie) refresh token for a fresh session. The browser sends the
+ * `cr_refresh` cookie automatically, so there is no token to read or send here. Returns true on
+ * success; refreshes the stored user summary from the response.
+ */
 async function tryRefresh(): Promise<boolean> {
-  const refreshToken = useAuth.getState().refreshToken;
-  if (!refreshToken) return false;
   try {
     const res = await fetch(`${BASE_URL}/auth/refresh`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) {
@@ -32,11 +33,7 @@ async function tryRefresh(): Promise<boolean> {
       return false;
     }
     const data = (await res.json()) as TokenResponse;
-    useAuth.getState().setSession({
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      user: data.user,
-    });
+    useAuth.getState().setUser(data.user);
     return true;
   } catch {
     useAuth.getState().clear();
@@ -71,14 +68,13 @@ async function request<T>(
   schema?: z.ZodType<T>,
   retry = true,
 ): Promise<T> {
-  const token = useAuth.getState().accessToken;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init.headers ?? {}),
     },
+    credentials: "include",
     cache: "no-store",
   });
 
@@ -109,9 +105,8 @@ async function request<T>(
 
 /** Fetch a binary file with auth (+ one refresh-retry) and trigger a browser download. */
 async function downloadFile(path: string, fallbackName: string, retry = true): Promise<void> {
-  const token = useAuth.getState().accessToken;
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: "include",
     cache: "no-store",
   });
   if (res.status === 401 && retry) {
@@ -138,11 +133,10 @@ async function downloadFile(path: string, fallbackName: string, retry = true): P
 
 /** POST a multipart form (file upload) with auth (+ one refresh-retry) and validate the response. */
 async function upload<T>(path: string, form: FormData, schema: z.ZodType<T>, retry = true): Promise<T> {
-  const token = useAuth.getState().accessToken;
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
     // NB: no Content-Type — the browser sets multipart/form-data with the boundary.
-    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    credentials: "include",
     body: form,
     cache: "no-store",
   });
@@ -225,8 +219,10 @@ export const api = {
     request("/auth/register", json("POST", b), S.RegisterResponseSchema),
   login: (b: { email: string; password: string; device?: string }) =>
     request("/auth/login", json("POST", b), S.TokenResponseSchema),
-  logout: (refreshToken: string) => request<void>("/auth/logout", json("POST", { refreshToken })),
+  logout: () => request<void>("/auth/logout", json("POST")),
   logoutAll: () => request<void>("/auth/logout-all", json("POST")),
+  /** Mint a short-lived access token for the collab WebSocket (which can't send the HttpOnly cookie). */
+  sessionToken: () => request<{ token: string }>("/auth/session-token"),
   verifyEmail: (token: string) =>
     request("/auth/verify-email", json("POST", { token }), S.MessageSchema),
   forgotPassword: (email: string) =>

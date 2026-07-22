@@ -1,6 +1,8 @@
 package africa.credresearch.modules.identity.interfaces.rest;
 
 import africa.credresearch.common.security.AppUserPrincipal;
+import africa.credresearch.common.security.AuthCookies;
+import africa.credresearch.common.security.JwtService;
 import africa.credresearch.modules.identity.application.AuthService;
 import africa.credresearch.modules.identity.application.dto.AuthTokens;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -33,9 +36,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthCookies cookies;
+    private final JwtService jwtService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuthCookies cookies, JwtService jwtService) {
         this.authService = authService;
+        this.cookies = cookies;
+        this.jwtService = jwtService;
     }
 
     // ── Request DTOs ─────────────────────────────────────────────────────────
@@ -54,11 +61,13 @@ public class AuthController {
             String device) {}
 
     public record RefreshRequest(
-            @Schema(description = "The opaque refresh token from login") @NotBlank String refreshToken,
+            @Schema(description = "The opaque refresh token from login. Optional — the browser "
+                    + "sends it automatically via the HttpOnly cr_refresh cookie.") String refreshToken,
             String device) {}
 
     public record LogoutRequest(
-            @Schema(description = "Refresh token to revoke") @NotBlank String refreshToken) {}
+            @Schema(description = "Refresh token to revoke. Optional — read from the cr_refresh "
+                    + "cookie when absent.") String refreshToken) {}
 
     public record VerifyEmailRequest(
             @Schema(description = "Token from the verification email link") @NotBlank String token) {}
@@ -109,9 +118,12 @@ public class AuthController {
             @ApiResponse(responseCode = "403", description = "Account suspended", content = @io.swagger.v3.oas.annotations.media.Content()),
             @ApiResponse(responseCode = "429", description = "Too many failed attempts (throttled)", content = @io.swagger.v3.oas.annotations.media.Content())
     })
-    public TokenResponse login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
-        return TokenResponse.from(authService.login(
-                req.email(), req.password(), req.device(), http.getHeader("User-Agent"), clientIp(http)));
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
+        AuthTokens tokens = authService.login(
+                req.email(), req.password(), req.device(), http.getHeader("User-Agent"), clientIp(http));
+        var builder = ResponseEntity.ok();
+        cookies.write(builder, tokens.accessToken(), tokens.refreshToken());
+        return builder.body(TokenResponse.from(tokens));
     }
 
     @PostMapping("/refresh")
@@ -123,17 +135,54 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "New token pair issued"),
             @ApiResponse(responseCode = "401", description = "Refresh token invalid, expired, or already used", content = @io.swagger.v3.oas.annotations.media.Content())
     })
-    public TokenResponse refresh(@Valid @RequestBody RefreshRequest req, HttpServletRequest http) {
-        return TokenResponse.from(authService.refresh(req.refreshToken(), req.device(), http.getHeader("User-Agent")));
+    public ResponseEntity<TokenResponse> refresh(
+            @RequestBody(required = false) RefreshRequest req, HttpServletRequest http) {
+        // Cookie first (browser session), then request body (API clients / legacy).
+        String presented = AuthCookies.read(http, AuthCookies.REFRESH);
+        if (presented == null && req != null) {
+            presented = req.refreshToken();
+        }
+        if (presented == null || presented.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String device = req != null ? req.device() : null;
+        AuthTokens tokens = authService.refresh(presented, device, http.getHeader("User-Agent"));
+        var builder = ResponseEntity.ok();
+        cookies.write(builder, tokens.accessToken(), tokens.refreshToken());
+        return builder.body(TokenResponse.from(tokens));
     }
 
     @PostMapping("/logout")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @SecurityRequirements
     @Operation(summary = "Log out (revoke one refresh token)", description = "Idempotent.")
     @ApiResponse(responseCode = "204", description = "Session revoked (or already invalid)")
-    public void logout(@Valid @RequestBody LogoutRequest req) {
-        authService.logout(req.refreshToken());
+    public ResponseEntity<Void> logout(@RequestBody(required = false) LogoutRequest req,
+                                       HttpServletRequest http) {
+        String presented = AuthCookies.read(http, AuthCookies.REFRESH);
+        if (presented == null && req != null) {
+            presented = req.refreshToken();
+        }
+        if (presented != null && !presented.isBlank()) {
+            authService.logout(presented);
+        }
+        var builder = ResponseEntity.noContent();
+        cookies.clear(builder);
+        return builder.build();
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/session-token")
+    @Operation(summary = "Mint a short-lived access token for the current session",
+            description = "For clients that cannot send the HttpOnly cookie themselves — notably the "
+                    + "Yjs collaboration WebSocket handshake. Authenticated via the cr_access cookie.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Fresh access token issued"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated", content = @io.swagger.v3.oas.annotations.media.Content())
+    })
+    public ResponseEntity<Map<String, Object>> sessionToken(@AuthenticationPrincipal AppUserPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(Map.of("token", jwtService.issueAccessToken(principal)));
     }
 
     @PostMapping("/logout-all")

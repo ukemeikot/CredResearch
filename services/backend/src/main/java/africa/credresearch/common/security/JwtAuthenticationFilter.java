@@ -30,9 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
+        // Prefer the Authorization header (API clients / legacy), fall back to the HttpOnly
+        // `cr_access` cookie set by the browser session.
         String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        String token = (header != null && header.startsWith("Bearer "))
+                ? header.substring(7)
+                : AuthCookies.read(request, AuthCookies.ACCESS);
+        if (token != null && !token.isBlank()) {
             try {
                 AppUserPrincipal principal = jwtService.parse(token);
                 List<SimpleGrantedAuthority> authorities = principal.roles().stream()

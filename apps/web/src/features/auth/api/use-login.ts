@@ -6,10 +6,10 @@ import { useAuth } from "@/lib/auth-store";
 
 /** Login mutation: authenticates and stores the session. */
 export function useLogin() {
-  const setSession = useAuth((s) => s.setSession);
+  const setUser = useAuth((s) => s.setUser);
   return useMutation({
     mutationFn: api.login,
     onSuccess: (res) =>
-      setSession({ accessToken: res.accessToken, refreshToken: res.refreshToken, user: res.user }),
+      setUser(res.user),
   });
 }
