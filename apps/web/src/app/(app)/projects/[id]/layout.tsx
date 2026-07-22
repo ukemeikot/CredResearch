@@ -40,16 +40,11 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   if (isDeep) return <>{children}</>;
 
   const activeSeg = parts[0] ?? "";
+  const project = query.data?.project;
 
-  if (query.isLoading) {
-    return (
-      <div className="grid place-items-center py-32">
-        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-slate-200 border-t-accent" />
-      </div>
-    );
-  }
-
-  if (query.isError || !query.data) {
+  // Only a genuine failure with no data at all blanks the page. A transient error while we still
+  // hold data keeps the shell (and sidebar) so it never flickers away.
+  if (!project && query.isError) {
     const status = query.error && "status" in query.error ? (query.error as { status: number }).status : 0;
     return (
       <div className="py-16">
@@ -74,32 +69,35 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     );
   }
 
-  const { project } = query.data;
+  // The sidebar depends only on the route (id + active segment), so it renders immediately and
+  // stays put while the project data loads. The Settings tab appears once ownership is known.
   const tabs = TABS.filter((t) => !("ownerOnly" in t && t.ownerOnly) || isOwner);
 
   return (
     <div>
       <BackLink />
 
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 flex flex-wrap items-center gap-3"
-      >
-        <h1 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">{project.title}</h1>
-        {project.level && (
-          <span className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[11px] uppercase tracking-wider text-slate-500">
-            {project.level}
-          </span>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        {project ? (
+          <>
+            <h1 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">{project.title}</h1>
+            {project.level && (
+              <span className="rounded-full border border-slate-200 px-2.5 py-0.5 text-[11px] uppercase tracking-wider text-slate-500">
+                {project.level}
+              </span>
+            )}
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${
+                STATUS_COLOR[project.status] ?? "text-slate-600 border-slate-200"
+              }`}
+            >
+              {formatStatus(project.status)}
+            </span>
+          </>
+        ) : (
+          <div className="h-8 w-56 animate-pulse rounded-lg bg-slate-100" />
         )}
-        <span
-          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${
-            STATUS_COLOR[project.status] ?? "text-slate-600 border-slate-200"
-          }`}
-        >
-          {formatStatus(project.status)}
-        </span>
-      </motion.div>
+      </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[220px_1fr]">
         {/* Sidebar */}
@@ -128,15 +126,22 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         </nav>
 
         {/* Section content */}
-        <motion.div
-          key={activeSeg}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="min-w-0"
-        >
-          {children}
-        </motion.div>
+        <div className="min-w-0">
+          {project ? (
+            <motion.div
+              key={activeSeg}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {children}
+            </motion.div>
+          ) : (
+            <div className="grid place-items-center py-24">
+              <div className="h-9 w-9 animate-spin-slow rounded-full border-2 border-slate-200 border-t-accent" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
