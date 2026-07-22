@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM gradle:8.10-jdk21 AS build
+FROM gradle:9.6-jdk21 AS build
 WORKDIR /app
 COPY . .
 # BuildKit cache mount keeps the Gradle dependency cache across image builds.
