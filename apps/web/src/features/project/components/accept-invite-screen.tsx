@@ -22,6 +22,9 @@ export function AcceptInviteScreen() {
   const [state, setState] = useState<State>("loading");
   const [message, setMessage] = useState("");
   const ran = useRef(false);
+  // Carry this exact accept URL through login/register so the user returns here and the
+  // invitation is accepted automatically (rather than landing on the dashboard, token lost).
+  const nextParam = encodeURIComponent(`/invite/accept?token=${token ?? ""}`);
 
   useEffect(() => {
     if (!hydrated || ran.current) return;
@@ -73,13 +76,14 @@ export function AcceptInviteScreen() {
             <>
               <h1 className="font-display text-2xl font-bold text-slate-900">You’re invited</h1>
               <p className="text-sm text-slate-500">
-                Sign in (or create an account with the invited email), then reopen this link to join the project.
+                Sign in (or create an account with the invited email) and you’ll be brought straight back here
+                to join the project.
               </p>
               <div className="flex w-full gap-3">
-                <Link href="/login" className="flex-1">
+                <Link href={`/login?next=${nextParam}`} className="flex-1">
                   <Button size="lg" className="w-full">Sign in</Button>
                 </Link>
-                <Link href="/register" className="flex-1">
+                <Link href={`/register?next=${nextParam}`} className="flex-1">
                   <Button variant="outline" size="lg" className="w-full">Register</Button>
                 </Link>
               </div>

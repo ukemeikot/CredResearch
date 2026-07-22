@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
@@ -13,8 +13,14 @@ import { PasswordField } from "@/components/ui/password-field";
 import { ApiError } from "@/lib/api";
 import { useLogin } from "../api/use-login";
 
+/** Only allow same-origin relative paths (avoids open-redirect via a crafted ?next=). */
+function safeNext(next: string | null): string {
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+}
+
 export function LoginScreen() {
   const router = useRouter();
+  const dest = safeNext(useSearchParams().get("next"));
   const login = useLogin();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +29,7 @@ export function LoginScreen() {
     e.preventDefault();
     try {
       await login.mutateAsync({ email, password });
-      router.push("/dashboard");
+      router.push(dest);
     } catch {
       /* error surfaced via login.error */
     }
@@ -70,7 +76,10 @@ export function LoginScreen() {
 
           <p className="mt-6 text-center text-sm text-slate-500">
             New here?{" "}
-            <Link href="/register" className="text-accent hover:text-accent-soft">
+            <Link
+              href={dest === "/dashboard" ? "/register" : `/register?next=${encodeURIComponent(dest)}`}
+              className="text-accent hover:text-accent-soft"
+            >
               Create an account
             </Link>
           </p>
