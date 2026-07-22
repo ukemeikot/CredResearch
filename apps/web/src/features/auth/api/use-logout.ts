@@ -13,9 +13,9 @@ import { useAuth } from "@/lib/auth-store";
 export function useLogout() {
   const qc = useQueryClient();
   return useCallback(async () => {
-    const { refreshToken, clear } = useAuth.getState();
+    const { clear } = useAuth.getState();
     try {
-      if (refreshToken) await api.logout(refreshToken);
+      await api.logout();
     } catch {
       /* ignore — revoke is best-effort */
     } finally {

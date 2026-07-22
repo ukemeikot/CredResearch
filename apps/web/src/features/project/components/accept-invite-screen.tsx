@@ -17,7 +17,7 @@ type State = "loading" | "needs-auth" | "accepting" | "success" | "error";
 export function AcceptInviteScreen() {
   const router = useRouter();
   const token = useSearchParams().get("token");
-  const { hydrated, accessToken } = useAuth();
+  const { hydrated, user } = useAuth();
   const accept = useAcceptInvite();
   const [state, setState] = useState<State>("loading");
   const [message, setMessage] = useState("");
@@ -30,7 +30,7 @@ export function AcceptInviteScreen() {
       setMessage("This invitation link is missing its token.");
       return;
     }
-    if (!accessToken) {
+    if (!user) {
       setState("needs-auth");
       return;
     }
@@ -46,7 +46,7 @@ export function AcceptInviteScreen() {
         setState("error");
         setMessage(e instanceof ApiError ? e.message : "Could not accept this invitation.");
       });
-  }, [hydrated, accessToken, token, accept, router]);
+  }, [hydrated, user, token, accept, router]);
 
   return (
     <main className="grid min-h-[100svh] place-items-center px-6 py-16">

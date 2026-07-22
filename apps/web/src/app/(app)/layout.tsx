@@ -19,13 +19,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const logout = useLogout();
-  const { accessToken, hydrated, user } = useAuth();
+  const { hydrated, user } = useAuth();
 
   useEffect(() => {
-    if (hydrated && !accessToken) router.replace("/login");
-  }, [hydrated, accessToken, router]);
+    if (hydrated && !user) router.replace("/login");
+  }, [hydrated, user, router]);
 
-  if (!hydrated || !accessToken) {
+  if (!hydrated || !user) {
     return (
       <div className="grid min-h-[100svh] place-items-center">
         <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-slate-200 border-t-accent" />

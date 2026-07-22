@@ -10,43 +10,34 @@ export interface SessionUser {
   plan: string;
 }
 
+/**
+ * Client-side session state. Access/refresh tokens are NO LONGER stored here — they live in
+ * HttpOnly cookies (set by the backend, unreadable by JS) so an XSS bug can't exfiltrate them.
+ * We keep only the non-sensitive user summary (id, roles, institution, plan) for gating + display;
+ * the cookies are the real proof of authentication.
+ */
 interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
   user: SessionUser | null;
   hydrated: boolean;
-  setSession: (t: { accessToken: string; refreshToken: string; user: SessionUser }) => void;
+  setUser: (user: SessionUser) => void;
   clear: () => void;
 }
 
 export const useAuth = create<AuthState>()(
   persist(
     (set) => ({
-      accessToken: null,
-      refreshToken: null,
       user: null,
       hydrated: false,
-      setSession: ({ accessToken, refreshToken, user }) =>
-        set({ accessToken, refreshToken, user }),
-      clear: () => set({ accessToken: null, refreshToken: null, user: null }),
+      setUser: (user) => set({ user }),
+      clear: () => set({ user: null }),
     }),
     {
       name: "credresearch-auth",
+      // Persist only the user summary — never tokens.
+      partialize: (s) => ({ user: s.user }),
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true;
       },
     },
   ),
 );
-
-/** Read token outside React (for the fetch client). */
-export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem("credresearch-auth");
-    if (!raw) return null;
-    return JSON.parse(raw)?.state?.accessToken ?? null;
-  } catch {
-    return null;
-  }
-}
