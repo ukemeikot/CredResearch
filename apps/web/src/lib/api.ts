@@ -255,6 +255,7 @@ export const api = {
   ) => request(`/projects/${id}`, json("PATCH", b), S.ProjectSummarySchema),
   transitionStatus: (id: string, status: ProjectStatus) =>
     request(`/projects/${id}/status`, json("POST", { status }), S.ProjectSummarySchema),
+  deleteProject: (id: string) => request<void>(`/projects/${id}`, json("DELETE")),
   addMember: (id: string, b: { userId: string; role: ProjectMemberRole }) =>
     request(`/projects/${id}/members`, json("POST", b), S.ProjectMemberSchema),
   removeMember: (id: string, userId: string) =>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { DocumentsPanel } from "@/features/document/components/documents-panel";
@@ -15,6 +15,7 @@ import type { ProjectMemberRole } from "@/lib/api";
 import { useProject } from "../api/use-projects";
 import { formatStatus, STATUS_COLOR } from "../model/project-status";
 import { ActivityFeed } from "./activity-feed";
+import { DeleteProjectModal } from "./delete-project-modal";
 import { EditProjectModal } from "./edit-project-modal";
 import { MembersPanel } from "./members-panel";
 import { MilestonesPanel } from "./milestones-panel";
@@ -25,6 +26,7 @@ export function ProjectWorkspace({ id }: { id: string }) {
   const me = useMe();
   const query = useProject(id);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // The caller's project-scoped role drives which controls are shown (the
   // backend enforces the same rules regardless).
@@ -95,9 +97,19 @@ export function ProjectWorkspace({ id }: { id: string }) {
           </span>
         </div>
         {isOwner && (
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil size={15} /> Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil size={15} /> Edit
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+              className="!text-rose-600 hover:!bg-rose-50"
+            >
+              <Trash2 size={15} /> Delete
+            </Button>
+          </div>
         )}
       </motion.div>
 
@@ -136,6 +148,7 @@ export function ProjectWorkspace({ id }: { id: string }) {
       </div>
 
       {isOwner && <EditProjectModal project={project} open={editOpen} onClose={() => setEditOpen(false)} />}
+      {isOwner && <DeleteProjectModal project={project} open={deleteOpen} onClose={() => setDeleteOpen(false)} />}
     </div>
   );
 }

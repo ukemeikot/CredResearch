@@ -69,6 +69,17 @@ export function useUpdateProject(id: string) {
   });
 }
 
+export function useDeleteProject(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteProject(id),
+    onSuccess: () => {
+      qc.setQueryData<ProjectSummary[]>(keys.all, (old) => old?.filter((p) => p.id !== id));
+      qc.removeQueries({ queryKey: keys.detail(id) });
+    },
+  });
+}
+
 export function useTransitionStatus(id: string) {
   const qc = useQueryClient();
   return useMutation({

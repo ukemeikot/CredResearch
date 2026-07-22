@@ -160,6 +160,20 @@ public class ProjectController {
                 id, req.title(), req.level(), req.abstractText(), req.departmentId()));
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a project",
+            description = "Permanently deletes the project and all of its data — documents, papers, "
+                    + "questionnaires, survey responses, reviews, AI-use ledger, members and activity. "
+                    + "Requires the OWNER project-role. This cannot be undone.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Project deleted"),
+            @ApiResponse(responseCode = "403", description = "Insufficient project role", content = @Content()),
+            @ApiResponse(responseCode = "404", description = "Project not found", content = @Content())
+    })
+    public void delete(@PathVariable UUID id) {
+        projectService.delete(id);
+    }
+
     @PostMapping("/{id}/members")
     @Operation(summary = "Add a member or (co-)supervisor",
             description = "Requires OWNER. Multiple SUPERVISORs (co-supervisors) are allowed (FR-PROJ-3).")

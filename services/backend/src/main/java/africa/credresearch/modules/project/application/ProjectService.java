@@ -28,17 +28,20 @@ public class ProjectService {
     private final StatusHistoryRepository statusHistory;
     private final ActivityService activityService;
     private final ProjectAccessGuard accessGuard;
+    private final ProjectDeletionService deletionService;
 
     public ProjectService(ProjectRepository projects,
                           ProjectMemberRepository members,
                           StatusHistoryRepository statusHistory,
                           ActivityService activityService,
-                          ProjectAccessGuard accessGuard) {
+                          ProjectAccessGuard accessGuard,
+                          ProjectDeletionService deletionService) {
         this.projects = projects;
         this.members = members;
         this.statusHistory = statusHistory;
         this.activityService = activityService;
         this.accessGuard = accessGuard;
+        this.deletionService = deletionService;
     }
 
     /** Creates a project owned by the caller and seeds an OWNER membership (FR-PROJ-1/2). */
@@ -78,6 +81,16 @@ public class ProjectService {
         projects.update(id, ctx.institutionId(), title, level, abstractText, departmentId, ctx.userId());
         activityService.record(id, ctx.userId(), "PROJECT_UPDATED", Map.of());
         return projects.findByIdAndInstitution(id, ctx.institutionId()).orElseThrow();
+    }
+
+    /**
+     * Permanently deletes the project and all of its data. Requires the OWNER project-role (or
+     * platform admin); the cascade runs in one transaction (see {@link ProjectDeletionService}).
+     */
+    @Transactional
+    public void delete(UUID id) {
+        accessGuard.requireRole(id, ProjectMemberRole.OWNER);
+        deletionService.deleteCascade(id);
     }
 
     /**
