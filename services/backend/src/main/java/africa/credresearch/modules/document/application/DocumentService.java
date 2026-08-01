@@ -15,6 +15,7 @@ import africa.credresearch.modules.document.domain.port.DocumentVersionRepositor
 import africa.credresearch.modules.project.application.ProjectAccessGuard;
 import africa.credresearch.modules.project.domain.ProjectMemberRole;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -59,6 +60,41 @@ public class DocumentService {
                         s.chapter(), s.heading(), null, null, 1))
                 .toList();
         sections.createAll(seeded);
+        return new DocumentDetail(doc, sections.findByDocument(doc.id()));
+    }
+
+    /**
+     * Creates a document from an uploaded file already converted by the worker to ProseMirror
+     * ({title, sections:[{heading, content}]}). Requires OWNER. The template supplies formatting
+     * rules for later export; its sections are not seeded — the imported sections are used instead.
+     */
+    @Transactional
+    public DocumentDetail importDocument(UUID projectId, UUID templateId, String title, JsonNode worker) {
+        projectAccess.requireRole(projectId, ProjectMemberRole.OWNER);
+        TenantContext ctx = TenantContextHolder.require();
+        templates.get(templateId); // enforce template visibility/existence for the FK
+        String docTitle = (title != null && !title.isBlank())
+                ? title.trim()
+                : (worker != null && worker.hasNonNull("title") ? worker.get("title").asText() : "Imported document");
+        Document doc = documents.create(
+                new Document(null, projectId, templateId, docTitle, "DRAFT"), ctx.userId());
+
+        List<DocumentSection> toCreate = new ArrayList<>();
+        JsonNode secs = worker == null ? null : worker.get("sections");
+        int order = 0;
+        if (secs != null && secs.isArray()) {
+            for (JsonNode s : secs) {
+                String heading = s.path("heading").asText("Section");
+                JsonNode content = s.get("content");
+                String contentStr = (content == null || content.isNull()) ? null : content.toString();
+                String text = content == null ? null : ProseMirrorText.flatten(content);
+                toCreate.add(new DocumentSection(null, doc.id(), order++, null, heading, contentStr, text, 1));
+            }
+        }
+        if (toCreate.isEmpty()) {
+            toCreate.add(new DocumentSection(null, doc.id(), 0, null, "Imported content", null, null, 1));
+        }
+        sections.createAll(toCreate);
         return new DocumentDetail(doc, sections.findByDocument(doc.id()));
     }
 

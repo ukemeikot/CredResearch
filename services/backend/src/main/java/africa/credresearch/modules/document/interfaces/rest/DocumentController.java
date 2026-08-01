@@ -1,8 +1,10 @@
 package africa.credresearch.modules.document.interfaces.rest;
 
 import africa.credresearch.modules.document.application.BundleService;
+import africa.credresearch.modules.document.application.DocumentAssetService;
 import africa.credresearch.modules.document.application.DocumentExportService;
 import africa.credresearch.modules.document.application.DocumentService;
+import africa.credresearch.modules.document.infrastructure.DocumentImportClient;
 import africa.credresearch.modules.document.domain.model.Document;
 import africa.credresearch.modules.document.domain.model.DocumentDetail;
 import africa.credresearch.modules.document.domain.model.DocumentSection;
@@ -30,6 +32,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/documents")
@@ -42,13 +49,18 @@ public class DocumentController {
     private final DocumentExportService exportService;
     private final BundleService bundleService;
     private final ObjectMapper objectMapper;
+    private final DocumentImportClient importClient;
+    private final DocumentAssetService assets;
 
     public DocumentController(DocumentService service, DocumentExportService exportService,
-                              BundleService bundleService, ObjectMapper objectMapper) {
+                              BundleService bundleService, ObjectMapper objectMapper,
+                              DocumentImportClient importClient, DocumentAssetService assets) {
         this.service = service;
         this.exportService = exportService;
         this.bundleService = bundleService;
         this.objectMapper = objectMapper;
+        this.importClient = importClient;
+        this.assets = assets;
     }
 
     // ── DTOs ─────────────────────────────────────────────────────────────────
@@ -88,10 +100,53 @@ public class DocumentController {
         return toDetail(service.createFromTemplate(req.projectId(), req.templateId(), req.title()));
     }
 
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Import an existing .docx/.pdf as an editable document",
+            description = "Converts an uploaded Word or PDF file into a document with editable "
+                    + "sections (headings + formatting preserved for .docx). Requires OWNER.")
+    public DocumentDetailResponse importDocument(@RequestParam("projectId") UUID projectId,
+                                                 @RequestParam("templateId") UUID templateId,
+                                                 @RequestParam(value = "title", required = false) String title,
+                                                 @RequestParam("file") MultipartFile file) {
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (java.io.IOException e) {
+            throw africa.credresearch.common.error.ApiException.badRequest("UPLOAD_FAILED", "Could not read the upload.");
+        }
+        JsonNode converted = importClient.convert(file.getOriginalFilename(), bytes);
+        return toDetail(service.importDocument(projectId, templateId, title, converted));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get a document with its sections")
     public DocumentDetailResponse get(@PathVariable UUID id) {
         return toDetail(service.get(id));
+    }
+
+    @PostMapping(value = "/{id}/assets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload an image/drawing used in the document",
+            description = "Stores an image (or an in-app drawing rendered to PNG) and returns a URL "
+                    + "to embed in the editor. Any project member may upload.")
+    public Map<String, String> uploadAsset(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (java.io.IOException e) {
+            throw africa.credresearch.common.error.ApiException.badRequest("UPLOAD_FAILED", "Could not read the upload.");
+        }
+        UUID assetId = assets.save(id, file.getContentType(), bytes);
+        return Map.of("id", assetId.toString(), "url", "/api/v1/documents/" + id + "/assets/" + assetId);
+    }
+
+    @GetMapping("/{id}/assets/{assetId}")
+    @Operation(summary = "Serve a document image/drawing")
+    public ResponseEntity<byte[]> getAsset(@PathVariable UUID id, @PathVariable UUID assetId) {
+        DocumentAssetService.Asset a = assets.load(id, assetId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, a.mimeType())
+                .header(HttpHeaders.CACHE_CONTROL, "private, max-age=31536000, immutable")
+                .body(a.bytes());
     }
 
     @GetMapping("/{id}/sections/{sectionId}")

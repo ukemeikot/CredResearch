@@ -53,6 +53,8 @@ public class ProjectDeletionService {
                 + "WHERE d.project_id = ?)", projectId);
         jdbc.update("DELETE FROM document_sections WHERE document_id IN "
                 + "(SELECT id FROM documents WHERE project_id = ?)", projectId);
+        jdbc.update("DELETE FROM document_assets WHERE document_id IN "
+                + "(SELECT id FROM documents WHERE project_id = ?)", projectId);
         jdbc.update("DELETE FROM ai_requests WHERE project_id = ?", projectId);
         jdbc.update("DELETE FROM documents WHERE project_id = ?", projectId);
 

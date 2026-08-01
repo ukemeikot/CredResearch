@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.interfaces.routers import ai, analysis, export, health, papers, similarity
+from app.interfaces.routers import import_router
 
 
 def create_app() -> FastAPI:
@@ -13,6 +14,7 @@ def create_app() -> FastAPI:
     app.include_router(papers.router)
     app.include_router(analysis.router)
     app.include_router(similarity.router)
+    app.include_router(import_router.router)
     return app
 
 

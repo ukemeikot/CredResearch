@@ -47,6 +47,21 @@ export function useCreateDocument(projectId: string) {
   });
 }
 
+export function useImportDocument(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (b: { templateId: string; title?: string; file: File }) =>
+      api.importDocument({ projectId, ...b }),
+    onSuccess: (detail: DocumentDetail) => {
+      qc.setQueryData<DocumentSummary[]>(keys.byProject(projectId), (old) => [
+        detail.document,
+        ...(old ?? []),
+      ]);
+      qc.setQueryData(keys.doc(detail.document.id), detail);
+    },
+  });
+}
+
 export function useDocument(id: string) {
   return useQuery({
     queryKey: keys.doc(id),

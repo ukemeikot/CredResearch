@@ -330,6 +330,19 @@ export const api = {
     request(`/documents?projectId=${projectId}`, undefined, z.array(S.DocumentSummarySchema)),
   createDocument: (b: { projectId: string; templateId: string; title?: string }) =>
     request("/documents", json("POST", b), S.DocumentDetailSchema),
+  importDocument: (b: { projectId: string; templateId: string; title?: string; file: File }) => {
+    const form = new FormData();
+    form.append("projectId", b.projectId);
+    form.append("templateId", b.templateId);
+    if (b.title) form.append("title", b.title);
+    form.append("file", b.file);
+    return upload("/documents/import", form, S.DocumentDetailSchema);
+  },
+  uploadDocAsset: (docId: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return upload(`/documents/${docId}/assets`, form, z.object({ id: z.string(), url: z.string() }));
+  },
   getDocument: (id: string) => request(`/documents/${id}`, undefined, S.DocumentDetailSchema),
   getSection: (docId: string, sectionId: string) =>
     request(`/documents/${docId}/sections/${sectionId}`, undefined, S.DocSectionSchema),

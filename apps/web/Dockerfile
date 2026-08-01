@@ -3,8 +3,10 @@
 # v11 build-approval gate; Debian slim gives reliable sharp prebuilt binaries.
 FROM node:22-slim AS deps
 WORKDIR /app
-COPY package.json ./
-RUN npm install --no-audit --no-fund
+# Deterministic install from the committed lockfile — keeps all @tiptap/* on one resolved version
+# (a fresh `npm install` from ranges can split core vs an extension across a minor and break the build).
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 FROM node:22-slim AS build
 WORKDIR /app

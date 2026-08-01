@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FileText, Plus } from "lucide-react";
+import { FileText, FileUp, Plus } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { useProjectDocuments } from "../api/use-documents";
 import { CreateDocumentModal } from "./create-document-modal";
+import { ImportDocumentModal } from "./import-document-modal";
 
 /** Documents for a project, shown in the project workspace. Owners can create from a template. */
 export function DocumentsPanel({ projectId, canCreate }: { projectId: string; canCreate: boolean }) {
   const docs = useProjectDocuments(projectId);
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const list = docs.data ?? [];
 
   return (
@@ -18,12 +20,20 @@ export function DocumentsPanel({ projectId, canCreate }: { projectId: string; ca
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Documents</p>
         {canCreate && (
-          <button
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-soft"
-          >
-            <Plus size={14} /> New
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setImportOpen(true)}
+              className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-soft"
+            >
+              <FileUp size={14} /> Import
+            </button>
+            <button
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-soft"
+            >
+              <Plus size={14} /> New
+            </button>
+          </div>
         )}
       </div>
 
@@ -55,6 +65,9 @@ export function DocumentsPanel({ projectId, canCreate }: { projectId: string; ca
       )}
 
       {canCreate && <CreateDocumentModal projectId={projectId} open={open} onClose={() => setOpen(false)} />}
+      {canCreate && (
+        <ImportDocumentModal projectId={projectId} open={importOpen} onClose={() => setImportOpen(false)} />
+      )}
     </GlassCard>
   );
 }

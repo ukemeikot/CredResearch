@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import { Color, FontFamily, FontSize, TextStyle } from "@tiptap/extension-text-style";
+import Image from "@tiptap/extension-image";
 import {
   AlertTriangle,
   Ban,
@@ -15,6 +16,7 @@ import {
   Heading2,
   Heading3,
   History,
+  ImagePlus,
   Italic,
   List,
   ListOrdered,
@@ -22,12 +24,14 @@ import {
   Loader2,
   MessageSquarePlus,
   Palette,
+  PenLine,
   Quote,
   Sparkles,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ApiError, type DocSection, type Paper } from "@/lib/api";
+import { api, ApiError, type DocSection, type Paper } from "@/lib/api";
+import { SketchModal } from "./sketch-modal";
 import { useMe } from "@/features/user/api/use-me";
 import { usePapers } from "@/features/paper/api/use-papers";
 import { citationLabel, inTextCitation } from "@/features/paper/model/cite";
@@ -40,7 +44,14 @@ import { useCollab, type CollabPeer } from "../hooks/use-collab";
 const AUTOSAVE_DELAY = 1200;
 
 // Rich-text style marks: typeface, size, and colour (TextStyle is the shared base the others attach to).
-const STYLE_EXTENSIONS = [TextStyle, FontFamily, FontSize, Color];
+const STYLE_EXTENSIONS = [
+  TextStyle,
+  FontFamily,
+  FontSize,
+  Color,
+  // Embedded images + in-app drawings (both stored as document assets, referenced by URL).
+  Image.configure({ inline: false, HTMLAttributes: { class: "rounded-lg max-w-full my-3" } }),
+];
 
 const FONT_FAMILIES: { label: string; value: string }[] = [
   { label: "Default", value: "" },
@@ -145,6 +156,26 @@ export function SectionEditor({
     },
     [section.id, collabReady],
   );
+
+  // Images + drawings: upload as a document asset, then insert an image node referencing its URL.
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [sketchOpen, setSketchOpen] = useState(false);
+
+  function insertImageUrl(url: string) {
+    editor?.chain().focus().setImage({ src: url }).run();
+  }
+
+  async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    try {
+      const { url } = await api.uploadDocAsset(docId, file);
+      insertImageUrl(url);
+    } catch {
+      /* upload failed — surfaced by the asset endpoint; keep the editor usable */
+    }
+  }
 
   // Seed the shared Yjs doc from the persisted content the first time it's opened (empty fragment).
   // Only the leader seeds, so peers don't each insert a copy.
@@ -285,7 +316,26 @@ export function SectionEditor({
         </div>
       )}
 
-      {editor && <Toolbar editor={editor} />}
+      {editor && (
+        <Toolbar
+          editor={editor}
+          onImage={() => imageInputRef.current?.click()}
+          onDraw={() => setSketchOpen(true)}
+        />
+      )}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={onPickImage}
+      />
+      <SketchModal
+        docId={docId}
+        open={sketchOpen}
+        onClose={() => setSketchOpen(false)}
+        onInserted={insertImageUrl}
+      />
 
       <div className="mt-2">
         {!aiOpen ? (
@@ -447,7 +497,15 @@ function SaveIndicator({ status }: { status: string }) {
   return <span className={`inline-flex items-center gap-1.5 text-xs ${s.cls}`}>{s.icon} {s.text}</span>;
 }
 
-function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>> }) {
+function Toolbar({
+  editor,
+  onImage,
+  onDraw,
+}: {
+  editor: NonNullable<ReturnType<typeof useEditor>>;
+  onImage?: () => void;
+  onDraw?: () => void;
+}) {
   const btn = (active: boolean) =>
     `grid h-8 w-8 place-items-center rounded-lg border text-slate-600 transition-colors ${
       active ? "border-accent/60 bg-accent/10 text-slate-900" : "border-slate-200 hover:border-slate-300"
@@ -461,6 +519,16 @@ function Toolbar({ editor }: { editor: NonNullable<ReturnType<typeof useEditor>>
       <button type="button" className={btn(editor.isActive("bulletList"))} onClick={() => editor.chain().focus().toggleBulletList().run()} aria-label="Bullet list"><List size={15} /></button>
       <button type="button" className={btn(editor.isActive("orderedList"))} onClick={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Ordered list"><ListOrdered size={15} /></button>
       <button type="button" className={btn(editor.isActive("blockquote"))} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Quote"><Quote size={15} /></button>
+
+      <span className="mx-0.5 w-px self-stretch bg-slate-100" />
+
+      {/* Images + drawings */}
+      {onImage && (
+        <button type="button" className={btn(false)} onClick={onImage} aria-label="Insert image"><ImagePlus size={15} /></button>
+      )}
+      {onDraw && (
+        <button type="button" className={btn(false)} onClick={onDraw} aria-label="Insert drawing"><PenLine size={15} /></button>
+      )}
 
       <span className="mx-0.5 w-px self-stretch bg-slate-100" />
 
